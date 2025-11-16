@@ -9,7 +9,7 @@ const StorySection = ({ weddingDetails }: StorySectionProps) => {
     <section className="py-20 bg-gradient-elegant">
       <div className="container mx-auto px-4">
         <h2 className="text-5xl font-serif font-bold text-center mb-16 text-foreground">
-          Our Story
+          Nossa História
         </h2>
         
         <div className="grid md:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
@@ -24,14 +24,14 @@ const StorySection = ({ weddingDetails }: StorySectionProps) => {
           <div className="space-y-6 animate-fade-in-up">
             <p className="text-lg text-muted-foreground leading-relaxed">
               {weddingDetails?.story || 
-                "From the moment we met, we knew something special had begun. Through laughter, adventures, and countless memories, our love has grown stronger each day."}
+                "Desde o momento em que nos conhecemos, soubemos que algo especial havia começado. Entre risadas, aventuras e inúmeras memórias, nosso amor cresceu mais forte a cada dia."}
             </p>
             <p className="text-lg text-muted-foreground leading-relaxed">
-              Now, surrounded by our loved ones, we're ready to start the greatest adventure of all – spending forever together.
+              Agora, cercados por nossos entes queridos, estamos prontos para começar a maior aventura de todas – passar para sempre juntos.
             </p>
             <div className="pt-6">
               <p className="text-2xl font-serif text-foreground italic">
-                "Two souls, one heart"
+                "Duas almas, um coração"
               </p>
             </div>
           </div>

@@ -10,6 +10,7 @@ import EventsManager from "@/components/admin/EventsManager";
 import PhotosManager from "@/components/admin/PhotosManager";
 import RSVPList from "@/components/admin/RSVPList";
 import InvitationsManager from "@/components/admin/InvitationsManager";
+import UsersManager from "@/components/admin/UsersManager";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -75,12 +76,13 @@ const Admin = () => {
 
       <main className="container mx-auto px-4 py-8">
         <Tabs defaultValue="details" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 max-w-3xl mx-auto">
+          <TabsList className="grid w-full grid-cols-6 max-w-4xl mx-auto">
             <TabsTrigger value="details">Detalhes</TabsTrigger>
             <TabsTrigger value="events">Eventos</TabsTrigger>
             <TabsTrigger value="photos">Fotos</TabsTrigger>
             <TabsTrigger value="invitations">Convites</TabsTrigger>
             <TabsTrigger value="rsvps">RSVPs</TabsTrigger>
+            <TabsTrigger value="users">Usuários</TabsTrigger>
           </TabsList>
 
           <TabsContent value="details">
@@ -101,6 +103,10 @@ const Admin = () => {
 
           <TabsContent value="rsvps">
             <RSVPList />
+          </TabsContent>
+
+          <TabsContent value="users">
+            <UsersManager />
           </TabsContent>
         </Tabs>
       </main>

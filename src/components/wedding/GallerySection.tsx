@@ -24,7 +24,7 @@ const GallerySection = ({ photos }: GallerySectionProps) => {
     <section className="py-20 bg-gradient-elegant">
       <div className="container mx-auto px-4">
         <h2 className="text-5xl font-serif font-bold text-center mb-16 text-foreground">
-          Our Moments
+          Nossos Momentos
         </h2>
         
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-6xl mx-auto">
