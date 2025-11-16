@@ -1,12 +1,95 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
+import HeroSection from "@/components/wedding/HeroSection";
+import StorySection from "@/components/wedding/StorySection";
+import EventsSection from "@/components/wedding/EventsSection";
+import GallerySection from "@/components/wedding/GallerySection";
+import RSVPSection from "@/components/wedding/RSVPSection";
+import { Button } from "@/components/ui/button";
+import { LogIn } from "lucide-react";
 
 const Index = () => {
+  const navigate = useNavigate();
+  const [session, setSession] = useState(null);
+  const [weddingDetails, setWeddingDetails] = useState(null);
+  const [events, setEvents] = useState([]);
+  const [photos, setPhotos] = useState([]);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const fetchWeddingData = async () => {
+      const { data: weddingData } = await supabase
+        .from("wedding_details")
+        .select("*")
+        .single();
+
+      if (weddingData) {
+        setWeddingDetails(weddingData);
+
+        const { data: eventsData } = await supabase
+          .from("events")
+          .select("*")
+          .eq("wedding_id", weddingData.id)
+          .order("event_date");
+
+        const { data: photosData } = await supabase
+          .from("photos")
+          .select("*")
+          .eq("wedding_id", weddingData.id)
+          .order("display_order");
+
+        setEvents(eventsData || []);
+        setPhotos(photosData || []);
+      }
+    };
+
+    fetchWeddingData();
+  }, []);
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
+    <div className="min-h-screen bg-background">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
+        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+          <h1 className="text-2xl font-serif font-bold text-primary">
+            {weddingDetails ? `${weddingDetails.bride_name} & ${weddingDetails.groom_name}` : "Our Wedding"}
+          </h1>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate(session ? "/admin" : "/auth")}
+            className="gap-2"
+          >
+            <LogIn className="w-4 h-4" />
+            {session ? "Dashboard" : "Admin Login"}
+          </Button>
+        </div>
+      </header>
+
+      <main className="pt-20">
+        <HeroSection weddingDetails={weddingDetails} />
+        <StorySection weddingDetails={weddingDetails} />
+        <EventsSection events={events} />
+        <GallerySection photos={photos} />
+        <RSVPSection weddingId={weddingDetails?.id} />
+      </main>
+
+      <footer className="bg-card border-t border-border py-8 mt-20">
+        <div className="container mx-auto px-4 text-center text-muted-foreground">
+          <p>© 2025 Wedding Invitation. All rights reserved.</p>
+        </div>
+      </footer>
     </div>
   );
 };
