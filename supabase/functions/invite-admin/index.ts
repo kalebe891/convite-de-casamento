@@ -50,20 +50,68 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log(`Inviting user: ${email} with role: ${role}`);
 
-    // Create invite using Supabase Admin API
-    const { data: inviteData, error: inviteError } = await supabase.auth.admin.inviteUserByEmail(email, {
-      data: {
+    // Create user directly using admin API (without triggering hooks)
+    const { data: userData, error: createError } = await supabase.auth.admin.createUser({
+      email: email,
+      email_confirm: true,
+      user_metadata: {
         role: role,
       },
-      redirectTo: `${req.headers.get("origin")}/auth`,
     });
 
-    if (inviteError) {
-      console.error("Error inviting user:", inviteError);
-      throw inviteError;
+    if (createError) {
+      console.error("Error creating user:", createError);
+      throw createError;
     }
 
-    console.log("User invited successfully:", inviteData);
+    if (!userData.user) {
+      throw new Error("User creation failed - no user data returned");
+    }
+
+    console.log("User created successfully:", userData.user.id);
+
+    // Create profile manually
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .insert({
+        id: userData.user.id,
+        email: email,
+        full_name: null,
+      });
+
+    if (profileError) {
+      console.error("Error creating profile:", profileError);
+      // Continue anyway - profile might already exist
+    }
+
+    // Assign role manually
+    const { error: roleError } = await supabase
+      .from('user_roles')
+      .insert({
+        user_id: userData.user.id,
+        role: role,
+      });
+
+    if (roleError) {
+      console.error("Error assigning role:", roleError);
+      throw roleError;
+    }
+
+    console.log("Role assigned successfully");
+
+    // Generate a password reset link for the user to set their password
+    const { data: resetData, error: resetError } = await supabase.auth.admin.generateLink({
+      type: 'magiclink',
+      email: email,
+      options: {
+        redirectTo: `${req.headers.get("origin")}/auth`,
+      },
+    });
+
+    if (resetError) {
+      console.error("Error generating reset link:", resetError);
+      throw resetError;
+    }
 
     // Send custom invitation email with Resend
     const emailResponse = await resend.emails.send({
@@ -72,19 +120,21 @@ const handler = async (req: Request): Promise<Response> => {
       subject: "Convite para administrar o site de casamento",
       html: `
         <h1>Você foi convidado!</h1>
-        <p>Você foi convidado para ser ${role === 'admin' ? 'administrador' : role === 'couple' ? 'do casal' : 'cerimonialista'} do site de casamento de Beatriz e Diogo.</p>
-        <p>Verifique seu email para um link de confirmação do Supabase para criar sua senha e acessar o painel administrativo.</p>
-        <p>Após criar sua senha, você poderá acessar o painel em: <a href="${req.headers.get("origin")}/auth">Fazer Login</a></p>
+        <p>Você foi convidado para ser <strong>${role === 'admin' ? 'administrador' : role === 'couple' ? 'do casal' : 'cerimonialista'}</strong> do site de casamento.</p>
+        <p>Clique no link abaixo para definir sua senha e acessar o painel administrativo:</p>
+        <p><a href="${resetData.properties.action_link}" style="background-color: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">Definir Senha e Acessar</a></p>
+        <p>Ou copie e cole este link no seu navegador:</p>
+        <p style="word-break: break-all; color: #666;">${resetData.properties.action_link}</p>
         <br>
         <p>Atenciosamente,</p>
-        <p>Beatriz & Diogo</p>
+        <p><strong>Equipe do Casamento</strong></p>
       `,
     });
 
     console.log("Email sent successfully:", emailResponse);
 
     return new Response(
-      JSON.stringify({ success: true, data: inviteData }),
+      JSON.stringify({ success: true, data: userData }),
       {
         status: 200,
         headers: {
