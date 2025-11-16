@@ -5,9 +5,16 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
-import Admin from "./pages/Admin";
+import AdminLayout from "./layouts/AdminLayout";
 import Invitation from "./pages/Invitation";
 import NotFound from "./pages/NotFound";
+import Usuarios from "./pages/admin/Usuarios";
+import Convidados from "./pages/admin/Convidados";
+import Cronograma from "./pages/admin/Cronograma";
+import Buffet from "./pages/admin/Buffet";
+import Momentos from "./pages/admin/Momentos";
+import Estatisticas from "./pages/admin/Estatisticas";
+import Logs from "./pages/admin/Logs";
 
 const queryClient = new QueryClient();
 
@@ -20,7 +27,16 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
-          <Route path="/admin" element={<Admin />} />
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<Cronograma />} />
+            <Route path="usuarios" element={<Usuarios />} />
+            <Route path="convidados" element={<Convidados />} />
+            <Route path="cronograma" element={<Cronograma />} />
+            <Route path="buffet" element={<Buffet />} />
+            <Route path="momentos" element={<Momentos />} />
+            <Route path="estatisticas" element={<Estatisticas />} />
+            <Route path="logs" element={<Logs />} />
+          </Route>
           <Route path="/convite/:code" element={<Invitation />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
