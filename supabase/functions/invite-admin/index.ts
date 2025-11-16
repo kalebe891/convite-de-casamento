@@ -55,7 +55,7 @@ const handler = async (req: Request): Promise<Response> => {
       data: {
         role: role,
       },
-      redirectTo: `${Deno.env.get("VITE_SUPABASE_URL")}/auth/callback`,
+      redirectTo: `${req.headers.get("origin")}/auth`,
     });
 
     if (inviteError) {

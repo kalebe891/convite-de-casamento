@@ -9,6 +9,8 @@ const Estatisticas = () => {
     totalRsvps: 0,
     attending: 0,
     notAttending: 0,
+    totalCompanions: 0,
+    totalPeople: 0,
   });
 
   useEffect(() => {
@@ -19,12 +21,17 @@ const Estatisticas = () => {
       ]);
 
       const rsvps = rsvpsRes.data || [];
+      const attending = rsvps.filter(r => r.attending).length;
+      const totalCompanions = rsvps.filter(r => r.attending && r.plus_one).length;
+      const totalPeople = attending + totalCompanions;
       
       setStats({
         totalInvitations: invitationsRes.count || 0,
         totalRsvps: rsvps.length,
-        attending: rsvps.filter(r => r.attending).length,
+        attending,
         notAttending: rsvps.filter(r => !r.attending).length,
+        totalCompanions,
+        totalPeople,
       });
     };
 
@@ -40,7 +47,7 @@ const Estatisticas = () => {
         </p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total de Convites</CardTitle>
@@ -92,7 +99,31 @@ const Estatisticas = () => {
             </p>
           </CardContent>
         </Card>
+
+        <Card className="border-primary">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total de Pessoas</CardTitle>
+            <Users className="h-4 w-4 text-primary" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-primary">{stats.totalPeople}</div>
+            <p className="text-xs text-muted-foreground">
+              Confirmados + Acompanhantes
+            </p>
+          </CardContent>
+        </Card>
       </div>
+
+      <Card className="bg-muted/50">
+        <CardContent className="pt-6">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <BarChart3 className="h-4 w-4" />
+            <p>
+              <strong>Total de Pessoas:</strong> Soma de {stats.attending} convidados confirmados + {stats.totalCompanions} acompanhantes = {stats.totalPeople} pessoas
+            </p>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

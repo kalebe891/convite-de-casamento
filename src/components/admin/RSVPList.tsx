@@ -71,12 +71,12 @@ const RSVPList = () => {
 
       <Card className="shadow-elegant">
         <CardHeader>
-          <CardTitle className="text-3xl font-serif">RSVP Responses</CardTitle>
-          <CardDescription>View all guest responses</CardDescription>
+          <CardTitle className="text-3xl font-serif">Confirmações de Presença</CardTitle>
+          <CardDescription>Visualize todas as respostas dos convidados</CardDescription>
         </CardHeader>
         <CardContent>
           {rsvps.length === 0 ? (
-            <p className="text-muted-foreground text-center py-8">No RSVPs received yet.</p>
+            <p className="text-muted-foreground text-center py-8">Nenhuma confirmação recebida ainda.</p>
           ) : (
             <div className="space-y-4">
               {rsvps.map((rsvp) => (
@@ -92,27 +92,26 @@ const RSVPList = () => {
                       )}
                     </div>
                     <Badge variant={rsvp.attending ? "default" : "secondary"}>
-                      {rsvp.attending ? "Attending" : "Not Attending"}
+                      {rsvp.attending ? "Confirmado" : "Não Confirmado"}
                     </Badge>
                   </div>
                   <div className="space-y-1 text-sm">
-                    {rsvp.plus_one && (
-                      <p className="text-muted-foreground">
-                        <strong>Plus One:</strong> Yes
-                      </p>
-                    )}
+                    <div className="flex items-center gap-2">
+                      <strong className="text-muted-foreground">Acompanhantes:</strong>
+                      <span className="text-foreground">{rsvp.plus_one ? "1" : "0"}</span>
+                    </div>
                     {rsvp.dietary_restrictions && (
                       <p className="text-muted-foreground">
-                        <strong>Dietary:</strong> {rsvp.dietary_restrictions}
+                        <strong>Restrições alimentares:</strong> {rsvp.dietary_restrictions}
                       </p>
                     )}
                     {rsvp.message && (
                       <p className="text-muted-foreground mt-2">
-                        <strong>Message:</strong> {rsvp.message}
+                        <strong>Mensagem:</strong> {rsvp.message}
                       </p>
                     )}
                     <p className="text-xs text-muted-foreground pt-2">
-                      Submitted: {new Date(rsvp.created_at).toLocaleString()}
+                      Enviado em: {new Date(rsvp.created_at).toLocaleString('pt-BR')}
                     </p>
                   </div>
                 </div>

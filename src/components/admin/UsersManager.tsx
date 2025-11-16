@@ -13,6 +13,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Mail } from "lucide-react";
+import UsersList from "./UsersList";
 
 const UsersManager = () => {
   const { toast } = useToast();
@@ -51,58 +52,62 @@ const UsersManager = () => {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Gerenciar Usuários</CardTitle>
-        <CardDescription>
-          Convide administradores, membros do casal ou cerimonialistas
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleInvite} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">E-mail do Usuário</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="usuario@exemplo.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Convidar Novo Usuário</CardTitle>
+          <CardDescription>
+            Convide administradores, membros do casal ou cerimonialistas
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleInvite} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">E-mail do Usuário</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="usuario@exemplo.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="role">Tipo de Acesso</Label>
+              <Select value={role} onValueChange={(value: any) => setRole(value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o tipo de acesso" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="admin">Administrador</SelectItem>
+                  <SelectItem value="couple">Casal</SelectItem>
+                  <SelectItem value="planner">Cerimonialista</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <Button type="submit" disabled={loading} className="w-full gap-2">
+              <Mail className="w-4 h-4" />
+              {loading ? "Enviando..." : "Enviar Convite"}
+            </Button>
+          </form>
+
+          <div className="mt-6 p-4 bg-muted rounded-lg">
+            <h3 className="font-semibold mb-2">Como funciona:</h3>
+            <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
+              <li>Digite o e-mail do usuário que deseja convidar</li>
+              <li>Selecione o tipo de acesso apropriado</li>
+              <li>O usuário receberá um e-mail com instruções para criar a senha</li>
+              <li>Após criar a senha, ele poderá acessar o painel administrativo</li>
+            </ol>
           </div>
+        </CardContent>
+      </Card>
 
-          <div className="space-y-2">
-            <Label htmlFor="role">Tipo de Acesso</Label>
-            <Select value={role} onValueChange={(value: any) => setRole(value)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione o tipo de acesso" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="admin">Administrador</SelectItem>
-                <SelectItem value="couple">Casal</SelectItem>
-                <SelectItem value="planner">Cerimonialista</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <Button type="submit" disabled={loading} className="w-full gap-2">
-            <Mail className="w-4 h-4" />
-            {loading ? "Enviando..." : "Enviar Convite"}
-          </Button>
-        </form>
-
-        <div className="mt-6 p-4 bg-muted rounded-lg">
-          <h3 className="font-semibold mb-2">Como funciona:</h3>
-          <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
-            <li>Digite o e-mail do usuário que deseja convidar</li>
-            <li>Selecione o tipo de acesso apropriado</li>
-            <li>O usuário receberá um e-mail com instruções para criar a senha</li>
-            <li>Após criar a senha, ele poderá acessar o painel administrativo</li>
-          </ol>
-        </div>
-      </CardContent>
-    </Card>
+      <UsersList />
+    </div>
   );
 };
 
