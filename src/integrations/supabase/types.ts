@@ -55,6 +55,59 @@ export type Database = {
           },
         ]
       }
+      invitations: {
+        Row: {
+          attending: boolean | null
+          created_at: string | null
+          dietary_restrictions: string | null
+          guest_email: string | null
+          guest_name: string
+          guest_phone: string | null
+          id: string
+          message: string | null
+          plus_one: boolean | null
+          responded_at: string | null
+          unique_code: string
+          wedding_id: string | null
+        }
+        Insert: {
+          attending?: boolean | null
+          created_at?: string | null
+          dietary_restrictions?: string | null
+          guest_email?: string | null
+          guest_name: string
+          guest_phone?: string | null
+          id?: string
+          message?: string | null
+          plus_one?: boolean | null
+          responded_at?: string | null
+          unique_code: string
+          wedding_id?: string | null
+        }
+        Update: {
+          attending?: boolean | null
+          created_at?: string | null
+          dietary_restrictions?: string | null
+          guest_email?: string | null
+          guest_name?: string
+          guest_phone?: string | null
+          id?: string
+          message?: string | null
+          plus_one?: boolean | null
+          responded_at?: string | null
+          unique_code?: string
+          wedding_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invitations_wedding_id_fkey"
+            columns: ["wedding_id"]
+            isOneToOne: false
+            referencedRelation: "wedding_details"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       photos: {
         Row: {
           caption: string | null

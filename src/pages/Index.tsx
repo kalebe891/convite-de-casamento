@@ -5,9 +5,9 @@ import HeroSection from "@/components/wedding/HeroSection";
 import StorySection from "@/components/wedding/StorySection";
 import EventsSection from "@/components/wedding/EventsSection";
 import GallerySection from "@/components/wedding/GallerySection";
-import RSVPSection from "@/components/wedding/RSVPSection";
 import { Button } from "@/components/ui/button";
 import { LogIn } from "lucide-react";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -63,17 +63,20 @@ const Index = () => {
       <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <h1 className="text-2xl font-serif font-bold text-primary">
-            {weddingDetails ? `${weddingDetails.bride_name} & ${weddingDetails.groom_name}` : "Our Wedding"}
+            {weddingDetails ? `${weddingDetails.bride_name} & ${weddingDetails.groom_name}` : "Nosso Casamento"}
           </h1>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate(session ? "/admin" : "/auth")}
-            className="gap-2"
-          >
-            <LogIn className="w-4 h-4" />
-            {session ? "Dashboard" : "Admin Login"}
-          </Button>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate(session ? "/admin" : "/auth")}
+              className="gap-2"
+            >
+              <LogIn className="w-4 h-4" />
+              {session ? "Painel" : "Login Admin"}
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -82,12 +85,11 @@ const Index = () => {
         <StorySection weddingDetails={weddingDetails} />
         <EventsSection events={events} />
         <GallerySection photos={photos} />
-        <RSVPSection weddingId={weddingDetails?.id} />
       </main>
 
       <footer className="bg-card border-t border-border py-8 mt-20">
         <div className="container mx-auto px-4 text-center text-muted-foreground">
-          <p>© 2025 Wedding Invitation. All rights reserved.</p>
+          <p>© 2025 Convite de Casamento. Todos os direitos reservados.</p>
         </div>
       </footer>
     </div>

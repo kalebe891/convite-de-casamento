@@ -9,6 +9,7 @@ import WeddingDetailsForm from "@/components/admin/WeddingDetailsForm";
 import EventsManager from "@/components/admin/EventsManager";
 import PhotosManager from "@/components/admin/PhotosManager";
 import RSVPList from "@/components/admin/RSVPList";
+import InvitationsManager from "@/components/admin/InvitationsManager";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -38,8 +39,8 @@ const Admin = () => {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     toast({
-      title: "Logged out",
-      description: "Successfully logged out.",
+      title: "Desconectado",
+      description: "Você saiu com sucesso.",
     });
     navigate("/");
   };
@@ -47,7 +48,7 @@ const Admin = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-muted-foreground">Loading...</p>
+        <p className="text-muted-foreground">Carregando...</p>
       </div>
     );
   }
@@ -58,15 +59,15 @@ const Admin = () => {
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center gap-3">
             <Heart className="w-8 h-8 text-primary" />
-            <h1 className="text-2xl font-serif font-bold">Wedding Admin Dashboard</h1>
+            <h1 className="text-2xl font-serif font-bold">Painel Administrativo</h1>
           </div>
           <div className="flex items-center gap-4">
             <Button variant="ghost" onClick={() => navigate("/")}>
-              View Invitation
+              Ver Convite
             </Button>
             <Button variant="outline" onClick={handleLogout} className="gap-2">
               <LogOut className="w-4 h-4" />
-              Logout
+              Sair
             </Button>
           </div>
         </div>
@@ -74,10 +75,11 @@ const Admin = () => {
 
       <main className="container mx-auto px-4 py-8">
         <Tabs defaultValue="details" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 max-w-2xl mx-auto">
-            <TabsTrigger value="details">Wedding Details</TabsTrigger>
-            <TabsTrigger value="events">Events</TabsTrigger>
-            <TabsTrigger value="photos">Photos</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-5 max-w-3xl mx-auto">
+            <TabsTrigger value="details">Detalhes</TabsTrigger>
+            <TabsTrigger value="events">Eventos</TabsTrigger>
+            <TabsTrigger value="photos">Fotos</TabsTrigger>
+            <TabsTrigger value="invitations">Convites</TabsTrigger>
             <TabsTrigger value="rsvps">RSVPs</TabsTrigger>
           </TabsList>
 
@@ -91,6 +93,10 @@ const Admin = () => {
 
           <TabsContent value="photos">
             <PhotosManager />
+          </TabsContent>
+
+          <TabsContent value="invitations">
+            <InvitationsManager />
           </TabsContent>
 
           <TabsContent value="rsvps">

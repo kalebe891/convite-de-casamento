@@ -12,11 +12,11 @@ const WeddingDetailsForm = () => {
   const [loading, setLoading] = useState(false);
   const [weddingId, setWeddingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
-    brideName: "",
-    groomName: "",
-    weddingDate: "",
-    venueName: "",
-    venueAddress: "",
+    brideName: "Beatriz de Oliveira",
+    groomName: "Diogo Martins",
+    weddingDate: "2026-04-18",
+    venueName: "Espaço Verde Eventos",
+    venueAddress: "Alameda Santana, Qd.102 - Lt.01 - Cardoso Continuação, Aparecida de Goiânia - GO",
     story: "",
   });
 
@@ -76,13 +76,13 @@ const WeddingDetailsForm = () => {
       }
 
       toast({
-        title: "Success!",
-        description: "Wedding details saved successfully.",
+        title: "Sucesso!",
+        description: "Detalhes do casamento salvos com sucesso.",
       });
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to save wedding details.",
+        title: "Erro",
+        description: "Falha ao salvar detalhes do casamento.",
         variant: "destructive",
       });
     } finally {
@@ -93,14 +93,14 @@ const WeddingDetailsForm = () => {
   return (
     <Card className="max-w-3xl mx-auto shadow-elegant">
       <CardHeader>
-        <CardTitle className="text-3xl font-serif">Wedding Details</CardTitle>
-        <CardDescription>Manage your wedding information</CardDescription>
+        <CardTitle className="text-3xl font-serif">Detalhes do Casamento</CardTitle>
+        <CardDescription>Gerencie as informações do seu casamento</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="brideName">Bride's Name</Label>
+              <Label htmlFor="brideName">Nome da Noiva</Label>
               <Input
                 id="brideName"
                 value={formData.brideName}
@@ -109,7 +109,7 @@ const WeddingDetailsForm = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="groomName">Groom's Name</Label>
+              <Label htmlFor="groomName">Nome do Noivo</Label>
               <Input
                 id="groomName"
                 value={formData.groomName}
@@ -120,7 +120,7 @@ const WeddingDetailsForm = () => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="weddingDate">Wedding Date</Label>
+            <Label htmlFor="weddingDate">Data do Casamento</Label>
             <Input
               id="weddingDate"
               type="date"
@@ -131,7 +131,7 @@ const WeddingDetailsForm = () => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="venueName">Venue Name</Label>
+            <Label htmlFor="venueName">Nome do Local</Label>
             <Input
               id="venueName"
               value={formData.venueName}
@@ -140,7 +140,7 @@ const WeddingDetailsForm = () => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="venueAddress">Venue Address</Label>
+            <Label htmlFor="venueAddress">Endereço do Local</Label>
             <Input
               id="venueAddress"
               value={formData.venueAddress}
@@ -149,7 +149,7 @@ const WeddingDetailsForm = () => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="story">Your Story</Label>
+            <Label htmlFor="story">Sua História</Label>
             <Textarea
               id="story"
               value={formData.story}
@@ -159,7 +159,7 @@ const WeddingDetailsForm = () => {
           </div>
 
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Saving..." : "Save Wedding Details"}
+            {loading ? "Salvando..." : "Salvar Detalhes"}
           </Button>
         </form>
       </CardContent>
