@@ -70,21 +70,22 @@ const handler = async (req: Request): Promise<Response> => {
       // If the user already exists, proceed with invitation flow instead of failing
       if (code === 'email_exists' || status === 422) {
         console.log("User already exists, proceeding with reinvite flow");
-        // Try to resolve user id from profiles by email
-        const { data: existingProfile, error: profileLookupError } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('email', email)
-          .maybeSingle();
-
-        if (profileLookupError) {
-          console.error('Error looking up existing profile by email:', profileLookupError);
+        
+        // Look up existing user by email using auth admin API
+        const { data: { users }, error: listError } = await supabase.auth.admin.listUsers();
+        
+        if (listError) {
+          console.error('Error listing users:', listError);
+          throw new Error('Failed to find existing user');
         }
-
-        if (existingProfile?.id) {
-          targetUserId = existingProfile.id;
+        
+        const existingUser = users.find(u => u.email === email);
+        
+        if (existingUser) {
+          targetUserId = existingUser.id;
+          console.log("Found existing user:", targetUserId);
         } else {
-          console.warn('Profile not found for existing email. Role assignment will be skipped but invite will be sent.');
+          throw new Error('User exists but could not be found');
         }
       } else {
         // Different error -> abort
@@ -106,13 +107,15 @@ const handler = async (req: Request): Promise<Response> => {
           {
             id: targetUserId,
             email: email,
-            full_name: null,
           },
-          { onConflict: 'id' }
+          { onConflict: 'id', ignoreDuplicates: false }
         );
 
       if (upsertProfileError) {
         console.error('Error upserting profile:', upsertProfileError);
+        // Don't fail the whole flow if profile already exists
+      } else {
+        console.log("Profile ensured successfully");
       }
 
       // Ensure role exists (idempotent)
