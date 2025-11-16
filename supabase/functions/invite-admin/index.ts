@@ -50,7 +50,10 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log(`Inviting user: ${email} with role: ${role}`);
 
-    // Create user directly using admin API (without triggering hooks)
+    // Create or reuse existing user, then ensure profile, role and send magic link
+    let targetUserId: string | null = null;
+
+    // Try to create the user first
     const { data: userData, error: createError } = await supabase.auth.admin.createUser({
       email: email,
       email_confirm: true,
@@ -61,45 +64,77 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (createError) {
       console.error("Error creating user:", createError);
-      throw createError;
+      const code = (createError as any)?.code || (createError as any)?.error?.code;
+      const status = (createError as any)?.status || (createError as any)?.error?.status;
+
+      // If the user already exists, proceed with invitation flow instead of failing
+      if (code === 'email_exists' || status === 422) {
+        console.log("User already exists, proceeding with reinvite flow");
+        // Try to resolve user id from profiles by email
+        const { data: existingProfile, error: profileLookupError } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('email', email)
+          .maybeSingle();
+
+        if (profileLookupError) {
+          console.error('Error looking up existing profile by email:', profileLookupError);
+        }
+
+        if (existingProfile?.id) {
+          targetUserId = existingProfile.id;
+        } else {
+          console.warn('Profile not found for existing email. Role assignment will be skipped but invite will be sent.');
+        }
+      } else {
+        // Different error -> abort
+        throw createError;
+      }
+    } else {
+      if (!userData?.user) {
+        throw new Error("User creation failed - no user data returned");
+      }
+      targetUserId = userData.user.id;
+      console.log("User created successfully:", targetUserId);
     }
 
-    if (!userData.user) {
-      throw new Error("User creation failed - no user data returned");
+    // Ensure profile exists (id + email). Only if we have the user id
+    if (targetUserId) {
+      const { error: upsertProfileError } = await supabase
+        .from('profiles')
+        .upsert(
+          {
+            id: targetUserId,
+            email: email,
+            full_name: null,
+          },
+          { onConflict: 'id' }
+        );
+
+      if (upsertProfileError) {
+        console.error('Error upserting profile:', upsertProfileError);
+      }
+
+      // Ensure role exists (idempotent)
+      const { error: upsertRoleError } = await supabase
+        .from('user_roles')
+        .upsert(
+          {
+            user_id: targetUserId,
+            role: role,
+          },
+          { onConflict: 'user_id,role' }
+        );
+
+      if (upsertRoleError) {
+        console.error("Error assigning role:", upsertRoleError);
+        // Don't fail the whole flow if role already exists; continue
+      } else {
+        console.log("Role ensured successfully");
+      }
     }
 
-    console.log("User created successfully:", userData.user.id);
-
-    // Create profile manually
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .insert({
-        id: userData.user.id,
-        email: email,
-        full_name: null,
-      });
-
-    if (profileError) {
-      console.error("Error creating profile:", profileError);
-      // Continue anyway - profile might already exist
-    }
-
-    // Assign role manually
-    const { error: roleError } = await supabase
-      .from('user_roles')
-      .insert({
-        user_id: userData.user.id,
-        role: role,
-      });
-
-    if (roleError) {
-      console.error("Error assigning role:", roleError);
-      throw roleError;
-    }
-
-    console.log("Role assigned successfully");
-
-    // Generate a password reset link for the user to set their password
+    // Generate a magic link for the user to access and set password if needed
     const { data: resetData, error: resetError } = await supabase.auth.admin.generateLink({
       type: 'magiclink',
       email: email,
@@ -113,28 +148,31 @@ const handler = async (req: Request): Promise<Response> => {
       throw resetError;
     }
 
-    // Send custom invitation email with Resend
-    const emailResponse = await resend.emails.send({
-      from: "Convite de Casamento <onboarding@resend.dev>",
-      to: [email],
-      subject: "Convite para administrar o site de casamento",
-      html: `
-        <h1>Você foi convidado!</h1>
-        <p>Você foi convidado para ser <strong>${role === 'admin' ? 'administrador' : role === 'couple' ? 'do casal' : 'cerimonialista'}</strong> do site de casamento.</p>
-        <p>Clique no link abaixo para definir sua senha e acessar o painel administrativo:</p>
-        <p><a href="${resetData.properties.action_link}" style="background-color: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">Definir Senha e Acessar</a></p>
-        <p>Ou copie e cole este link no seu navegador:</p>
-        <p style="word-break: break-all; color: #666;">${resetData.properties.action_link}</p>
-        <br>
-        <p>Atenciosamente,</p>
-        <p><strong>Equipe do Casamento</strong></p>
-      `,
-    });
-
-    console.log("Email sent successfully:", emailResponse);
+    // Send custom invitation email with Resend (do not fail if Resend key is invalid)
+    try {
+      const emailResponse = await resend.emails.send({
+        from: "Convite de Casamento <onboarding@resend.dev>",
+        to: [email],
+        subject: "Convite para administrar o site de casamento",
+        html: `
+          <h1>Você foi convidado!</h1>
+          <p>Você foi convidado para ser <strong>${role === 'admin' ? 'administrador' : role === 'couple' ? 'do casal' : 'cerimonialista'}</strong> do site de casamento.</p>
+          <p>Clique no link abaixo para definir sua senha e acessar o painel administrativo:</p>
+          <p><a href="${resetData.properties.action_link}" style="background-color: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">Definir Senha e Acessar</a></p>
+          <p>Ou copie e cole este link no seu navegador:</p>
+          <p style="word-break: break-all; color: #666;">${resetData.properties.action_link}</p>
+          <br>
+          <p>Atenciosamente,</p>
+          <p><strong>Equipe do Casamento</strong></p>
+        `,
+      });
+      console.log("Email send attempt response:", emailResponse);
+    } catch (emailErr) {
+      console.error('Resend email error (non-blocking):', emailErr);
+    }
 
     return new Response(
-      JSON.stringify({ success: true, data: userData }),
+      JSON.stringify({ success: true, user_id: targetUserId, email }),
       {
         status: 200,
         headers: {
