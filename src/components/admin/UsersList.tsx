@@ -45,6 +45,8 @@ interface UserRole {
 
 interface UserWithRole extends UserProfile {
   roles: UserRole[];
+  isEditingName?: boolean;
+  editNameValue?: string;
 }
 
 const roleLabels = {
@@ -65,6 +67,8 @@ const UsersList = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
+  const [editingUserId, setEditingUserId] = useState<string | null>(null);
+  const [editNameValue, setEditNameValue] = useState("");
 
   const fetchUsers = async () => {
     try {
@@ -170,6 +174,42 @@ const UsersList = () => {
     }
   };
 
+  const handleUpdateName = async (userId: string) => {
+    if (!editNameValue.trim()) {
+      toast({
+        title: "Nome inválido",
+        description: "O nome não pode estar vazio.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ full_name: editNameValue.trim() })
+        .eq("id", userId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Nome atualizado!",
+        description: "O nome do usuário foi alterado com sucesso.",
+      });
+
+      setEditingUserId(null);
+      setEditNameValue("");
+      fetchUsers();
+    } catch (error: any) {
+      console.error("Error updating name:", error);
+      toast({
+        title: "Erro ao atualizar nome",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleResendInvite = async (email: string, role: "admin" | "couple" | "planner") => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -260,10 +300,55 @@ const UsersList = () => {
                 <TableBody>
                   {filteredUsers.map((user) => {
                     const currentRole = user.roles[0]?.role;
+                    const isEditing = editingUserId === user.id;
                     return (
                       <TableRow key={user.id}>
                         <TableCell className="font-medium">
-                          {user.full_name || "Sem nome"}
+                          {isEditing ? (
+                            <div className="flex gap-2 items-center">
+                              <Input
+                                value={editNameValue}
+                                onChange={(e) => setEditNameValue(e.target.value)}
+                                className="max-w-[200px]"
+                                autoFocus
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") {
+                                    handleUpdateName(user.id);
+                                  } else if (e.key === "Escape") {
+                                    setEditingUserId(null);
+                                    setEditNameValue("");
+                                  }
+                                }}
+                              />
+                              <Button
+                                size="sm"
+                                onClick={() => handleUpdateName(user.id)}
+                              >
+                                Salvar
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => {
+                                  setEditingUserId(null);
+                                  setEditNameValue("");
+                                }}
+                              >
+                                Cancelar
+                              </Button>
+                            </div>
+                          ) : (
+                            <div 
+                              className="cursor-pointer hover:text-primary"
+                              onClick={() => {
+                                setEditingUserId(user.id);
+                                setEditNameValue(user.full_name || "");
+                              }}
+                              title="Clique para editar"
+                            >
+                              {user.full_name || "Sem nome"}
+                            </div>
+                          )}
                         </TableCell>
                         <TableCell>{user.email}</TableCell>
                         <TableCell>

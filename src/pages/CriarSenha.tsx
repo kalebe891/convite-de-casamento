@@ -15,6 +15,7 @@ const CriarSenha = () => {
   const [loading, setLoading] = useState(false);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [nome, setNome] = useState("");
   const token = searchParams.get("t");
 
   useEffect(() => {
@@ -31,6 +32,15 @@ const CriarSenha = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!nome.trim()) {
+      toast({
+        title: "Nome obrigatório",
+        description: "Por favor, informe seu nome.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (password !== confirmPassword) {
       toast({
         title: "Senhas não coincidem",
@@ -56,6 +66,7 @@ const CriarSenha = () => {
         body: {
           token,
           password,
+          nome,
         },
       });
 
@@ -100,6 +111,19 @@ const CriarSenha = () => {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="nome">Nome Completo</Label>
+              <Input
+                id="nome"
+                type="text"
+                value={nome}
+                onChange={(e) => setNome(e.target.value)}
+                placeholder="Digite seu nome completo"
+                required
+                disabled={loading}
+              />
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="password">Senha</Label>
               <Input

@@ -13,6 +13,7 @@ const corsHeaders = {
 interface CompleteInvitationRequest {
   token: string;
   password: string;
+  nome?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -22,7 +23,7 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
-    const { token, password }: CompleteInvitationRequest = await req.json();
+    const { token, password, nome }: CompleteInvitationRequest = await req.json();
 
     console.log('Processing invitation completion for token:', token);
 
@@ -53,12 +54,13 @@ const handler = async (req: Request): Promise<Response> => {
     console.log('Token validated, creating user:', pendingUser.email);
 
     // Create user with admin API
+    const finalNome = nome?.trim() || pendingUser.nome;
     const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
       email: pendingUser.email,
       password: password,
       email_confirm: true,
       user_metadata: {
-        full_name: pendingUser.nome,
+        full_name: finalNome,
       }
     });
 
@@ -75,7 +77,7 @@ const handler = async (req: Request): Promise<Response> => {
       .insert({
         id: newUser.user.id,
         email: pendingUser.email,
-        full_name: pendingUser.nome,
+        full_name: finalNome,
       });
 
     if (profileError) {
