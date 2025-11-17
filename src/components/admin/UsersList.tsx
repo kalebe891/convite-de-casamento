@@ -61,7 +61,11 @@ const roleColors = {
   planner: "secondary",
 } as const;
 
-const UsersList = () => {
+interface UsersListProps {
+  refreshKey?: number;
+}
+
+const UsersList = ({ refreshKey }: UsersListProps) => {
   const { toast } = useToast();
   const [users, setUsers] = useState<UserWithRole[]>([]);
   const [loading, setLoading] = useState(true);
@@ -112,7 +116,7 @@ const UsersList = () => {
 
   useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [refreshKey]);
 
   const handleRoleChange = async (userId: string, newRole: "admin" | "couple" | "planner") => {
     try {
