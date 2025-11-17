@@ -50,119 +50,93 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log(`Inviting user: ${email} with role: ${role}`);
 
-    // Create or reuse existing user, then ensure profile, role and send magic link
+    // Prefer official invite: creates the user (if needed) and sends email
     let targetUserId: string | null = null;
 
-    // Try to create the user first
-    const { data: userData, error: createError } = await supabase.auth.admin.createUser({
-      email: email,
-      email_confirm: true,
-      user_metadata: {
-        role: role,
-      },
-    });
+    try {
+      const { data: inviteData, error: inviteError } = await supabase.auth.admin.inviteUserByEmail(email, {
+        redirectTo: `${req.headers.get("origin")}/auth`,
+      });
 
-    if (createError) {
-      console.error("Error creating user:", createError);
-      const code = (createError as any)?.code || (createError as any)?.error?.code;
-      const status = (createError as any)?.status || (createError as any)?.error?.status;
+      if (!inviteError && inviteData?.user?.id) {
+        targetUserId = inviteData.user.id;
+        console.log("Backend invite sent successfully:", targetUserId);
 
-      // If the user already exists, proceed with invitation flow instead of failing
-      if (code === 'email_exists' || status === 422) {
-        console.log("User already exists, proceeding with reinvite flow");
-        
-        // Look up existing user by email using auth admin API
-        const { data: { users }, error: listError } = await supabase.auth.admin.listUsers();
-        
-        if (listError) {
-          console.error('Error listing users:', listError);
-          throw new Error('Failed to find existing user');
-        }
-        
-        const existingUser = users.find(u => u.email === email);
-        
-        if (existingUser) {
-          targetUserId = existingUser.id;
-          console.log("Found existing user:", targetUserId);
-        } else {
-          throw new Error('User exists but could not be found');
-        }
-      } else {
-        // Different error -> abort
-        throw createError;
-      }
-    } else {
-      if (!userData?.user) {
-        throw new Error("User creation failed - no user data returned");
-      }
-      targetUserId = userData.user.id;
-      console.log("User created successfully:", targetUserId);
-    }
-
-    // Ensure profile exists (id + email). Only if we have the user id
-    if (targetUserId) {
-      const { error: upsertProfileError } = await supabase
-        .from('profiles')
-        .upsert(
-          {
-            id: targetUserId,
-            email: email,
-          },
-          { onConflict: 'id', ignoreDuplicates: false }
-        );
-
-      if (upsertProfileError) {
-        console.error('Error upserting profile:', upsertProfileError);
-        // Don't fail the whole flow if profile already exists
-      } else {
-        console.log("Profile ensured successfully");
-      }
-
-      // Ensure role exists (idempotent)
-      const { error: upsertRoleError } = await supabase
-        .from('user_roles')
-        .upsert(
-          {
-            user_id: targetUserId,
-            role: role,
-          },
-          { onConflict: 'user_id,role' }
-        );
-
-      if (upsertRoleError) {
-        console.error("Error assigning role:", upsertRoleError);
-        // Don't fail the whole flow if role already exists; continue
-      } else {
-        console.log("Role ensured successfully");
-      }
-
-      // Try sending the official invite email via backend mailer (preferred channel)
-      try {
-        const { data: inviteData, error: inviteError } = await supabase.auth.admin.inviteUserByEmail(email, {
-          redirectTo: `${req.headers.get("origin")}/auth`,
-        });
-
-        if (inviteError) {
-          // Will fallback to magic link + Resend below
-          console.error("inviteUserByEmail error (fallback to magic link):", inviteError);
-        } else {
-          console.log("inviteUserByEmail sent successfully for:", inviteData?.user?.id);
-
-          return new Response(
-            JSON.stringify({ success: true, user_id: targetUserId, email, method: "backend_invite" }),
-            {
-              status: 200,
-              headers: {
-                "Content-Type": "application/json",
-                ...corsHeaders,
-              },
-            }
+        // Ensure profile and role (idempotent)
+        const { error: upsertProfileError } = await supabase
+          .from('profiles')
+          .upsert(
+            { id: targetUserId, email },
+            { onConflict: 'id', ignoreDuplicates: false }
           );
+        if (upsertProfileError) {
+          console.error('Error upserting profile:', upsertProfileError);
         }
-      } catch (inviteUnexpectedErr) {
-        console.error("Unexpected error in inviteUserByEmail:", inviteUnexpectedErr);
-        // Will fallback to magic link + Resend below
+
+        const { error: upsertRoleError } = await supabase
+          .from('user_roles')
+          .upsert(
+            { user_id: targetUserId, role },
+            { onConflict: 'user_id,role' }
+          );
+        if (upsertRoleError) {
+          console.error("Error assigning role:", upsertRoleError);
+        }
+
+        return new Response(
+          JSON.stringify({ success: true, user_id: targetUserId, email, method: "backend_invite" }),
+          {
+            status: 200,
+            headers: {
+              "Content-Type": "application/json",
+              ...corsHeaders,
+            },
+          }
+        );
       }
+
+      // If the user already exists, continue with magic link flow below
+      if (inviteError) {
+        const code = (inviteError as any)?.code || (inviteError as any)?.error?.code;
+        const status = (inviteError as any)?.status || (inviteError as any)?.error?.status;
+        if (code === 'email_exists' || status === 422) {
+          console.log("User already exists, proceeding with reinvite flow");
+          const { data: { users }, error: listError } = await supabase.auth.admin.listUsers();
+          if (listError) {
+            console.error('Error listing users:', listError);
+            throw new Error('Failed to find existing user');
+          }
+          const existingUser = users.find(u => u.email === email);
+          if (existingUser) {
+            targetUserId = existingUser.id;
+            console.log("Found existing user:", targetUserId);
+          } else {
+            throw new Error('User exists but could not be found');
+          }
+
+          // Ensure profile and role (idempotent)
+          const { error: upsertProfileError } = await supabase
+            .from('profiles')
+            .upsert(
+              { id: targetUserId, email },
+              { onConflict: 'id', ignoreDuplicates: false }
+            );
+          if (upsertProfileError) console.error('Error upserting profile:', upsertProfileError);
+
+          const { error: upsertRoleError } = await supabase
+            .from('user_roles')
+            .upsert(
+              { user_id: targetUserId, role },
+              { onConflict: 'user_id,role' }
+            );
+          if (upsertRoleError) console.error("Error assigning role:", upsertRoleError);
+        } else {
+          throw inviteError;
+        }
+      }
+    } catch (inviteUnexpectedErr) {
+      console.error("Unexpected error in inviteUserByEmail:", inviteUnexpectedErr);
+      // Will fallback to magic link + Resend below
     }
 
     // Generate a magic link for the user to access and set password if needed
