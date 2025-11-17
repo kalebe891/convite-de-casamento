@@ -14,6 +14,44 @@ export type Database = {
   }
   public: {
     Tables: {
+      buffet_items: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          display_order: number | null
+          id: string
+          is_public: boolean | null
+          item_name: string
+          wedding_id: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          is_public?: boolean | null
+          item_name: string
+          wedding_id?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          is_public?: boolean | null
+          item_name?: string
+          wedding_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "buffet_items_wedding_id_fkey"
+            columns: ["wedding_id"]
+            isOneToOne: false
+            referencedRelation: "wedding_details"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           created_at: string | null
@@ -91,6 +129,7 @@ export type Database = {
           guest_name: string
           guest_phone: string | null
           id: string
+          invitation_code: string | null
           message: string | null
           plus_one: boolean | null
           responded_at: string | null
@@ -105,6 +144,7 @@ export type Database = {
           guest_name: string
           guest_phone?: string | null
           id?: string
+          invitation_code?: string | null
           message?: string | null
           plus_one?: boolean | null
           responded_at?: string | null
@@ -119,6 +159,7 @@ export type Database = {
           guest_name?: string
           guest_phone?: string | null
           id?: string
+          invitation_code?: string | null
           message?: string | null
           plus_one?: boolean | null
           responded_at?: string | null
@@ -196,6 +237,47 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "photos_wedding_id_fkey"
+            columns: ["wedding_id"]
+            isOneToOne: false
+            referencedRelation: "wedding_details"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      playlist_songs: {
+        Row: {
+          artist: string | null
+          created_at: string | null
+          display_order: number | null
+          id: string
+          is_public: boolean | null
+          moment: string
+          song_name: string
+          wedding_id: string | null
+        }
+        Insert: {
+          artist?: string | null
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          is_public?: boolean | null
+          moment: string
+          song_name: string
+          wedding_id?: string | null
+        }
+        Update: {
+          artist?: string | null
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          is_public?: boolean | null
+          moment?: string
+          song_name?: string
+          wedding_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "playlist_songs_wedding_id_fkey"
             columns: ["wedding_id"]
             isOneToOne: false
             referencedRelation: "wedding_details"
@@ -312,6 +394,44 @@ export type Database = {
           },
         ]
       }
+      timeline_events: {
+        Row: {
+          activity: string
+          created_at: string | null
+          display_order: number | null
+          id: string
+          is_public: boolean | null
+          time: string
+          wedding_id: string | null
+        }
+        Insert: {
+          activity: string
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          is_public?: boolean | null
+          time: string
+          wedding_id?: string | null
+        }
+        Update: {
+          activity?: string
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          is_public?: boolean | null
+          time?: string
+          wedding_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "timeline_events_wedding_id_fkey"
+            columns: ["wedding_id"]
+            isOneToOne: false
+            referencedRelation: "wedding_details"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           id: string
@@ -341,37 +461,49 @@ export type Database = {
       wedding_details: {
         Row: {
           bride_name: string
+          couple_message: string | null
           created_at: string | null
           groom_name: string
           id: string
+          show_guest_list_public: boolean | null
+          show_rsvp_status_public: boolean | null
           story: string | null
           theme_color: string | null
           updated_at: string | null
           venue_address: string | null
+          venue_map_url: string | null
           venue_name: string | null
           wedding_date: string
         }
         Insert: {
           bride_name: string
+          couple_message?: string | null
           created_at?: string | null
           groom_name: string
           id?: string
+          show_guest_list_public?: boolean | null
+          show_rsvp_status_public?: boolean | null
           story?: string | null
           theme_color?: string | null
           updated_at?: string | null
           venue_address?: string | null
+          venue_map_url?: string | null
           venue_name?: string | null
           wedding_date: string
         }
         Update: {
           bride_name?: string
+          couple_message?: string | null
           created_at?: string | null
           groom_name?: string
           id?: string
+          show_guest_list_public?: boolean | null
+          show_rsvp_status_public?: boolean | null
           story?: string | null
           theme_color?: string | null
           updated_at?: string | null
           venue_address?: string | null
+          venue_map_url?: string | null
           venue_name?: string | null
           wedding_date?: string
         }

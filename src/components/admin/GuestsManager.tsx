@@ -72,15 +72,15 @@ const GuestsManager = () => {
   }, []);
 
   const handleAddGuest = async () => {
-    if (!newGuest.name) {
-      toast.error("Nome é obrigatório");
+    if (!newGuest.name || !newGuest.email) {
+      toast.error("Nome e e-mail são obrigatórios");
       return;
     }
 
     const { error } = await supabase.from("guests").insert({
       name: newGuest.name,
       phone: newGuest.phone || null,
-      email: newGuest.email || null,
+      email: newGuest.email,
       status: "pending",
     });
 
@@ -252,13 +252,14 @@ const GuestsManager = () => {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="email">E-mail</Label>
+                    <Label htmlFor="email">E-mail *</Label>
                     <Input
                       id="email"
                       type="email"
                       value={newGuest.email}
                       onChange={(e) => setNewGuest({ ...newGuest, email: e.target.value })}
                       placeholder="email@exemplo.com"
+                      required
                     />
                   </div>
                   <Button onClick={handleAddGuest} className="w-full">

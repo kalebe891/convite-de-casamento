@@ -12,10 +12,13 @@ import NotFound from "./pages/NotFound";
 import AccessDenied from "./pages/AccessDenied";
 import CriarSenha from "./pages/CriarSenha";
 import RSVP from "./pages/RSVP";
+import Convite from "./pages/Convite";
 import Usuarios from "./pages/admin/Usuarios";
 import Convidados from "./pages/admin/Convidados";
+import Detalhes from "./pages/admin/Detalhes";
 import Cronograma from "./pages/admin/Cronograma";
 import Buffet from "./pages/admin/Buffet";
+import Playlist from "./pages/admin/Playlist";
 import Momentos from "./pages/admin/Momentos";
 import Estatisticas from "./pages/admin/Estatisticas";
 import Logs from "./pages/admin/Logs";
@@ -34,13 +37,16 @@ const App = () => (
           <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/criar-senha" element={<CriarSenha />} />
           <Route path="/rsvp" element={<RSVP />} />
+          <Route path="/convite/:id" element={<Convite />} />
           <Route path="/acesso-negado" element={<AccessDenied />} />
           <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<Cronograma />} />
+            <Route index element={<Detalhes />} />
+            <Route path="detalhes" element={<Detalhes />} />
             <Route path="usuarios" element={<Usuarios />} />
             <Route path="convidados" element={<Convidados />} />
             <Route path="cronograma" element={<Cronograma />} />
             <Route path="buffet" element={<Buffet />} />
+            <Route path="playlist" element={<Playlist />} />
             <Route path="momentos" element={<Momentos />} />
             <Route path="estatisticas" element={<Estatisticas />} />
             <Route path="logs" element={<Logs />} />
