@@ -11,19 +11,16 @@ const AuthCallback = () => {
   useEffect(() => {
     const run = async () => {
       try {
-        const url = new URL(window.location.href);
-        const code = url.searchParams.get("code");
-
-        if (!code) {
-          setStatus("error");
-          return;
-        }
-
-        const { error } = await supabase.auth.exchangeCodeForSession(code);
+        const { data, error } = await supabase.auth.getSession();
+        
         if (error) throw error;
-
-        setStatus("success");
-        navigate("/admin", { replace: true });
+        
+        if (data.session) {
+          setStatus("success");
+          navigate("/admin", { replace: true });
+        } else {
+          setStatus("error");
+        }
       } catch (err: any) {
         console.error("Auth callback error:", err);
         setStatus("error");
