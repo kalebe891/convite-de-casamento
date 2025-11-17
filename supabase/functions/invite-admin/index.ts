@@ -203,7 +203,12 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     return new Response(
-      JSON.stringify({ success: true, user_id: targetUserId, email }),
+      JSON.stringify({ 
+        success: true, 
+        user_id: targetUserId, 
+        email,
+        magic_link: resetData.properties.action_link 
+      }),
       {
         status: 200,
         headers: {
