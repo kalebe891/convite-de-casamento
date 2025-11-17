@@ -20,7 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Shield, UserCog, Users as UsersIcon, Trash2, Search } from "lucide-react";
+import { Shield, UserCog, Users as UsersIcon, Trash2, Search, Mail } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -147,33 +147,59 @@ const UsersList = () => {
     if (!deleteUserId) return;
 
     try {
-      // Delete user roles first
-      const { error: rolesError } = await supabase
-        .from("user_roles")
-        .delete()
-        .eq("user_id", deleteUserId);
+      // Get current user session
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        throw new Error("Você precisa estar autenticado");
+      }
 
-      if (rolesError) throw rolesError;
+      // Call admin API to delete user from auth
+      const { error: authError } = await supabase.auth.admin.deleteUser(
+        deleteUserId
+      );
 
-      // Delete profile
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .delete()
-        .eq("id", deleteUserId);
-
-      if (profileError) throw profileError;
+      if (authError) throw authError;
 
       toast({
         title: "Usuário removido!",
-        description: "O usuário foi removido com sucesso.",
+        description: "O usuário foi removido completamente do sistema.",
       });
 
-      fetchUsers();
       setDeleteUserId(null);
+      fetchUsers();
     } catch (error: any) {
       console.error("Error deleting user:", error);
       toast({
         title: "Erro ao remover usuário",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleResendInvite = async (email: string, role: "admin" | "couple" | "planner") => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        throw new Error("Você precisa estar autenticado");
+      }
+
+      const { error } = await supabase.functions.invoke("invite-admin", {
+        body: { email, role },
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Convite reenviado!",
+        description: `Um novo email de convite foi enviado para ${email}.`,
+      });
+    } catch (error: any) {
+      console.error("Error resending invite:", error);
+      toast({
+        title: "Erro ao reenviar convite",
         description: error.message,
         variant: "destructive",
       });
@@ -276,14 +302,26 @@ const UsersList = () => {
                           </Select>
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setDeleteUserId(user.id)}
-                            className="text-destructive hover:text-destructive"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleResendInvite(user.email || "", currentRole || "planner")}
+                              disabled={!user.email}
+                              title="Reenviar convite"
+                            >
+                              <Mail className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setDeleteUserId(user.id)}
+                              className="text-destructive hover:text-destructive"
+                              title="Remover usuário"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     );
@@ -300,7 +338,7 @@ const UsersList = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja remover este usuário? Esta ação não pode ser desfeita.
+              Tem certeza que deseja remover este usuário? Esta ação não pode ser desfeita e removerá permanentemente o usuário do sistema, incluindo todos os seus dados.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
