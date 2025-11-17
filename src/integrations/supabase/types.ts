@@ -55,6 +55,33 @@ export type Database = {
           },
         ]
       }
+      guests: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          phone: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          name: string
+          phone?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          phone?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       invitations: {
         Row: {
           attending: boolean | null
@@ -202,6 +229,41 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      rsvp_tokens: {
+        Row: {
+          created_at: string
+          expires_at: string
+          guest_id: string
+          id: string
+          token: string
+          used: boolean
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          guest_id: string
+          id?: string
+          token: string
+          used?: boolean
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          guest_id?: string
+          id?: string
+          token?: string
+          used?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rsvp_tokens_guest_id_fkey"
+            columns: ["guest_id"]
+            isOneToOne: false
+            referencedRelation: "guests"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       rsvps: {
         Row: {

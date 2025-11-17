@@ -1,3 +1,4 @@
+import GuestsManager from "@/components/admin/GuestsManager";
 import InvitationsManager from "@/components/admin/InvitationsManager";
 import RSVPList from "@/components/admin/RSVPList";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -12,11 +13,16 @@ const Convidados = () => {
         </p>
       </div>
 
-      <Tabs defaultValue="invitations" className="space-y-6">
+      <Tabs defaultValue="guests" className="space-y-6">
         <TabsList>
+          <TabsTrigger value="guests">Convidados</TabsTrigger>
           <TabsTrigger value="invitations">Convites</TabsTrigger>
           <TabsTrigger value="rsvps">Confirmações</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="guests">
+          <GuestsManager />
+        </TabsContent>
 
         <TabsContent value="invitations">
           <InvitationsManager />
