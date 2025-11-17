@@ -147,19 +147,11 @@ const UsersList = () => {
     if (!deleteUserId) return;
 
     try {
-      // Get current user session
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        throw new Error("Você precisa estar autenticado");
-      }
+      const { data, error } = await supabase.functions.invoke("delete-user", {
+        body: { userId: deleteUserId },
+      });
 
-      // Call admin API to delete user from auth
-      const { error: authError } = await supabase.auth.admin.deleteUser(
-        deleteUserId
-      );
-
-      if (authError) throw authError;
+      if (error) throw error;
 
       toast({
         title: "Usuário removido!",
