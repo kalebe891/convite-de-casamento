@@ -12,30 +12,81 @@ const CriarSenha = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [nome, setNome] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [role, setRole] = useState("");
   const token = searchParams.get("t");
 
+  // Load pending user data
   useEffect(() => {
-    if (!token) {
-      toast({
-        title: "Link inválido",
-        description: "O link de convite está incompleto ou inválido.",
-        variant: "destructive",
-      });
-      navigate("/");
-    }
+    const loadInviteData = async () => {
+      if (!token) {
+        toast({
+          title: "Link inválido",
+          description: "O link de convite está incompleto ou inválido.",
+          variant: "destructive",
+        });
+        navigate("/");
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('pending_users')
+          .select('email, nome, papel')
+          .eq('token', token)
+          .eq('usado', false)
+          .single();
+
+        if (error || !data) {
+          toast({
+            title: "Convite inválido",
+            description: "Este convite não existe ou já foi utilizado.",
+            variant: "destructive",
+          });
+          navigate("/");
+          return;
+        }
+
+        setEmail(data.email);
+        setFullName(data.nome || '');
+        setRole(data.papel);
+      } catch (error) {
+        console.error('Error loading invite:', error);
+        toast({
+          title: "Erro",
+          description: "Não foi possível carregar os dados do convite.",
+          variant: "destructive",
+        });
+        navigate("/");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadInviteData();
   }, [token, navigate, toast]);
+
+  const getRoleName = (roleKey: string): string => {
+    const roleMap: Record<string, string> = {
+      admin: 'Administrador',
+      couple: 'Casal',
+      planner: 'Cerimonialista',
+    };
+    return roleMap[roleKey] || roleKey;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!nome.trim()) {
+    if (!fullName.trim()) {
       toast({
         title: "Nome obrigatório",
-        description: "Por favor, informe seu nome.",
+        description: "Por favor, informe seu nome completo.",
         variant: "destructive",
       });
       return;
@@ -59,56 +110,68 @@ const CriarSenha = () => {
       return;
     }
 
-    setLoading(true);
+    setSubmitting(true);
 
     try {
-      // Verificar o token OTP e criar a sessão
-      const { data: verifyData, error: verifyError } = await supabase.auth.verifyOtp({
-        type: 'signup',
-        token_hash: token!,
+      // Call Edge Function to create user
+      const { data, error } = await supabase.functions.invoke('complete-user-invite', {
+        body: {
+          token,
+          email,
+          password,
+          full_name: fullName.trim(),
+        },
       });
 
-      if (verifyError) throw verifyError;
-      if (!verifyData.session) throw new Error("Não foi possível criar a sessão");
-
-      // Atualizar a senha do usuário
-      const { error: updateError } = await supabase.auth.updateUser({
-        password: password,
-      });
-
-      if (updateError) throw updateError;
-
-      // Atualizar o perfil com o nome
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({ full_name: nome })
-        .eq('id', verifyData.user.id);
-
-      if (profileError) throw profileError;
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
 
       toast({
         title: "Conta criada com sucesso!",
+        description: "Fazendo login...",
+      });
+
+      // Sign in with the new credentials
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (signInError) throw signInError;
+
+      toast({
+        title: "Bem-vindo!",
         description: "Redirecionando para o painel administrativo...",
       });
 
-      // Redirecionar para o admin
+      // Redirect to admin
       setTimeout(() => {
         navigate("/admin", { replace: true });
       }, 1000);
+
     } catch (error: any) {
       console.error("Error completing invitation:", error);
       toast({
-        title: "Erro ao criar senha",
+        title: "Erro ao criar conta",
         description: error.message || "Não foi possível completar o cadastro. Tente novamente.",
         variant: "destructive",
       });
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
-  if (!token) {
-    return null;
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-secondary/5">
+        <Card className="w-full max-w-md">
+          <CardContent className="pt-6 flex flex-col items-center justify-center space-y-4">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="text-muted-foreground">Carregando convite...</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   return (
@@ -117,21 +180,32 @@ const CriarSenha = () => {
         <CardHeader>
           <CardTitle className="text-2xl font-serif">Criar Senha</CardTitle>
           <CardDescription>
-            Defina sua senha para acessar o painel administrativo
+            Você foi convidado como <strong>{getRoleName(role)}</strong>. Complete seu cadastro para acessar o painel administrativo.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="nome">Nome Completo</Label>
+              <Label htmlFor="email">E-mail</Label>
               <Input
-                id="nome"
+                id="email"
+                type="email"
+                value={email}
+                disabled
+                className="bg-muted"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="fullName">Nome Completo</Label>
+              <Input
+                id="fullName"
                 type="text"
-                value={nome}
-                onChange={(e) => setNome(e.target.value)}
                 placeholder="Digite seu nome completo"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
                 required
-                disabled={loading}
+                disabled={submitting}
               />
             </div>
 
@@ -140,12 +214,12 @@ const CriarSenha = () => {
               <Input
                 id="password"
                 type="password"
+                placeholder="Mínimo 6 caracteres"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Digite sua senha"
                 required
+                disabled={submitting}
                 minLength={6}
-                disabled={loading}
               />
             </div>
 
@@ -154,23 +228,29 @@ const CriarSenha = () => {
               <Input
                 id="confirmPassword"
                 type="password"
+                placeholder="Digite a senha novamente"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Digite novamente sua senha"
                 required
+                disabled={submitting}
                 minLength={6}
-                disabled={loading}
               />
             </div>
 
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Criar Conta
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={submitting}
+            >
+              {submitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Criando conta...
+                </>
+              ) : (
+                "Criar Conta e Acessar"
+              )}
             </Button>
-
-            <p className="text-xs text-muted-foreground text-center">
-              A senha deve ter no mínimo 6 caracteres
-            </p>
           </form>
         </CardContent>
       </Card>

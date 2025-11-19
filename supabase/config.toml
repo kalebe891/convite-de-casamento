@@ -17,3 +17,6 @@ verify_jwt = true
 
 [functions.generate-rsvp-token]
 verify_jwt = true
+
+[functions.complete-user-invite]
+verify_jwt = false
