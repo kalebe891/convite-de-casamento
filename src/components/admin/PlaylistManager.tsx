@@ -7,6 +7,8 @@ import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Trash2, Plus } from "lucide-react";
+import { playlistSongSchema } from "@/lib/validationSchemas";
+import { getSafeErrorMessage } from "@/lib/errorHandling";
 
 const PlaylistManager = () => {
   const { toast } = useToast();
@@ -36,19 +38,32 @@ const PlaylistManager = () => {
   };
 
   const handleAdd = async () => {
-    if (!weddingId || !newSong.moment || !newSong.song_name) return;
+    if (!weddingId) return;
+
+    // Validate input data
+    const validationResult = playlistSongSchema.safeParse({
+      song_name: newSong.song_name,
+      artist: newSong.artist,
+      moment: newSong.moment
+    });
+    
+    if (!validationResult.success) {
+      const firstError = validationResult.error.errors[0];
+      toast({ title: "Erro de validação", description: firstError.message, variant: "destructive" });
+      return;
+    }
 
     const { error } = await supabase.from("playlist_songs").insert({
       wedding_id: weddingId,
-      moment: newSong.moment,
-      song_name: newSong.song_name,
-      artist: newSong.artist,
+      moment: validationResult.data.moment.trim(),
+      song_name: validationResult.data.song_name.trim(),
+      artist: validationResult.data.artist?.trim() || null,
       is_public: newSong.is_public,
       display_order: songs.length,
     });
 
     if (error) {
-      toast({ title: "Erro", description: error.message, variant: "destructive" });
+      toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
     } else {
       toast({ title: "Sucesso", description: "Música adicionada!" });
       setNewSong({ moment: "", song_name: "", artist: "", is_public: true });
@@ -60,7 +75,7 @@ const PlaylistManager = () => {
     const { error } = await supabase.from("playlist_songs").delete().eq("id", id);
 
     if (error) {
-      toast({ title: "Erro", description: error.message, variant: "destructive" });
+      toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
     } else {
       toast({ title: "Sucesso", description: "Música removida!" });
       fetchData();
@@ -74,7 +89,7 @@ const PlaylistManager = () => {
       .eq("id", id);
 
     if (error) {
-      toast({ title: "Erro", description: error.message, variant: "destructive" });
+      toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
     } else {
       fetchData();
     }

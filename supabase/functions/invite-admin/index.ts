@@ -130,8 +130,16 @@ const handler = async (req: Request): Promise<Response> => {
     );
   } catch (error: any) {
     console.error("Error in invite-admin function:", error);
+    
+    // Return safe error message to client, log full error for debugging
+    const safeErrorMessage = error.message?.toLowerCase().includes('unauthorized') || error.message?.toLowerCase().includes('admin')
+      ? 'Você não tem permissão para esta operação.'
+      : error.message?.toLowerCase().includes('duplicate') || error.message?.toLowerCase().includes('unique')
+      ? 'Este usuário já foi convidado.'
+      : 'Erro ao processar convite. Tente novamente.';
+    
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: safeErrorMessage }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },
