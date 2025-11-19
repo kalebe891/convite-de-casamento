@@ -8,6 +8,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useToast } from "@/hooks/use-toast";
 import { Copy, Plus, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { invitationSchema } from "@/lib/validationSchemas";
+import { getSafeErrorMessage } from "@/lib/errorHandling";
 
 const InvitationsManager = () => {
   const { toast } = useToast();
@@ -52,12 +54,26 @@ const InvitationsManager = () => {
     setLoading(true);
 
     try {
+      // Validate input data
+      const validationResult = invitationSchema.safeParse(formData);
+      
+      if (!validationResult.success) {
+        const firstError = validationResult.error.errors[0];
+        toast({
+          title: "Erro de validação",
+          description: firstError.message,
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
       const uniqueCode = generateUniqueCode();
       const { error } = await supabase.from("invitations").insert({
         wedding_id: weddingId,
-        guest_name: formData.guestName,
-        guest_email: formData.guestEmail,
-        guest_phone: formData.guestPhone,
+        guest_name: validationResult.data.guestName.trim(),
+        guest_email: validationResult.data.guestEmail?.trim() || null,
+        guest_phone: validationResult.data.guestPhone?.trim() || null,
         unique_code: uniqueCode,
       });
 
@@ -73,7 +89,7 @@ const InvitationsManager = () => {
     } catch (error) {
       toast({
         title: "Erro",
-        description: "Não foi possível criar o convite.",
+        description: getSafeErrorMessage(error),
         variant: "destructive",
       });
     } finally {
@@ -105,7 +121,7 @@ const InvitationsManager = () => {
     } catch (error) {
       toast({
         title: "Erro",
-        description: "Não foi possível excluir o convite.",
+        description: getSafeErrorMessage(error),
         variant: "destructive",
       });
     }

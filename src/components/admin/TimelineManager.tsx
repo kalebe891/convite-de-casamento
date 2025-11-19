@@ -7,6 +7,8 @@ import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Trash2, Plus } from "lucide-react";
+import { timelineEventSchema } from "@/lib/validationSchemas";
+import { getSafeErrorMessage } from "@/lib/errorHandling";
 
 const TimelineManager = () => {
   const { toast } = useToast();
@@ -36,18 +38,30 @@ const TimelineManager = () => {
   };
 
   const handleAdd = async () => {
-    if (!weddingId || !newEvent.time || !newEvent.activity) return;
+    if (!weddingId) return;
+
+    // Validate input data
+    const validationResult = timelineEventSchema.safeParse({
+      time: newEvent.time,
+      activity: newEvent.activity
+    });
+    
+    if (!validationResult.success) {
+      const firstError = validationResult.error.errors[0];
+      toast({ title: "Erro de validação", description: firstError.message, variant: "destructive" });
+      return;
+    }
 
     const { error } = await supabase.from("timeline_events").insert({
       wedding_id: weddingId,
-      time: newEvent.time,
-      activity: newEvent.activity,
+      time: validationResult.data.time.trim(),
+      activity: validationResult.data.activity.trim(),
       is_public: newEvent.is_public,
       display_order: events.length,
     });
 
     if (error) {
-      toast({ title: "Erro", description: error.message, variant: "destructive" });
+      toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
     } else {
       toast({ title: "Sucesso", description: "Evento adicionado!" });
       setNewEvent({ time: "", activity: "", is_public: true });
@@ -59,7 +73,7 @@ const TimelineManager = () => {
     const { error } = await supabase.from("timeline_events").delete().eq("id", id);
 
     if (error) {
-      toast({ title: "Erro", description: error.message, variant: "destructive" });
+      toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
     } else {
       toast({ title: "Sucesso", description: "Evento removido!" });
       fetchData();
@@ -73,7 +87,7 @@ const TimelineManager = () => {
       .eq("id", id);
 
     if (error) {
-      toast({ title: "Erro", description: error.message, variant: "destructive" });
+      toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
     } else {
       fetchData();
     }

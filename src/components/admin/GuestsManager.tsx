@@ -10,6 +10,8 @@ import { toast } from "sonner";
 import { Mail, MessageSquare, Trash2, Copy, ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import { guestSchema } from "@/lib/validationSchemas";
+import { getSafeErrorMessage } from "@/lib/errorHandling";
 
 interface Guest {
   id: string;
@@ -72,21 +74,25 @@ const GuestsManager = () => {
   }, []);
 
   const handleAddGuest = async () => {
-    if (!newGuest.name || !newGuest.email) {
-      toast.error("Nome e e-mail são obrigatórios");
+    // Validate input data
+    const validationResult = guestSchema.safeParse(newGuest);
+    
+    if (!validationResult.success) {
+      const firstError = validationResult.error.errors[0];
+      toast.error(firstError.message);
       return;
     }
 
     const { error } = await supabase.from("guests").insert({
-      name: newGuest.name,
-      phone: newGuest.phone || null,
-      email: newGuest.email,
+      name: validationResult.data.name.trim(),
+      phone: validationResult.data.phone?.trim() || null,
+      email: validationResult.data.email?.trim() || null,
       status: "pending",
     });
 
     if (error) {
       console.error("Error adding guest:", error);
-      toast.error("Erro ao adicionar convidado");
+      toast.error(getSafeErrorMessage(error));
     } else {
       toast.success("Convidado adicionado com sucesso!");
       setNewGuest({ name: "", phone: "", email: "" });
@@ -100,7 +106,7 @@ const GuestsManager = () => {
 
     if (error) {
       console.error("Error deleting guest:", error);
-      toast.error("Erro ao excluir convidado");
+      toast.error(getSafeErrorMessage(error));
     } else {
       toast.success("Convidado excluído com sucesso!");
       fetchGuests();

@@ -7,6 +7,8 @@ import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Trash2, Plus } from "lucide-react";
+import { buffetItemSchema } from "@/lib/validationSchemas";
+import { getSafeErrorMessage } from "@/lib/errorHandling";
 
 const BuffetManager = () => {
   const { toast } = useToast();
@@ -36,18 +38,30 @@ const BuffetManager = () => {
   };
 
   const handleAdd = async () => {
-    if (!weddingId || !newItem.item_name) return;
+    if (!weddingId) return;
+
+    // Validate input data
+    const validationResult = buffetItemSchema.safeParse({
+      item_name: newItem.item_name,
+      category: newItem.category
+    });
+    
+    if (!validationResult.success) {
+      const firstError = validationResult.error.errors[0];
+      toast({ title: "Erro de validação", description: firstError.message, variant: "destructive" });
+      return;
+    }
 
     const { error } = await supabase.from("buffet_items").insert({
       wedding_id: weddingId,
-      item_name: newItem.item_name,
-      category: newItem.category,
+      item_name: validationResult.data.item_name.trim(),
+      category: validationResult.data.category?.trim() || null,
       is_public: newItem.is_public,
       display_order: items.length,
     });
 
     if (error) {
-      toast({ title: "Erro", description: error.message, variant: "destructive" });
+      toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
     } else {
       toast({ title: "Sucesso", description: "Item adicionado!" });
       setNewItem({ item_name: "", category: "", is_public: true });
@@ -59,7 +73,7 @@ const BuffetManager = () => {
     const { error } = await supabase.from("buffet_items").delete().eq("id", id);
 
     if (error) {
-      toast({ title: "Erro", description: error.message, variant: "destructive" });
+      toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
     } else {
       toast({ title: "Sucesso", description: "Item removido!" });
       fetchData();
@@ -73,7 +87,7 @@ const BuffetManager = () => {
       .eq("id", id);
 
     if (error) {
-      toast({ title: "Erro", description: error.message, variant: "destructive" });
+      toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
     } else {
       fetchData();
     }
