@@ -6,6 +6,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Check, X, Heart } from "lucide-react";
 
+interface GuestData {
+  id: string;
+  name: string;
+  status: string;
+}
+
 const RSVP = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -50,6 +56,8 @@ const RSVP = () => {
 
       if (tokenData.used) {
         toast.error("Este convite já foi respondido");
+        setSubmitted(true);
+        setGuestName((tokenData.guests as GuestData).name);
         setLoading(false);
         return;
       }
@@ -61,7 +69,7 @@ const RSVP = () => {
         return;
       }
 
-      setGuestName((tokenData.guests as any).name);
+      setGuestName((tokenData.guests as GuestData).name);
       setTokenValid(true);
     } catch (error) {
       console.error("Error validating token:", error);

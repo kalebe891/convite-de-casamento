@@ -1,1 +1,19 @@
 project_id = "aksquxfuxrbpyzmyhuqu"
+
+[functions.send-rsvp-email]
+verify_jwt = false
+
+[functions.rsvp-view]
+verify_jwt = false
+
+[functions.rsvp-respond]
+verify_jwt = false
+
+[functions.invite-admin]
+verify_jwt = true
+
+[functions.delete-user]
+verify_jwt = true
+
+[functions.generate-rsvp-token]
+verify_jwt = true

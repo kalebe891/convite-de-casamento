@@ -33,16 +33,25 @@ const Invitation = () => {
       if (!code) return;
 
       try {
-        const { data: invitationData, error } = await supabase
-          .from("invitations")
-          .select("*")
-          .eq("unique_code", code)
-          .single();
+        // Usar Edge Function segura para buscar convite
+        const url = new URL(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/rsvp-view`);
+        url.searchParams.set('token', code);
 
-        if (error) throw error;
+        const response = await fetch(url.toString(), {
+          headers: {
+            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+          },
+        });
 
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Convite não encontrado');
+        }
+
+        const invitationData = await response.json();
         setInvitation(invitationData);
 
+        // Buscar detalhes do casamento (ainda precisa de acesso direto)
         if (invitationData.wedding_id) {
           const { data: weddingData } = await supabase
             .from("wedding_details")
@@ -69,10 +78,10 @@ const Invitation = () => {
             message: invitationData.message || "",
           });
         }
-      } catch (error) {
+      } catch (error: any) {
         toast({
           title: "Erro",
-          description: "Convite não encontrado.",
+          description: error.message || "Convite não encontrado.",
           variant: "destructive",
         });
       } finally {
@@ -88,27 +97,42 @@ const Invitation = () => {
     setSubmitting(true);
 
     try {
-      const { error } = await supabase
-        .from("invitations")
-        .update({
-          attending: formData.attending === "yes",
-          plus_one: formData.plusOne,
-          dietary_restrictions: formData.dietaryRestrictions,
-          message: formData.message,
-          responded_at: new Date().toISOString(),
-        })
-        .eq("unique_code", code);
+      // Usar Edge Function segura para enviar resposta
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/rsvp-respond`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+          },
+          body: JSON.stringify({
+            token: code,
+            attending: formData.attending === "yes",
+            plus_one: formData.plusOne,
+            dietary_restrictions: formData.dietaryRestrictions,
+            message: formData.message,
+          }),
+        }
+      );
 
-      if (error) throw error;
+      const data = await response.json();
+
+      if (!response.ok || data.error) {
+        throw new Error(data.error || 'Erro ao enviar confirmação');
+      }
 
       toast({
         title: "Confirmação enviada!",
         description: "Obrigado por confirmar sua presença.",
       });
-    } catch (error) {
+      
+      // Atualizar estado local
+      setInvitation({ ...invitation, responded_at: new Date().toISOString() });
+    } catch (error: any) {
       toast({
         title: "Erro",
-        description: "Não foi possível enviar a confirmação.",
+        description: error.message || "Não foi possível enviar a confirmação.",
         variant: "destructive",
       });
     } finally {
