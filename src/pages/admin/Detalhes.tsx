@@ -1,5 +1,6 @@
 import WeddingDetailsForm from "@/components/admin/WeddingDetailsForm";
 import WeddingSettingsForm from "@/components/admin/WeddingSettingsForm";
+import WeddingPhotosManager from "@/components/admin/WeddingPhotosManager";
 
 const Detalhes = () => {
   return (
@@ -12,6 +13,7 @@ const Detalhes = () => {
       </div>
       <WeddingDetailsForm />
       <WeddingSettingsForm />
+      <WeddingPhotosManager />
     </div>
   );
 };
