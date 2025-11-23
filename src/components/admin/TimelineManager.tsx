@@ -101,8 +101,9 @@ const TimelineManager = () => {
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <Label>Horário</Label>
+            <Label>Horário (HH:MM)</Label>
             <Input
+              type="time"
               placeholder="Ex: 14:00"
               value={newEvent.time}
               onChange={(e) => setNewEvent({ ...newEvent, time: e.target.value })}

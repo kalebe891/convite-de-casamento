@@ -9,9 +9,8 @@ export const guestSchema = z.object({
   email: z.string()
     .trim()
     .email('E-mail inválido')
-    .max(255, 'E-mail deve ter no máximo 255 caracteres')
-    .optional()
-    .or(z.literal('')),
+    .min(1, 'E-mail é obrigatório')
+    .max(255, 'E-mail deve ter no máximo 255 caracteres'),
   phone: z.string()
     .trim()
     .regex(/^(\+?[1-9]\d{0,3})?[\s.-]?\(?\d{1,4}\)?[\s.-]?\d{1,4}[\s.-]?\d{1,9}$/, 'Telefone inválido')

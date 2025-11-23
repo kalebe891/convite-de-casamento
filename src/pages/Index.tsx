@@ -5,6 +5,8 @@ import HeroSection from "@/components/wedding/HeroSection";
 import StorySection from "@/components/wedding/StorySection";
 import EventsSection from "@/components/wedding/EventsSection";
 import GallerySection from "@/components/wedding/GallerySection";
+import TimelineSection from "@/components/wedding/TimelineSection";
+import ConfirmedGuestsSection from "@/components/wedding/ConfirmedGuestsSection";
 import { Button } from "@/components/ui/button";
 import { LogIn } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -84,6 +86,8 @@ const Index = () => {
         <HeroSection weddingDetails={weddingDetails} />
         <StorySection weddingDetails={weddingDetails} />
         <EventsSection events={events} />
+        <TimelineSection weddingId={weddingDetails?.id || null} />
+        <ConfirmedGuestsSection weddingId={weddingDetails?.id || null} />
         <GallerySection photos={photos} />
       </main>
 
