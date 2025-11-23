@@ -52,6 +52,39 @@ export type Database = {
           },
         ]
       }
+      checkin_logs: {
+        Row: {
+          checked_in_at: string
+          created_at: string | null
+          guest_email: string
+          guest_id: string | null
+          id: string
+          metadata: Json | null
+          performed_by: string | null
+          source: string
+        }
+        Insert: {
+          checked_in_at: string
+          created_at?: string | null
+          guest_email: string
+          guest_id?: string | null
+          id?: string
+          metadata?: Json | null
+          performed_by?: string | null
+          source: string
+        }
+        Update: {
+          checked_in_at?: string
+          created_at?: string | null
+          guest_email?: string
+          guest_id?: string | null
+          id?: string
+          metadata?: Json | null
+          performed_by?: string | null
+          source?: string
+        }
+        Relationships: []
+      }
       events: {
         Row: {
           created_at: string | null
@@ -95,6 +128,7 @@ export type Database = {
       }
       guests: {
         Row: {
+          checked_in_at: string | null
           created_at: string
           email: string
           id: string
@@ -103,6 +137,7 @@ export type Database = {
           status: string
         }
         Insert: {
+          checked_in_at?: string | null
           created_at?: string
           email: string
           id?: string
@@ -111,6 +146,7 @@ export type Database = {
           status?: string
         }
         Update: {
+          checked_in_at?: string | null
           created_at?: string
           email?: string
           id?: string
@@ -123,6 +159,7 @@ export type Database = {
       invitations: {
         Row: {
           attending: boolean | null
+          checked_in_at: string | null
           created_at: string | null
           dietary_restrictions: string | null
           guest_email: string | null
@@ -138,6 +175,7 @@ export type Database = {
         }
         Insert: {
           attending?: boolean | null
+          checked_in_at?: string | null
           created_at?: string | null
           dietary_restrictions?: string | null
           guest_email?: string | null
@@ -153,6 +191,7 @@ export type Database = {
         }
         Update: {
           attending?: boolean | null
+          checked_in_at?: string | null
           created_at?: string | null
           dietary_restrictions?: string | null
           guest_email?: string | null
@@ -529,7 +568,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "couple" | "planner"
+      app_role: "admin" | "couple" | "planner" | "cerimonial"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -657,7 +696,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "couple", "planner"],
+      app_role: ["admin", "couple", "planner", "cerimonial"],
     },
   },
 } as const

@@ -8,11 +8,12 @@ import { LogOut, Heart } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import ThemeToggle from "@/components/ThemeToggle";
 import { useRequireRole } from "@/hooks/useRequireRole";
+import { OfflineIndicator } from "@/components/admin/OfflineIndicator";
 
 const AdminLayout = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user, role, loading } = useRequireRole(["admin", "couple", "planner"]);
+  const { user, role, loading } = useRequireRole(["admin", "couple", "planner", "cerimonial"]);
   const [userName, setUserName] = useState("");
 
   useEffect(() => {
@@ -52,6 +53,7 @@ const AdminLayout = () => {
 
   return (
     <SidebarProvider>
+      <OfflineIndicator />
       <div className="min-h-screen flex w-full bg-gradient-elegant">
         <AppSidebar />
         

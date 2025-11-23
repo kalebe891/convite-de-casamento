@@ -17,6 +17,7 @@ import Buffet from "./pages/admin/Buffet";
 import Playlist from "./pages/admin/Playlist";
 import Momentos from "./pages/admin/Momentos";
 import Estatisticas from "./pages/admin/Estatisticas";
+import Checkin from "./pages/admin/Checkin";
 import Logs from "./pages/admin/Logs";
 
 const queryClient = new QueryClient();
@@ -38,6 +39,7 @@ const App = () => (
             <Route path="detalhes" element={<Detalhes />} />
             <Route path="usuarios" element={<Usuarios />} />
             <Route path="convidados" element={<Convidados />} />
+            <Route path="checkin" element={<Checkin />} />
             <Route path="cronograma" element={<Cronograma />} />
             <Route path="buffet" element={<Buffet />} />
             <Route path="playlist" element={<Playlist />} />

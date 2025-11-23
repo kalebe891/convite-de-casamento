@@ -3,6 +3,19 @@ import App from "./App.tsx";
 import "./index.css";
 import { ThemeProvider } from "./components/ThemeProvider";
 
+// Register Service Worker for PWA
+if ('serviceWorker' in navigator && window.location.pathname.startsWith('/admin')) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(registration => {
+        console.log('SW registered:', registration);
+      })
+      .catch(error => {
+        console.log('SW registration failed:', error);
+      });
+  });
+}
+
 createRoot(document.getElementById("root")!).render(
   <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
     <App />
