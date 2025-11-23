@@ -140,40 +140,116 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        // Check for conflict: if server has more recent check-in, skip
-        if (guest.checked_in_at && new Date(guest.checked_in_at) > new Date(check.checked_in_at)) {
-          results.failed.push({
-            guest_email: check.guest_email,
-            reason: 'Server has more recent check-in',
-          });
-          continue;
+        // Conflict resolution logic
+        const existingCheckin = guest.checked_in_at;
+        const incomingTimestamp = new Date(check.checked_in_at);
+        let conflictMetadata = check.metadata || {};
+        let shouldUpdate = true;
+
+        if (existingCheckin) {
+          const existingTimestamp = new Date(existingCheckin);
+          
+          // Rule 1: Incoming is newer than existing - keep existing (first check-in wins)
+          if (incomingTimestamp > existingTimestamp) {
+            conflictMetadata = {
+              ...conflictMetadata,
+              conflict: true,
+              reason: 'duplicate',
+              kept: 'existing',
+              existing_timestamp: existingCheckin,
+              incoming_timestamp: check.checked_in_at,
+            };
+            shouldUpdate = false;
+
+            // Log conflict without updating
+            await supabaseAdmin.from('checkin_logs').insert({
+              guest_email: check.guest_email,
+              guest_id: guest.id,
+              checked_in_at: check.checked_in_at,
+              performed_by: user.id,
+              source: check.source,
+              metadata: conflictMetadata,
+            });
+
+            results.failed.push({
+              guest_email: check.guest_email,
+              reason: 'Duplicate check-in - existing kept (older)',
+            });
+            continue;
+          }
+
+          // Rule 2: Incoming is older - overwrite with older timestamp
+          if (incomingTimestamp < existingTimestamp) {
+            conflictMetadata = {
+              ...conflictMetadata,
+              conflict: true,
+              reason: 'older_offline',
+              replaced: 'existing',
+              existing_timestamp: existingCheckin,
+              incoming_timestamp: check.checked_in_at,
+            };
+            shouldUpdate = true;
+          }
+
+          // Rule 3: Same timestamp - prioritize online source
+          if (incomingTimestamp.getTime() === existingTimestamp.getTime()) {
+            if (check.source === 'offline') {
+              conflictMetadata = {
+                ...conflictMetadata,
+                conflict: true,
+                reason: 'same_timestamp',
+                kept: 'online',
+                existing_timestamp: existingCheckin,
+                incoming_timestamp: check.checked_in_at,
+              };
+              shouldUpdate = false;
+
+              // Log conflict without updating
+              await supabaseAdmin.from('checkin_logs').insert({
+                guest_email: check.guest_email,
+                guest_id: guest.id,
+                checked_in_at: check.checked_in_at,
+                performed_by: user.id,
+                source: check.source,
+                metadata: conflictMetadata,
+              });
+
+              results.failed.push({
+                guest_email: check.guest_email,
+                reason: 'Same timestamp - online version kept',
+              });
+              continue;
+            }
+          }
         }
 
-        // Update guest check-in status
-        const { error: updateError } = await supabaseAdmin
-          .from('guests')
-          .update({
-            checked_in_at: check.checked_in_at,
-            status: 'confirmed',
-          })
-          .eq('id', guest.id);
+        // Update guest check-in status if needed
+        if (shouldUpdate) {
+          const { error: updateError } = await supabaseAdmin
+            .from('guests')
+            .update({
+              checked_in_at: check.checked_in_at,
+              status: 'confirmed',
+            })
+            .eq('id', guest.id);
 
-        if (updateError) {
-          results.failed.push({
-            guest_email: check.guest_email,
-            reason: updateError.message,
-          });
-          continue;
+          if (updateError) {
+            results.failed.push({
+              guest_email: check.guest_email,
+              reason: updateError.message,
+            });
+            continue;
+          }
+
+          // Also update invitation if exists
+          await supabaseAdmin
+            .from('invitations')
+            .update({
+              checked_in_at: check.checked_in_at,
+              attending: true,
+            })
+            .eq('guest_email', check.guest_email);
         }
-
-        // Also update invitation if exists
-        await supabaseAdmin
-          .from('invitations')
-          .update({
-            checked_in_at: check.checked_in_at,
-            attending: true,
-          })
-          .eq('guest_email', check.guest_email);
 
         // Log check-in to audit table
         const { error: logError } = await supabaseAdmin.from('checkin_logs').insert({
@@ -182,7 +258,7 @@ Deno.serve(async (req) => {
           checked_in_at: check.checked_in_at,
           performed_by: user.id,
           source: check.source,
-          metadata: check.metadata || {},
+          metadata: conflictMetadata,
         });
 
         if (logError) {

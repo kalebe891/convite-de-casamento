@@ -14,8 +14,9 @@ import {
   updateGuestCheckin,
   removeFromOutbox,
 } from "@/lib/db";
-import { Search, Wifi, WifiOff, RefreshCw, CheckCircle, XCircle, Clock } from "lucide-react";
+import { Search, Wifi, WifiOff, RefreshCw, CheckCircle, XCircle, Clock, AlertCircle } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { ConflictDetailsDialog } from "@/components/admin/ConflictDetailsDialog";
 
 interface Guest {
   id: string;
@@ -35,6 +36,9 @@ const Checkin = () => {
   const [pendingCount, setPendingCount] = useState(0);
   const [syncing, setSyncing] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [conflicts, setConflicts] = useState<any[]>([]);
+  const [selectedConflict, setSelectedConflict] = useState<any | null>(null);
+  const [conflictDialogOpen, setConflictDialogOpen] = useState(false);
 
   // Fetch guests and sync with local DB
   const fetchGuests = async () => {
@@ -73,10 +77,26 @@ const Checkin = () => {
     }
   };
 
-  // Update pending count
+  // Update pending count and fetch conflicts
   const updatePendingCount = async () => {
     const pending = await getPendingCheckins();
     setPendingCount(pending.length);
+  };
+
+  const fetchConflicts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("checkin_logs")
+        .select("*")
+        .not("metadata->>conflict", "is", null)
+        .order("created_at", { ascending: false })
+        .limit(10);
+
+      if (error) throw error;
+      setConflicts(data || []);
+    } catch (error) {
+      console.error("Error fetching conflicts:", error);
+    }
   };
 
   // Sync pending check-ins
@@ -125,6 +145,7 @@ const Checkin = () => {
 
       await updatePendingCount();
       await fetchGuests();
+      await fetchConflicts();
     } catch (error) {
       toast({
         title: "Erro na sincronização",
@@ -227,6 +248,7 @@ const Checkin = () => {
   useEffect(() => {
     fetchGuests();
     updatePendingCount();
+    fetchConflicts();
   }, []);
 
   const getStatusBadge = (guest: Guest) => {
@@ -291,6 +313,34 @@ const Checkin = () => {
         </CardContent>
       </Card>
 
+      {/* Conflicts Alert */}
+      {conflicts.length > 0 && (
+        <Card className="bg-yellow-50 border-yellow-200">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-5 h-5 text-yellow-600" />
+                <span className="font-medium">
+                  ⚠️ {conflicts.length} conflito(s) detectado(s) e resolvido(s) automaticamente
+                </span>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  if (conflicts[0]) {
+                    setSelectedConflict(conflicts[0]);
+                    setConflictDialogOpen(true);
+                  }
+                }}
+              >
+                Ver detalhes
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Search */}
       <Card>
         <CardHeader>
@@ -347,6 +397,13 @@ const Checkin = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Conflict Details Dialog */}
+      <ConflictDetailsDialog
+        open={conflictDialogOpen}
+        onOpenChange={setConflictDialogOpen}
+        log={selectedConflict}
+      />
     </div>
   );
 };

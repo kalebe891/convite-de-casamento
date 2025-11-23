@@ -75,9 +75,15 @@ Quando você realizar check-ins sem conexão à internet:
 
 ### 5. Resolução de Conflitos
 Se houver conflitos (ex: mesmo convidado com check-in feito por outra pessoa):
-- O sistema prefere sempre o check-in **mais recente**
-- Você será notificado de conflitos resolvidos
-- Os logs de auditoria mantêm registro de todas as ações
+- O sistema prefere sempre o check-in **mais antigo** (first check-in wins)
+- Banner amarelo exibe: "⚠️ X conflito(s) detectado(s) e resolvido(s) automaticamente"
+- Clique em "Ver detalhes" para visualizar informações do conflito:
+  - E-mail do convidado
+  - Timestamps comparados (existente vs recebido)
+  - Regra aplicada (duplicado, offline mais antigo, mesmo timestamp)
+  - Ação tomada (mantido ou substituído)
+  - Origem (offline/online)
+- Os logs de auditoria mantêm registro completo de todas as ações e conflitos
 
 ---
 
@@ -116,23 +122,57 @@ Se houver conflitos (ex: mesmo convidado com check-in feito por outra pessoa):
 - [ ] Buscar convidado por e-mail completo
 - [ ] Verificar resultados instantâneos
 
-### Teste 7: Conflitos
+### Teste 7: Conflitos Básicos
 - [ ] Em outro dispositivo, fazer check-in do mesmo convidado
 - [ ] No dispositivo offline, tentar sincronizar check-in antigo
-- [ ] Verificar que o mais recente prevalece
+- [ ] Verificar que o mais antigo prevalece (first check-in wins)
 
-### Teste 8: Permissões (Cerimonial)
+### Teste 8: Check-in Duplo com Timestamps Diferentes
+- [ ] Dispositivo A faz check-in às 10:00
+- [ ] Dispositivo B (offline) tenta check-in às 10:05
+- [ ] Resultado esperado: Check-in de 10:00 mantido
+- [ ] Verificar conflito registrado com reason: "duplicate"
+- [ ] Abrir modal de detalhes e confirmar informações
+
+### Teste 9: Offline Mais Antigo que Online
+- [ ] Dispositivo A (online) faz check-in às 10:00
+- [ ] Dispositivo B (offline) tinha check-in de 09:55
+- [ ] Sincronizar dispositivo B
+- [ ] Resultado esperado: Check-in substituído para 09:55
+- [ ] Verificar conflito registrado com reason: "older_offline"
+
+### Teste 10: Mesmo Timestamp de Dispositivos Diferentes
+- [ ] Dispositivo A (online) faz check-in às 10:00:00
+- [ ] Dispositivo B (offline) com check-in às 10:00:00
+- [ ] Sincronizar dispositivo B
+- [ ] Resultado esperado: Versão online mantida
+- [ ] Verificar conflito registrado com reason: "same_timestamp"
+
+### Teste 11: Offline Enviado Após 24h
+- [ ] Dispositivo em modo offline por 24 horas
+- [ ] Realizar check-in offline
+- [ ] Reconectar e sincronizar
+- [ ] Verificar aplicação de regras de timestamp
+
+### Teste 12: Timestamp Alterado Manualmente (Teste de Fraude)
+- [ ] Abrir DevTools → Application → IndexedDB
+- [ ] Modificar timestamp de check-in pendente para data passada
+- [ ] Sincronizar
+- [ ] Verificar que sistema detecta e aplica regras de conflito
+
+### Teste 13: Permissões (Cerimonial)
 - [ ] Login com papel "cerimonial"
 - [ ] Verificar acesso à página de check-in
 - [ ] Confirmar que não há acesso a outras páginas administrativas
 
-### Teste 9: Logs de Auditoria
+### Teste 14: Logs de Auditoria
 - [ ] Acessar com perfil admin
 - [ ] Verificar tabela `checkin_logs` no banco de dados
 - [ ] Confirmar registro de `source` (online/offline)
 - [ ] Verificar campo `performed_by` com ID do usuário
+- [ ] Verificar campo `metadata` com detalhes de conflitos
 
-### Teste 10: Instalação PWA
+### Teste 15: Instalação PWA
 - [ ] Testar instalação em iOS
 - [ ] Testar instalação em Android
 - [ ] Verificar ícone na tela inicial
@@ -167,6 +207,12 @@ Se houver conflitos (ex: mesmo convidado com check-in feito por outra pessoa):
 - `performed_by`: ID do usuário que realizou
 - `source`: "online" ou "offline"
 - `metadata`: dados adicionais (device info, conflitos)
+  - `conflict`: boolean indicando se houve conflito
+  - `reason`: motivo do conflito ("duplicate", "older_offline", "same_timestamp")
+  - `kept`: indica qual versão foi mantida ("existing" ou "online")
+  - `replaced`: indica se houve substituição ("existing")
+  - `existing_timestamp`: timestamp do check-in existente
+  - `incoming_timestamp`: timestamp do check-in recebido
 
 ---
 
