@@ -32,10 +32,9 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/convite/:invitation_code" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/criar-senha" element={<CriarSenha />} />
-          <Route path="/rsvp" element={<RSVP />} />
-          <Route path="/convite/:id" element={<Convite />} />
           <Route path="/acesso-negado" element={<AccessDenied />} />
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<Detalhes />} />
@@ -49,7 +48,6 @@ const App = () => (
             <Route path="estatisticas" element={<Estatisticas />} />
             <Route path="logs" element={<Logs />} />
           </Route>
-          <Route path="/convite/:code" element={<Invitation />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
