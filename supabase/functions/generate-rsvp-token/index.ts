@@ -59,35 +59,60 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Convidado não encontrado");
     }
 
-    // Generate token
-    const tokenString = crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().replace(/-/g, "");
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 30);
-
-    const { data: tokenData, error: tokenError } = await supabase
-      .from("rsvp_tokens")
-      .insert({
-        token: tokenString,
-        guest_id: guest_id,
-        expires_at: expiresAt.toISOString(),
-      })
-      .select()
+    // Get wedding details
+    const { data: weddingData } = await supabase
+      .from("wedding_details")
+      .select("id")
       .single();
 
-    if (tokenError) {
-      console.error("Error creating token:", tokenError);
-      throw new Error("Erro ao gerar token");
+    if (!weddingData) {
+      throw new Error("Detalhes do casamento não encontrados");
+    }
+
+    // Check if invitation already exists for this guest
+    let invitation;
+    const { data: existingInvitation } = await supabase
+      .from("invitations")
+      .select("*")
+      .eq("guest_email", guest.email)
+      .eq("wedding_id", weddingData.id)
+      .single();
+
+    if (existingInvitation) {
+      invitation = existingInvitation;
+    } else {
+      // Create new invitation with unique code
+      const uniqueCode = crypto.randomUUID().replace(/-/g, "").substring(0, 12).toUpperCase();
+      
+      const { data: newInvitation, error: invitationError } = await supabase
+        .from("invitations")
+        .insert({
+          wedding_id: weddingData.id,
+          guest_name: guest.name,
+          guest_email: guest.email,
+          guest_phone: guest.phone,
+          unique_code: uniqueCode,
+        })
+        .select()
+        .single();
+
+      if (invitationError) {
+        console.error("Error creating invitation:", invitationError);
+        throw new Error("Erro ao gerar convite");
+      }
+
+      invitation = newInvitation;
     }
 
     const origin = req.headers.get("origin") || "http://localhost:8080";
-    const rsvpLink = `${origin}/rsvp?token=${tokenString}`;
+    const invitationLink = `${origin}/convite/${invitation.unique_code}`;
 
-    console.log("Token generated successfully:", { guest_id, token: tokenString });
+    console.log("Invitation generated successfully:", { guest_id, invitation_code: invitation.unique_code });
 
     return new Response(
       JSON.stringify({ 
-        token: tokenString,
-        link: rsvpLink 
+        invitation_code: invitation.unique_code,
+        link: invitationLink 
       }),
       {
         status: 200,

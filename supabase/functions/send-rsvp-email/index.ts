@@ -66,28 +66,53 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Convidado não possui e-mail cadastrado");
     }
 
-    // Generate token
-    const tokenString = crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().replace(/-/g, "");
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 30);
-
-    const { data: tokenData, error: tokenError } = await supabase
-      .from("rsvp_tokens")
-      .insert({
-        token: tokenString,
-        guest_id: guest_id,
-        expires_at: expiresAt.toISOString(),
-      })
-      .select()
+    // Get wedding details
+    const { data: weddingData } = await supabase
+      .from("wedding_details")
+      .select("id")
       .single();
 
-    if (tokenError) {
-      console.error("Error creating token:", tokenError);
-      throw new Error("Erro ao gerar token");
+    if (!weddingData) {
+      throw new Error("Detalhes do casamento não encontrados");
+    }
+
+    // Check if invitation already exists for this guest
+    let invitation;
+    const { data: existingInvitation } = await supabase
+      .from("invitations")
+      .select("*")
+      .eq("guest_email", guest.email)
+      .eq("wedding_id", weddingData.id)
+      .single();
+
+    if (existingInvitation) {
+      invitation = existingInvitation;
+    } else {
+      // Create new invitation with unique code
+      const uniqueCode = crypto.randomUUID().replace(/-/g, "").substring(0, 12).toUpperCase();
+      
+      const { data: newInvitation, error: invitationError } = await supabase
+        .from("invitations")
+        .insert({
+          wedding_id: weddingData.id,
+          guest_name: guest.name,
+          guest_email: guest.email,
+          guest_phone: guest.phone,
+          unique_code: uniqueCode,
+        })
+        .select()
+        .single();
+
+      if (invitationError) {
+        console.error("Error creating invitation:", invitationError);
+        throw new Error("Erro ao gerar convite");
+      }
+
+      invitation = newInvitation;
     }
 
     const origin = req.headers.get("origin") || "http://localhost:8080";
-    const rsvpLink = `${origin}/rsvp?token=${tokenString}`;
+    const invitationLink = `${origin}/convite/${invitation.unique_code}`;
 
     // Send email
     const emailResponse = await resend.emails.send({
@@ -104,14 +129,14 @@ const handler = async (req: Request): Promise<Response> => {
             Estamos muito felizes em convidá-lo(a) para celebrar conosco este momento tão especial!
           </p>
           <div style="text-align: center; margin: 30px 0;">
-            <a href="${rsvpLink}" 
+            <a href="${invitationLink}" 
                style="background-color: #8B5CF6; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-size: 16px; display: inline-block;">
               Confirmar Presença
             </a>
           </div>
           <p style="font-size: 14px; color: #999; text-align: center;">
             Ou copie e cole este link no seu navegador:<br>
-            <span style="color: #666;">${rsvpLink}</span>
+            <span style="color: #666;">${invitationLink}</span>
           </p>
         </div>
       `,
@@ -122,8 +147,8 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(
       JSON.stringify({ 
         success: true, 
-        token: tokenString,
-        link: rsvpLink 
+        invitation_code: invitation.unique_code,
+        link: invitationLink 
       }),
       {
         status: 200,
