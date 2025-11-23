@@ -215,6 +215,7 @@ export type Database = {
           created_at: string | null
           display_order: number | null
           id: string
+          is_main: boolean | null
           photo_url: string
           wedding_id: string | null
         }
@@ -223,6 +224,7 @@ export type Database = {
           created_at?: string | null
           display_order?: number | null
           id?: string
+          is_main?: boolean | null
           photo_url: string
           wedding_id?: string | null
         }
@@ -231,6 +233,7 @@ export type Database = {
           created_at?: string | null
           display_order?: number | null
           id?: string
+          is_main?: boolean | null
           photo_url?: string
           wedding_id?: string | null
         }
