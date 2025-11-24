@@ -167,14 +167,6 @@ const Auth = () => {
             <p>Apenas usuários convidados podem acessar.</p>
             <p>Verifique seu e-mail para instruções de acesso.</p>
           </div>
-          
-          <Button
-            variant="ghost"
-            className="w-full mt-4"
-            onClick={() => navigate("/")}
-          >
-            Voltar ao Convite
-          </Button>
         </CardContent>
       </Card>
     </div>

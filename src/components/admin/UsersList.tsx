@@ -20,7 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Shield, UserCog, Users as UsersIcon, Trash2, Search } from "lucide-react";
+import { Shield, UserCog, Users as UsersIcon, Trash2, Search, RefreshCw } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -214,6 +214,43 @@ const UsersList = ({ refreshKey }: UsersListProps) => {
     }
   };
 
+  const handleRegenerateToken = async (email: string, name: string) => {
+    try {
+      // Get user role first
+      const user = users.find(u => u.email === email);
+      if (!user || !user.roles[0]) {
+        toast({
+          title: "Erro",
+          description: "Não foi possível identificar o papel do usuário.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke("invite-admin", {
+        body: {
+          email,
+          nome: name,
+          role: user.roles[0].role,
+        },
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Novo token gerado!",
+        description: `Um novo link de acesso foi gerado e enviado para ${email}`,
+      });
+    } catch (error: any) {
+      console.error("Error regenerating token:", error);
+      toast({
+        title: "Erro ao gerar token",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
 
   const filteredUsers = users.filter((user) => {
     const searchLower = searchTerm.toLowerCase();
@@ -356,15 +393,27 @@ const UsersList = ({ refreshKey }: UsersListProps) => {
                           </Select>
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setDeleteUserId(user.id)}
-                            className="text-destructive hover:text-destructive"
-                            title="Remover usuário"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                          <div className="flex gap-2 justify-end">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleRegenerateToken(user.email || "", user.full_name || "")}
+                              disabled={!user.email}
+                              className="text-primary hover:text-primary"
+                              title="Gerar novo token de acesso"
+                            >
+                              <RefreshCw className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setDeleteUserId(user.id)}
+                              className="text-destructive hover:text-destructive"
+                              title="Remover usuário"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     );

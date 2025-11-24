@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Mail, MessageSquare, Trash2, Copy, ExternalLink } from "lucide-react";
+import { Mail, MessageSquare, Trash2, Copy, ExternalLink, RefreshCw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { guestSchema } from "@/lib/validationSchemas";
@@ -202,6 +202,29 @@ const GuestsManager = () => {
     }
   };
 
+  const handleRegenerateToken = async (guest: Guest) => {
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-rsvp-token", {
+        body: { guest_id: guest.id },
+      });
+
+      if (error) throw error;
+
+      const link = data.link;
+      const message = `Olá, ${guest.name}! 🎉\n\nSe desejar alterar sua confirmação de presença para o nosso casamento, acesse o link abaixo:\n\n${link}\n\nO link é válido por 30 dias.`;
+
+      setWhatsAppMessage(message);
+      setWhatsAppLink(link);
+      setSelectedGuest(guest);
+      setIsWhatsAppOpen(true);
+
+      toast.success("Novo token gerado com sucesso!");
+    } catch (error: any) {
+      console.error("Error regenerating token:", error);
+      toast.error(error.message || "Erro ao gerar novo token");
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "confirmed":
@@ -335,6 +358,7 @@ const GuestsManager = () => {
                           variant="outline"
                           size="sm"
                           onClick={() => handleSendEmail(guest)}
+                          title="Enviar e-mail"
                         >
                           <Mail className="h-4 w-4" />
                         </Button>
@@ -343,13 +367,24 @@ const GuestsManager = () => {
                         variant="outline"
                         size="sm"
                         onClick={() => handleGenerateWhatsAppLink(guest)}
+                        title="Gerar link para WhatsApp"
                       >
                         <MessageSquare className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleRegenerateToken(guest)}
+                        className="text-primary hover:text-primary"
+                        title="Gerar novo token para alterar status"
+                      >
+                        <RefreshCw className="h-4 w-4" />
                       </Button>
                       <Button
                         variant="destructive"
                         size="sm"
                         onClick={() => handleDeleteGuest(guest.id)}
+                        title="Excluir convidado"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
