@@ -50,17 +50,20 @@ const handler = async (req: Request): Promise<Response> => {
     const { email, nome, role }: InviteRequest = await req.json();
     console.log(`Creating invitation for: ${email} with role: ${role}`);
 
-    // Create or update pending user (email is now the PK)
+    // Delete any existing pending invite for this email to generate a new token
+    await supabase
+      .from('pending_users')
+      .delete()
+      .eq('email', email);
+
+    // Create new pending user with fresh token
     const { data: pendingUser, error: pendingError } = await supabase
       .from('pending_users')
-      .upsert({
+      .insert({
         email,
         nome: nome || email.split('@')[0],
         papel: role,
         usado: false,
-        created_at: new Date().toISOString(),
-      }, {
-        onConflict: 'email'
       })
       .select()
       .single();
@@ -70,7 +73,7 @@ const handler = async (req: Request): Promise<Response> => {
       throw pendingError;
     }
 
-    console.log('Pending user created:', pendingUser.id);
+    console.log('Pending user created with new token:', pendingUser.id);
 
     // Generate invitation link
     const origin = req.headers.get('origin') || req.headers.get('referer')?.split('/').slice(0, 3).join('/') || '';

@@ -37,15 +37,38 @@ const CriarSenha = () => {
       try {
         const { data, error } = await supabase
           .from('pending_users')
-          .select('email, nome, papel')
+          .select('email, nome, papel, expires_at, usado')
           .eq('token', token)
-          .eq('usado', false)
           .single();
 
         if (error || !data) {
           toast({
             title: "Convite inválido",
-            description: "Este convite não existe ou já foi utilizado.",
+            description: "Este convite não existe ou o link está incorreto.",
+            variant: "destructive",
+          });
+          navigate("/");
+          return;
+        }
+
+        // Check if token was already used
+        if (data.usado) {
+          toast({
+            title: "Convite já utilizado",
+            description: "Este convite já foi usado. Solicite um novo convite ao administrador.",
+            variant: "destructive",
+          });
+          navigate("/");
+          return;
+        }
+
+        // Check if token expired (48 hours)
+        const expiresAt = new Date(data.expires_at);
+        const now = new Date();
+        if (expiresAt <= now) {
+          toast({
+            title: "Convite expirado",
+            description: "Este convite expirou. Solicite um novo convite ao administrador.",
             variant: "destructive",
           });
           navigate("/");

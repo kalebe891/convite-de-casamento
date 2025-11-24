@@ -68,12 +68,15 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Check if token expired
+    // Check if token expired (48 hours from creation)
     const expiresAt = new Date(pendingUser.expires_at);
-    if (expiresAt < new Date()) {
-      console.error('[complete-user-invite] Token expired');
+    const now = new Date();
+    if (expiresAt <= now) {
+      console.error('[complete-user-invite] Token expired at:', expiresAt, 'Current time:', now);
       return new Response(
-        JSON.stringify({ error: 'Convite expirado' }),
+        JSON.stringify({ 
+          error: 'Convite expirado. Por favor, solicite um novo convite ao administrador.' 
+        }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
