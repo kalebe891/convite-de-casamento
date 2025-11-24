@@ -152,17 +152,6 @@ const Auth = () => {
             </Button>
           </form>
 
-          <Button
-            type="button"
-            variant="ghost"
-            className="w-full mt-4"
-            onClick={() => setIsLogin(!isLogin)}
-          >
-            {isLogin 
-              ? "Primeira vez? Criar conta"
-              : "Já tem conta? Fazer login"}
-          </Button>
-
           <div className="mt-6 text-center text-sm text-muted-foreground">
             <p>Apenas usuários convidados podem acessar.</p>
             <p>Verifique seu e-mail para instruções de acesso.</p>
