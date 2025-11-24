@@ -15,6 +15,7 @@ import Detalhes from "./pages/admin/Detalhes";
 import Cronograma from "./pages/admin/Cronograma";
 import Buffet from "./pages/admin/Buffet";
 import Playlist from "./pages/admin/Playlist";
+import Presentes from "./pages/admin/Presentes";
 import Momentos from "./pages/admin/Momentos";
 import Estatisticas from "./pages/admin/Estatisticas";
 import Checkin from "./pages/admin/Checkin";
@@ -40,6 +41,7 @@ const App = () => (
             <Route path="usuarios" element={<Usuarios />} />
             <Route path="convidados" element={<Convidados />} />
             <Route path="checkin" element={<Checkin />} />
+            <Route path="presentes" element={<Presentes />} />
             <Route path="cronograma" element={<Cronograma />} />
             <Route path="buffet" element={<Buffet />} />
             <Route path="playlist" element={<Playlist />} />

@@ -1,0 +1,187 @@
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
+import { Trash2, Plus } from "lucide-react";
+import { getSafeErrorMessage } from "@/lib/errorHandling";
+
+const GiftManager = () => {
+  const { toast } = useToast();
+  const [items, setItems] = useState<any[]>([]);
+  const [weddingId, setWeddingId] = useState<string | null>(null);
+  const [newItem, setNewItem] = useState({ 
+    gift_name: "", 
+    description: "", 
+    link: "",
+    is_public: true 
+  });
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    const { data: wedding } = await supabase
+      .from("wedding_details")
+      .select("id")
+      .single();
+
+    if (wedding) {
+      setWeddingId(wedding.id);
+      const { data: itemsData } = await supabase
+        .from("gift_items")
+        .select("*")
+        .eq("wedding_id", wedding.id)
+        .order("display_order");
+      setItems(itemsData || []);
+    }
+  };
+
+  const handleAdd = async () => {
+    if (!weddingId || !newItem.gift_name.trim()) {
+      toast({ title: "Erro", description: "Nome do presente é obrigatório", variant: "destructive" });
+      return;
+    }
+
+    const { error } = await supabase.from("gift_items").insert({
+      wedding_id: weddingId,
+      gift_name: newItem.gift_name.trim(),
+      description: newItem.description.trim() || null,
+      link: newItem.link.trim() || null,
+      is_public: newItem.is_public,
+      display_order: items.length,
+    });
+
+    if (error) {
+      toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
+    } else {
+      toast({ title: "Sucesso", description: "Presente adicionado!" });
+      setNewItem({ gift_name: "", description: "", link: "", is_public: true });
+      fetchData();
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    const { error } = await supabase.from("gift_items").delete().eq("id", id);
+
+    if (error) {
+      toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
+    } else {
+      toast({ title: "Sucesso", description: "Presente removido!" });
+      fetchData();
+    }
+  };
+
+  const handleTogglePublic = async (id: string, currentValue: boolean) => {
+    const { error } = await supabase
+      .from("gift_items")
+      .update({ is_public: !currentValue })
+      .eq("id", id);
+
+    if (error) {
+      toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
+    } else {
+      fetchData();
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Adicionar Presente</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label>Nome do Presente</Label>
+            <Input
+              placeholder="Ex: Jogo de panelas"
+              value={newItem.gift_name}
+              onChange={(e) => setNewItem({ ...newItem, gift_name: e.target.value })}
+            />
+          </div>
+          <div>
+            <Label>Descrição (opcional)</Label>
+            <Input
+              placeholder="Ex: Jogo com 5 peças antiaderente"
+              value={newItem.description}
+              onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
+            />
+          </div>
+          <div>
+            <Label>Link (opcional)</Label>
+            <Input
+              placeholder="https://exemplo.com/produto"
+              value={newItem.link}
+              onChange={(e) => setNewItem({ ...newItem, link: e.target.value })}
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <Switch
+              checked={newItem.is_public}
+              onCheckedChange={(checked) => setNewItem({ ...newItem, is_public: checked })}
+            />
+            <Label>Exibir publicamente</Label>
+          </div>
+          <Button onClick={handleAdd} disabled={!newItem.gift_name}>
+            <Plus className="w-4 h-4 mr-2" />
+            Adicionar
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Lista de Presentes</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {items.length === 0 ? (
+            <p className="text-muted-foreground text-center py-8">Nenhum presente adicionado.</p>
+          ) : (
+            <div className="space-y-4">
+              {items.map((item) => (
+                <div key={item.id} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="flex-1">
+                    <p className="font-semibold">{item.gift_name}</p>
+                    {item.description && (
+                      <p className="text-sm text-muted-foreground">{item.description}</p>
+                    )}
+                    {item.link && (
+                      <a 
+                        href={item.link} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-sm text-primary hover:underline"
+                      >
+                        Ver link
+                      </a>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={item.is_public}
+                      onCheckedChange={() => handleTogglePublic(item.id, item.is_public)}
+                    />
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      onClick={() => handleDelete(item.id)}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+export default GiftManager;

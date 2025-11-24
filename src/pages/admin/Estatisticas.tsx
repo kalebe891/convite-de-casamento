@@ -1,5 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart3, Users, CheckCircle, XCircle } from "lucide-react";
+import { BarChart3, Users, CheckCircle, XCircle, UserCheck } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -9,6 +9,7 @@ const Estatisticas = () => {
     pending: 0,
     attending: 0,
     notAttending: 0,
+    checkedIn: 0,
   });
 
   useEffect(() => {
@@ -21,12 +22,14 @@ const Estatisticas = () => {
       const confirmed = allGuests.filter(g => g.status === 'confirmed').length;
       const declined = allGuests.filter(g => g.status === 'declined').length;
       const pending = allGuests.filter(g => g.status === 'pending').length;
+      const checkedIn = allGuests.filter(g => g.checked_in_at !== null).length;
       
       setStats({
         totalGuests: allGuests.length,
         pending,
         attending: confirmed,
         notAttending: declined,
+        checkedIn,
       });
     };
 
@@ -96,36 +99,66 @@ const Estatisticas = () => {
         </Card>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Análise Detalhada</CardTitle>
-          <CardDescription>
-            Taxa de confirmação dos convidados
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium">Taxa de Confirmação</span>
-              <span className="text-sm text-muted-foreground">
-                {stats.totalGuests > 0 
-                  ? Math.round((stats.attending / stats.totalGuests) * 100) 
-                  : 0}%
-              </span>
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Análise de Confirmação</CardTitle>
+            <CardDescription>
+              Taxa de confirmação dos convidados
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium">Taxa de Confirmação</span>
+                <span className="text-sm text-muted-foreground">
+                  {stats.totalGuests > 0 
+                    ? Math.round((stats.attending / stats.totalGuests) * 100) 
+                    : 0}%
+                </span>
+              </div>
+              <div className="w-full bg-muted rounded-full h-2">
+                <div 
+                  className="bg-green-600 h-2 rounded-full transition-all" 
+                  style={{ 
+                    width: stats.totalGuests > 0 
+                      ? `${(stats.attending / stats.totalGuests) * 100}%` 
+                      : '0%' 
+                  }}
+                />
+              </div>
             </div>
-            <div className="w-full bg-muted rounded-full h-2">
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <div>
+              <CardTitle>Check-in Realizado</CardTitle>
+              <CardDescription className="mt-2">
+                Convidados que fizeram check-in
+              </CardDescription>
+            </div>
+            <UserCheck className="h-8 w-8 text-blue-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">{stats.checkedIn}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              de {stats.attending} confirmados
+            </p>
+            <div className="w-full bg-muted rounded-full h-2 mt-3">
               <div 
-                className="bg-green-600 h-2 rounded-full transition-all" 
+                className="bg-blue-600 h-2 rounded-full transition-all" 
                 style={{ 
-                  width: stats.totalGuests > 0 
-                    ? `${(stats.attending / stats.totalGuests) * 100}%` 
+                  width: stats.attending > 0 
+                    ? `${(stats.checkedIn / stats.attending) * 100}%` 
                     : '0%' 
                 }}
               />
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
