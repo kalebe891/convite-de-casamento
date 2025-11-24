@@ -126,6 +126,50 @@ export type Database = {
           },
         ]
       }
+      gift_items: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          display_order: number | null
+          gift_name: string
+          id: string
+          is_public: boolean | null
+          is_purchased: boolean | null
+          link: string | null
+          wedding_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          gift_name: string
+          id?: string
+          is_public?: boolean | null
+          is_purchased?: boolean | null
+          link?: string | null
+          wedding_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          gift_name?: string
+          id?: string
+          is_public?: boolean | null
+          is_purchased?: boolean | null
+          link?: string | null
+          wedding_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gift_items_wedding_id_fkey"
+            columns: ["wedding_id"]
+            isOneToOne: false
+            referencedRelation: "wedding_details"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       guests: {
         Row: {
           checked_in_at: string | null
