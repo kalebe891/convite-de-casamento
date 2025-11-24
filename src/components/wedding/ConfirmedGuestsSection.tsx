@@ -33,39 +33,29 @@ const ConfirmedGuestsSection = ({ weddingId }: ConfirmedGuestsSectionProps) => {
         });
       }
 
-      // Buscar confirmações da tabela invitations
-      const { data: invitationsData } = await supabase
-        .from("invitations")
-        .select("*")
-        .eq("wedding_id", weddingId)
-        .eq("attending", true)
-        .order("guest_name");
+      // Buscar convidados confirmados da tabela guests
+      const { data: confirmedGuestsData } = await supabase
+        .from("guests")
+        .select("id, name, email, phone")
+        .eq("status", "confirmed")
+        .order("name");
 
-      // Buscar confirmações da tabela rsvps
-      const { data: rsvpsData } = await supabase
-        .from("rsvps")
-        .select("*")
-        .eq("wedding_id", weddingId)
-        .eq("attending", true)
-        .order("guest_name");
-
-      const confirmed = [...(invitationsData || []), ...(rsvpsData || [])];
-      
       // Buscar total de convidados
-      const { data: allInvitations } = await supabase
-        .from("invitations")
-        .select("id")
-        .eq("wedding_id", weddingId);
+      const { data: allGuestsData } = await supabase
+        .from("guests")
+        .select("id");
 
-      const { data: allRsvps } = await supabase
-        .from("rsvps")
-        .select("id")
-        .eq("wedding_id", weddingId);
+      // Transformar dados para o formato esperado
+      const formattedGuests = (confirmedGuestsData || []).map(guest => ({
+        id: guest.id,
+        guest_name: guest.name,
+        plus_one: false,
+      }));
 
-      setConfirmedGuests(confirmed);
+      setConfirmedGuests(formattedGuests);
       setStats({
-        confirmed: confirmed.length,
-        total: (allInvitations?.length || 0) + (allRsvps?.length || 0),
+        confirmed: confirmedGuestsData?.length || 0,
+        total: allGuestsData?.length || 0,
       });
     };
 

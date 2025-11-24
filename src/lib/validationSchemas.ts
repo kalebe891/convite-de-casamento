@@ -6,15 +6,14 @@ export const guestSchema = z.object({
     .trim()
     .min(1, 'Nome é obrigatório')
     .max(100, 'Nome deve ter no máximo 100 caracteres'),
+  phone: z.string()
+    .trim()
+    .min(1, 'Telefone é obrigatório')
+    .regex(/^\(\d{2}\)\s\d{5}-\d{4}$/, 'Telefone deve estar no formato (xx) xxxxx-xxxx'),
   email: z.string()
     .trim()
     .email('E-mail inválido')
-    .min(1, 'E-mail é obrigatório')
-    .max(255, 'E-mail deve ter no máximo 255 caracteres'),
-  phone: z.string()
-    .trim()
-    .regex(/^(\+?[1-9]\d{0,3})?[\s.-]?\(?\d{1,4}\)?[\s.-]?\d{1,4}[\s.-]?\d{1,9}$/, 'Telefone inválido')
-    .max(20, 'Telefone deve ter no máximo 20 caracteres')
+    .max(255, 'E-mail deve ter no máximo 255 caracteres')
     .optional()
     .or(z.literal('')),
 });

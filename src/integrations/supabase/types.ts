@@ -174,28 +174,28 @@ export type Database = {
         Row: {
           checked_in_at: string | null
           created_at: string
-          email: string
+          email: string | null
           id: string
           name: string
-          phone: string | null
+          phone: string
           status: string
         }
         Insert: {
           checked_in_at?: string | null
           created_at?: string
-          email: string
+          email?: string | null
           id?: string
           name: string
-          phone?: string | null
+          phone: string
           status?: string
         }
         Update: {
           checked_in_at?: string | null
           created_at?: string
-          email?: string
+          email?: string | null
           id?: string
           name?: string
-          phone?: string | null
+          phone?: string
           status?: string
         }
         Relationships: []

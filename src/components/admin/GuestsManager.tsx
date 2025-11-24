@@ -305,23 +305,40 @@ const GuestsManager = () => {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="phone">Telefone</Label>
+                    <Label htmlFor="phone">Telefone *</Label>
                     <Input
                       id="phone"
                       value={newGuest.phone}
-                      onChange={(e) => setNewGuest({ ...newGuest, phone: e.target.value })}
+                      onChange={(e) => {
+                        // Format phone as user types: (xx) xxxxx-xxxx
+                        let value = e.target.value.replace(/\D/g, "");
+                        if (value.length > 11) value = value.slice(0, 11);
+                        
+                        let formatted = "";
+                        if (value.length > 0) {
+                          formatted = `(${value.slice(0, 2)}`;
+                          if (value.length > 2) {
+                            formatted += `) ${value.slice(2, 7)}`;
+                            if (value.length > 7) {
+                              formatted += `-${value.slice(7, 11)}`;
+                            }
+                          }
+                        }
+                        setNewGuest({ ...newGuest, phone: formatted });
+                      }}
                       placeholder="(00) 00000-0000"
+                      maxLength={15}
+                      required
                     />
                   </div>
                   <div>
-                    <Label htmlFor="email">E-mail *</Label>
+                    <Label htmlFor="email">E-mail</Label>
                     <Input
                       id="email"
                       type="email"
                       value={newGuest.email}
                       onChange={(e) => setNewGuest({ ...newGuest, email: e.target.value })}
                       placeholder="email@exemplo.com"
-                      required
                     />
                   </div>
                   <Button onClick={handleAddGuest} className="w-full">

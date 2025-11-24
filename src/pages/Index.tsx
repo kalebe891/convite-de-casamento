@@ -8,6 +8,7 @@ import GallerySection from "@/components/wedding/GallerySection";
 import TimelineSection from "@/components/wedding/TimelineSection";
 import BuffetSection from "@/components/wedding/BuffetSection";
 import PlaylistSection from "@/components/wedding/PlaylistSection";
+import GiftsSection from "@/components/wedding/GiftsSection";
 import ConfirmedGuestsSection from "@/components/wedding/ConfirmedGuestsSection";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -375,6 +376,7 @@ const Index = () => {
         <TimelineSection weddingId={weddingDetails?.id || null} />
         <BuffetSection weddingId={weddingDetails?.id || null} />
         <PlaylistSection weddingId={weddingDetails?.id || null} />
+        <GiftsSection weddingId={weddingDetails?.id || null} />
         <ConfirmedGuestsSection weddingId={weddingDetails?.id || null} />
         <GallerySection photos={photos} />
       </main>
