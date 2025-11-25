@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Trash2, Plus, Pencil, X } from "lucide-react";
 import { getSafeErrorMessage } from "@/lib/errorHandling";
+import { logAdminAction } from "@/lib/adminLogger";
 
 const GiftManager = () => {
   const { toast } = useToast();
@@ -50,6 +51,7 @@ const GiftManager = () => {
 
     if (editingId) {
       // Update existing gift
+      const oldItem = items.find(item => item.id === editingId);
       const { error } = await supabase
         .from("gift_items")
         .update({
@@ -63,6 +65,13 @@ const GiftManager = () => {
       if (error) {
         toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
       } else {
+        await logAdminAction({
+          action: "update",
+          tableName: "gift_items",
+          recordId: editingId,
+          oldData: oldItem,
+          newData: newItem,
+        });
         toast({ title: "Sucesso", description: "Presente atualizado!" });
         setNewItem({ gift_name: "", description: "", link: "", is_public: true });
         setEditingId(null);
@@ -70,18 +79,24 @@ const GiftManager = () => {
       }
     } else {
       // Insert new gift
-      const { error } = await supabase.from("gift_items").insert({
+      const { data, error } = await supabase.from("gift_items").insert({
         wedding_id: weddingId,
         gift_name: newItem.gift_name.trim(),
         description: newItem.description.trim() || null,
         link: newItem.link.trim() || null,
         is_public: newItem.is_public,
         display_order: items.length,
-      });
+      }).select().single();
 
       if (error) {
         toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
       } else {
+        await logAdminAction({
+          action: "insert",
+          tableName: "gift_items",
+          recordId: data?.id,
+          newData: newItem,
+        });
         toast({ title: "Sucesso", description: "Presente adicionado!" });
         setNewItem({ gift_name: "", description: "", link: "", is_public: true });
         fetchData();
@@ -105,11 +120,18 @@ const GiftManager = () => {
   };
 
   const handleDelete = async (id: string) => {
+    const deletedItem = items.find(item => item.id === id);
     const { error } = await supabase.from("gift_items").delete().eq("id", id);
 
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
     } else {
+      await logAdminAction({
+        action: "delete",
+        tableName: "gift_items",
+        recordId: id,
+        oldData: deletedItem,
+      });
       toast({ title: "Sucesso", description: "Presente removido!" });
       fetchData();
     }

@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Trash2, Plus, Pencil, X } from "lucide-react";
 import { buffetItemSchema } from "@/lib/validationSchemas";
 import { getSafeErrorMessage } from "@/lib/errorHandling";
+import { logAdminAction } from "@/lib/adminLogger";
 
 const BuffetManager = () => {
   const { toast } = useToast();
@@ -55,6 +56,7 @@ const BuffetManager = () => {
 
     if (editingId) {
       // Update existing item
+      const oldItem = items.find(item => item.id === editingId);
       const { error } = await supabase
         .from("buffet_items")
         .update({
@@ -67,6 +69,13 @@ const BuffetManager = () => {
       if (error) {
         toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
       } else {
+        await logAdminAction({
+          action: "update",
+          tableName: "buffet_items",
+          recordId: editingId,
+          oldData: oldItem,
+          newData: newItem,
+        });
         toast({ title: "Sucesso", description: "Item atualizado!" });
         setNewItem({ item_name: "", category: "", is_public: true });
         setEditingId(null);
@@ -74,17 +83,23 @@ const BuffetManager = () => {
       }
     } else {
       // Insert new item
-      const { error } = await supabase.from("buffet_items").insert({
+      const { data, error } = await supabase.from("buffet_items").insert({
         wedding_id: weddingId,
         item_name: validationResult.data.item_name.trim(),
         category: validationResult.data.category?.trim() || null,
         is_public: newItem.is_public,
         display_order: items.length,
-      });
+      }).select().single();
 
       if (error) {
         toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
       } else {
+        await logAdminAction({
+          action: "insert",
+          tableName: "buffet_items",
+          recordId: data?.id,
+          newData: newItem,
+        });
         toast({ title: "Sucesso", description: "Item adicionado!" });
         setNewItem({ item_name: "", category: "", is_public: true });
         fetchData();
@@ -107,11 +122,18 @@ const BuffetManager = () => {
   };
 
   const handleDelete = async (id: string) => {
+    const deletedItem = items.find(item => item.id === id);
     const { error } = await supabase.from("buffet_items").delete().eq("id", id);
 
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
     } else {
+      await logAdminAction({
+        action: "delete",
+        tableName: "buffet_items",
+        recordId: id,
+        oldData: deletedItem,
+      });
       toast({ title: "Sucesso", description: "Item removido!" });
       fetchData();
     }
