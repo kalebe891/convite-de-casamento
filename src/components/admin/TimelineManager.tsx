@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Trash2, Plus, Pencil, X } from "lucide-react";
 import { timelineEventSchema } from "@/lib/validationSchemas";
 import { getSafeErrorMessage } from "@/lib/errorHandling";
+import { logAdminAction } from "@/lib/adminLogger";
 
 const TimelineManager = () => {
   const { toast } = useToast();
@@ -33,7 +34,7 @@ const TimelineManager = () => {
         .from("timeline_events")
         .select("*")
         .eq("wedding_id", wedding.id)
-        .order("display_order");
+        .order("time", { ascending: true });
       setEvents(eventsData || []);
     }
   };
@@ -55,6 +56,7 @@ const TimelineManager = () => {
 
     if (editingId) {
       // Update existing event
+      const oldEvent = events.find(e => e.id === editingId);
       const { error } = await supabase
         .from("timeline_events")
         .update({
@@ -68,6 +70,13 @@ const TimelineManager = () => {
       if (error) {
         toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
       } else {
+        await logAdminAction({
+          action: "update",
+          tableName: "timeline_events",
+          recordId: editingId,
+          oldData: oldEvent,
+          newData: newEvent,
+        });
         toast({ title: "Sucesso", description: "Evento atualizado!" });
         setNewEvent({ time: "", activity: "", observation: "", is_public: true });
         setEditingId(null);
@@ -75,18 +84,24 @@ const TimelineManager = () => {
       }
     } else {
       // Insert new event
-      const { error } = await supabase.from("timeline_events").insert({
+      const { data, error } = await supabase.from("timeline_events").insert({
         wedding_id: weddingId,
         time: validationResult.data.time.trim(),
         activity: validationResult.data.activity.trim(),
         observation: newEvent.observation.trim() || null,
         is_public: newEvent.is_public,
         display_order: events.length,
-      });
+      }).select().single();
 
       if (error) {
         toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
       } else {
+        await logAdminAction({
+          action: "insert",
+          tableName: "timeline_events",
+          recordId: data?.id,
+          newData: newEvent,
+        });
         toast({ title: "Sucesso", description: "Evento adicionado!" });
         setNewEvent({ time: "", activity: "", observation: "", is_public: true });
         fetchData();
@@ -110,11 +125,18 @@ const TimelineManager = () => {
   };
 
   const handleDelete = async (id: string) => {
+    const deletedEvent = events.find(e => e.id === id);
     const { error } = await supabase.from("timeline_events").delete().eq("id", id);
 
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
     } else {
+      await logAdminAction({
+        action: "delete",
+        tableName: "timeline_events",
+        recordId: id,
+        oldData: deletedEvent,
+      });
       toast({ title: "Sucesso", description: "Evento removido!" });
       fetchData();
     }

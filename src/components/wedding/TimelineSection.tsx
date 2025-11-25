@@ -27,7 +27,7 @@ const TimelineSection = ({ weddingId }: TimelineSectionProps) => {
         .select("*")
         .eq("wedding_id", weddingId)
         .eq("is_public", true)
-        .order("display_order");
+        .order("time", { ascending: true });
 
       setEvents(data || []);
     };

@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Trash2, Plus, Pencil, X } from "lucide-react";
 import { playlistSongSchema } from "@/lib/validationSchemas";
 import { getSafeErrorMessage } from "@/lib/errorHandling";
+import { logAdminAction } from "@/lib/adminLogger";
 
 const PlaylistManager = () => {
   const { toast } = useToast();
@@ -56,6 +57,7 @@ const PlaylistManager = () => {
 
     if (editingId) {
       // Update existing song
+      const oldSong = songs.find(s => s.id === editingId);
       const { error } = await supabase
         .from("playlist_songs")
         .update({
@@ -69,6 +71,13 @@ const PlaylistManager = () => {
       if (error) {
         toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
       } else {
+        await logAdminAction({
+          action: "update",
+          tableName: "playlist_songs",
+          recordId: editingId,
+          oldData: oldSong,
+          newData: newSong,
+        });
         toast({ title: "Sucesso", description: "Música atualizada!" });
         setNewSong({ moment: "", song_name: "", artist: "", is_public: true });
         setEditingId(null);
@@ -76,18 +85,24 @@ const PlaylistManager = () => {
       }
     } else {
       // Insert new song
-      const { error } = await supabase.from("playlist_songs").insert({
+      const { data, error } = await supabase.from("playlist_songs").insert({
         wedding_id: weddingId,
         moment: validationResult.data.moment.trim(),
         song_name: validationResult.data.song_name.trim(),
         artist: validationResult.data.artist?.trim() || null,
         is_public: newSong.is_public,
         display_order: songs.length,
-      });
+      }).select().single();
 
       if (error) {
         toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
       } else {
+        await logAdminAction({
+          action: "insert",
+          tableName: "playlist_songs",
+          recordId: data?.id,
+          newData: newSong,
+        });
         toast({ title: "Sucesso", description: "Música adicionada!" });
         setNewSong({ moment: "", song_name: "", artist: "", is_public: true });
         fetchData();
@@ -111,11 +126,18 @@ const PlaylistManager = () => {
   };
 
   const handleDelete = async (id: string) => {
+    const deletedSong = songs.find(s => s.id === id);
     const { error } = await supabase.from("playlist_songs").delete().eq("id", id);
 
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
     } else {
+      await logAdminAction({
+        action: "delete",
+        tableName: "playlist_songs",
+        recordId: id,
+        oldData: deletedSong,
+      });
       toast({ title: "Sucesso", description: "Música removida!" });
       fetchData();
     }

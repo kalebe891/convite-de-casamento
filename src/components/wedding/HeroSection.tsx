@@ -28,7 +28,7 @@ const HeroSection = ({ weddingDetails }: HeroSectionProps) => {
         
         <p className="text-2xl md:text-3xl text-muted-foreground mb-8">
           {weddingDetails?.wedding_date 
-            ? format(new Date(weddingDetails.wedding_date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })
+            ? format(new Date(weddingDetails.wedding_date + 'T00:00:00'), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })
             : "18 de Abril de 2026"}
         </p>
         
