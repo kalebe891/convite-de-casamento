@@ -249,46 +249,54 @@ const Invitation = () => {
                         placeholder="Ex: vegetariano, intolerância à lactose..."
                       />
                     </div>
-
-                    {gifts.length > 0 && (
-                      <div className="space-y-3 p-4 border rounded-lg bg-background">
-                        <Label className="text-base">
-                          Gostaria de presentear os noivos? (opcional)
-                        </Label>
-                        <RadioGroup
-                          value={formData.selectedGiftId}
-                          onValueChange={(value) =>
-                            setFormData({ ...formData, selectedGiftId: value })
-                          }
-                        >
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="" id="no-gift" />
-                            <Label htmlFor="no-gift" className="font-normal cursor-pointer">
-                              Não selecionar presente
-                            </Label>
-                          </div>
-                          {gifts.map((gift) => (
-                            <div key={gift.id} className="flex items-start space-x-2">
-                              <RadioGroupItem value={gift.id} id={`gift-${gift.id}`} />
-                              <Label
-                                htmlFor={`gift-${gift.id}`}
-                                className="font-normal cursor-pointer flex-1"
-                              >
-                                <div>
-                                  <p className="font-medium">{gift.gift_name}</p>
-                                  {gift.description && (
-                                    <p className="text-sm text-muted-foreground">
-                                      {gift.description}
-                                    </p>
-                                  )}
-                                </div>
-                              </Label>
-                            </div>
-                          ))}
-                        </RadioGroup>
-                      </div>
-                    )}
                   </>
+                )}
+
+                {gifts.length > 0 && (
+                  <div className={`space-y-3 p-4 border rounded-lg bg-background transition-opacity ${
+                    formData.attending !== "yes" ? "opacity-60" : ""
+                  }`}>
+                    <Label className="text-base">
+                      Gostaria de presentear os noivos? (opcional)
+                    </Label>
+                    {formData.attending !== "yes" && (
+                      <p className="text-sm text-muted-foreground">
+                        Confirme sua presença para selecionar um presente
+                      </p>
+                    )}
+                    <RadioGroup
+                      value={formData.selectedGiftId}
+                      onValueChange={(value) =>
+                        setFormData({ ...formData, selectedGiftId: value })
+                      }
+                      disabled={formData.attending !== "yes"}
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="" id="no-gift" disabled={formData.attending !== "yes"} />
+                        <Label htmlFor="no-gift" className="font-normal cursor-pointer">
+                          Não selecionar presente
+                        </Label>
+                      </div>
+                      {gifts.map((gift) => (
+                        <div key={gift.id} className="flex items-start space-x-2">
+                          <RadioGroupItem value={gift.id} id={`gift-${gift.id}`} disabled={formData.attending !== "yes"} />
+                          <Label
+                            htmlFor={`gift-${gift.id}`}
+                            className="font-normal cursor-pointer flex-1"
+                          >
+                            <div>
+                              <p className="font-medium">{gift.gift_name}</p>
+                              {gift.description && (
+                                <p className="text-sm text-muted-foreground">
+                                  {gift.description}
+                                </p>
+                              )}
+                            </div>
+                          </Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  </div>
                 )}
 
                 <div className="space-y-2">
