@@ -21,11 +21,13 @@ const Invitation = () => {
   const [invitation, setInvitation] = useState<any>(null);
   const [weddingDetails, setWeddingDetails] = useState<any>(null);
   const [events, setEvents] = useState([]);
+  const [gifts, setGifts] = useState<any[]>([]);
   const [formData, setFormData] = useState({
     attending: "",
     plusOne: false,
     dietaryRestrictions: "",
     message: "",
+    selectedGiftId: "",
   });
 
   useEffect(() => {
@@ -68,6 +70,17 @@ const Invitation = () => {
             .order("event_date");
 
           setEvents(eventsData || []);
+
+          // Buscar presentes disponíveis (não selecionados)
+          const { data: giftsData } = await supabase
+            .from("gift_items")
+            .select("*")
+            .eq("wedding_id", invitationData.wedding_id)
+            .eq("is_public", true)
+            .is("selected_by_invitation_id", null)
+            .order("display_order");
+
+          setGifts(giftsData || []);
         }
 
         if (invitationData.attending !== null) {
@@ -76,6 +89,7 @@ const Invitation = () => {
             plusOne: invitationData.plus_one || false,
             dietaryRestrictions: invitationData.dietary_restrictions || "",
             message: invitationData.message || "",
+            selectedGiftId: "",
           });
         }
       } catch (error: any) {
@@ -112,6 +126,7 @@ const Invitation = () => {
             plus_one: formData.plusOne,
             dietary_restrictions: formData.dietaryRestrictions,
             message: formData.message,
+            selected_gift_id: formData.selectedGiftId || null,
           }),
         }
       );
@@ -234,6 +249,45 @@ const Invitation = () => {
                         placeholder="Ex: vegetariano, intolerância à lactose..."
                       />
                     </div>
+
+                    {gifts.length > 0 && (
+                      <div className="space-y-3 p-4 border rounded-lg bg-background">
+                        <Label className="text-base">
+                          Gostaria de presentear os noivos? (opcional)
+                        </Label>
+                        <RadioGroup
+                          value={formData.selectedGiftId}
+                          onValueChange={(value) =>
+                            setFormData({ ...formData, selectedGiftId: value })
+                          }
+                        >
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="" id="no-gift" />
+                            <Label htmlFor="no-gift" className="font-normal cursor-pointer">
+                              Não selecionar presente
+                            </Label>
+                          </div>
+                          {gifts.map((gift) => (
+                            <div key={gift.id} className="flex items-start space-x-2">
+                              <RadioGroupItem value={gift.id} id={`gift-${gift.id}`} />
+                              <Label
+                                htmlFor={`gift-${gift.id}`}
+                                className="font-normal cursor-pointer flex-1"
+                              >
+                                <div>
+                                  <p className="font-medium">{gift.gift_name}</p>
+                                  {gift.description && (
+                                    <p className="text-sm text-muted-foreground">
+                                      {gift.description}
+                                    </p>
+                                  )}
+                                </div>
+                              </Label>
+                            </div>
+                          ))}
+                        </RadioGroup>
+                      </div>
+                    )}
                   </>
                 )}
 

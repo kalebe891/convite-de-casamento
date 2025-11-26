@@ -11,6 +11,7 @@ interface RespondRequest {
   plus_one?: boolean;
   dietary_restrictions?: string;
   message?: string;
+  selected_gift_id?: string;
 }
 
 // Rate limiting simples: armazena IPs e timestamps
@@ -61,7 +62,7 @@ Deno.serve(async (req) => {
 
     // Parse e validação do body
     const body = await req.json();
-    const { token, attending, plus_one, dietary_restrictions, message } = body as RespondRequest;
+    const { token, attending, plus_one, dietary_restrictions, message, selected_gift_id } = body as RespondRequest;
 
     // Validação de entrada básica
     if (!token || typeof token !== 'string' || token.trim().length === 0) {
@@ -102,6 +103,14 @@ Deno.serve(async (req) => {
       console.error('[rsvp-respond] Mensagem inválida');
       return new Response(
         JSON.stringify({ error: 'Mensagem deve ter no máximo 1000 caracteres' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (selected_gift_id && typeof selected_gift_id !== 'string') {
+      console.error('[rsvp-respond] ID de presente inválido');
+      return new Response(
+        JSON.stringify({ error: 'ID de presente inválido' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -158,6 +167,22 @@ Deno.serve(async (req) => {
         JSON.stringify({ error: 'Erro ao processar resposta' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
+    }
+
+    // Se o convidado confirmou presença E selecionou um presente, vincular
+    if (attending && selected_gift_id) {
+      const { error: giftError } = await supabase
+        .from('gift_items')
+        .update({ selected_by_invitation_id: invitation.id })
+        .eq('id', selected_gift_id)
+        .is('selected_by_invitation_id', null); // Garantir que não foi selecionado por outro
+
+      if (giftError) {
+        console.warn('[rsvp-respond] Erro ao vincular presente (pode já ter sido selecionado):', giftError);
+        // Não retornamos erro aqui pois o RSVP foi registrado com sucesso
+      } else {
+        console.log('[rsvp-respond] Presente vinculado:', selected_gift_id);
+      }
     }
 
     console.log('[rsvp-respond] Resposta registrada com sucesso:', invitation.guest_name, '- Confirmado:', attending);
