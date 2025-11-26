@@ -31,6 +31,17 @@ const Invitation = () => {
     message: "",
   });
 
+  const fetchGiftItems = async (weddingId: string) => {
+    const { data: giftsData } = await supabase
+      .from("gift_items")
+      .select("*")
+      .eq("wedding_id", weddingId)
+      .is("selected_by_invitation_id", null)
+      .order("display_order");
+    
+    setGifts(giftsData || []);
+  };
+
   useEffect(() => {
     const fetchInvitation = async () => {
       if (!code) return;
@@ -72,15 +83,8 @@ const Invitation = () => {
 
           setEvents(eventsData || []);
 
-          // Buscar presentes disponíveis (não selecionados)
-          const { data: giftsData } = await supabase
-            .from("gift_items")
-            .select("*")
-            .eq("wedding_id", invitationData.wedding_id)
-            .is("selected_by_invitation_id", null)
-            .order("display_order");
-
-          setGifts(giftsData || []);
+          // Buscar presentes disponíveis
+          await fetchGiftItems(invitationData.wedding_id);
         }
 
         if (invitationData.attending !== null) {
@@ -150,21 +154,14 @@ const Invitation = () => {
           description: "Você pode escolher outro presente.",
         });
       } else {
-        toast({
-          title: "🎁 Presente reservado!",
-          description: `${data.gift_name} foi reservado por você.`,
-        });
-      }
+      toast({
+        title: "🎁 Presente reservado!",
+        description: `${data.gift_name} foi reservado por você.`,
+      });
+    }
 
-      // Atualizar lista de presentes
-      const { data: giftsData } = await supabase
-        .from("gift_items")
-        .select("*")
-        .eq("wedding_id", invitation.wedding_id)
-        .is("selected_by_invitation_id", null)
-        .order("display_order");
-
-      setGifts(giftsData || []);
+    // Atualizar lista de presentes
+    await fetchGiftItems(invitation.wedding_id);
     } catch (error: any) {
       toast({
         title: "Erro",
