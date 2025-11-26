@@ -14,6 +14,7 @@ const GiftManager = () => {
   const { toast } = useToast();
   const [items, setItems] = useState<any[]>([]);
   const [weddingId, setWeddingId] = useState<string | null>(null);
+  const [showGiftsSection, setShowGiftsSection] = useState<boolean>(true);
   const [newItem, setNewItem] = useState({ 
     gift_name: "", 
     description: "", 
@@ -29,11 +30,12 @@ const GiftManager = () => {
   const fetchData = async () => {
     const { data: wedding } = await supabase
       .from("wedding_details")
-      .select("id")
+      .select("id, show_gifts_section")
       .single();
 
     if (wedding) {
       setWeddingId(wedding.id);
+      setShowGiftsSection(wedding.show_gifts_section ?? true);
       const { data: itemsData } = await supabase
         .from("gift_items")
         .select(`
@@ -165,8 +167,55 @@ const GiftManager = () => {
     }
   };
 
+  const handleToggleGiftsSection = async (newValue: boolean) => {
+    if (!weddingId) return;
+
+    const { error } = await supabase
+      .from("wedding_details")
+      .update({ show_gifts_section: newValue })
+      .eq("id", weddingId);
+
+    if (error) {
+      toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
+    } else {
+      toast({ 
+        title: "Atualizado", 
+        description: `Seção de presentes ${newValue ? 'exibida' : 'oculta'} na página inicial`,
+      });
+      
+      await logAdminAction({
+        action: "update",
+        tableName: "wedding_details",
+        recordId: weddingId,
+        newData: { show_gifts_section: newValue },
+      });
+      
+      setShowGiftsSection(newValue);
+    }
+  };
+
   return (
     <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Visibilidade da Seção de Presentes</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium">Exibir seção "Lista de Presentes" na página inicial</p>
+              <p className="text-sm text-muted-foreground">
+                Controla se toda a seção de presentes aparece na página inicial
+              </p>
+            </div>
+            <Switch
+              checked={showGiftsSection}
+              onCheckedChange={handleToggleGiftsSection}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle>{editingId ? "Editar Presente" : "Adicionar Presente"}</CardTitle>
