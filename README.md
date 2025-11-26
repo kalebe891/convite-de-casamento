@@ -71,3 +71,26 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+
+## Versioning
+
+This project follows [Semantic Versioning](https://semver.org/). See [CHANGELOG.md](CHANGELOG.md) for detailed version history.
+
+**Current Version**: 0.9.0
+
+### Creating Version Tags
+
+To create git tags for versions documented in the CHANGELOG:
+
+```bash
+# Create annotated tag
+git tag -a v0.9.0 -m "Version 0.9.0 - Admin logging system"
+
+# Push all tags to remote
+git push origin --tags
+```
+
+### Version Strategy
+- **0.x.x**: Pre-release versions during development
+- **1.0.0**: First production-ready release (planned)
+- Follow semantic versioning for all future releases
