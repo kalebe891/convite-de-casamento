@@ -22,11 +22,24 @@ interface GiftItem {
 const GiftsSection = ({ weddingId }: GiftsSectionProps) => {
   const [gifts, setGifts] = useState<GiftItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showSection, setShowSection] = useState(true);
 
   useEffect(() => {
     if (!weddingId) return;
 
-    const fetchGifts = async () => {
+    const fetchData = async () => {
+      // Fetch wedding settings
+      const { data: weddingData } = await supabase
+        .from("wedding_details")
+        .select("show_gifts_section")
+        .eq("id", weddingId)
+        .single();
+
+      if (weddingData) {
+        setShowSection(weddingData.show_gifts_section ?? true);
+      }
+
+      // Fetch gifts
       const { data, error } = await supabase
         .from("gift_items")
         .select(`
@@ -45,7 +58,7 @@ const GiftsSection = ({ weddingId }: GiftsSectionProps) => {
       setLoading(false);
     };
 
-    fetchGifts();
+    fetchData();
 
     // Subscribe to realtime changes
     const channel = supabase
@@ -59,7 +72,19 @@ const GiftsSection = ({ weddingId }: GiftsSectionProps) => {
           filter: `wedding_id=eq.${weddingId}`,
         },
         () => {
-          fetchGifts();
+          fetchData();
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "wedding_details",
+          filter: `id=eq.${weddingId}`,
+        },
+        () => {
+          fetchData();
         }
       )
       .subscribe();
@@ -70,6 +95,7 @@ const GiftsSection = ({ weddingId }: GiftsSectionProps) => {
   }, [weddingId]);
 
   if (loading) return null;
+  if (!showSection) return null;
   if (gifts.length === 0) return null;
 
   return (
