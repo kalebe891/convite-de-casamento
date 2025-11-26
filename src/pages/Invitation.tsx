@@ -318,21 +318,21 @@ const Invitation = () => {
                   </>
                 )}
 
-                {(gifts.length > 0 || selectedGiftId) && (
-                  <div className="space-y-3 p-4 border rounded-lg bg-background">
-                    <Label className="text-base">
-                      Gostaria de presentear os noivos? (opcional)
-                    </Label>
-                    <p className="text-sm text-muted-foreground">
-                      Você pode selecionar um presente agora e confirmar sua presença depois
-                    </p>
-                    {selectedGiftId && (
-                      <div className="p-3 bg-primary/10 border border-primary/20 rounded-md">
-                        <p className="text-sm font-medium text-primary">
-                          🎁 Presente reservado por você!
-                        </p>
-                      </div>
-                    )}
+                <div className="space-y-3 p-4 border rounded-lg bg-background">
+                  <Label className="text-base">
+                    Gostaria de presentear os noivos? (opcional)
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    Você pode selecionar um presente agora e confirmar sua presença depois
+                  </p>
+                  {selectedGiftId && (
+                    <div className="p-3 bg-primary/10 border border-primary/20 rounded-md">
+                      <p className="text-sm font-medium text-primary">
+                        🎁 Presente reservado por você!
+                      </p>
+                    </div>
+                  )}
+                  {gifts.length > 0 ? (
                     <RadioGroup
                       value={selectedGiftId}
                       onValueChange={handleGiftSelect}
@@ -363,13 +363,21 @@ const Invitation = () => {
                         </div>
                       ))}
                     </RadioGroup>
-                    {giftSelecting && (
-                      <p className="text-sm text-muted-foreground">
-                        Processando seleção...
-                      </p>
-                    )}
-                  </div>
-                )}
+                  ) : selectedGiftId ? (
+                    <p className="text-sm text-muted-foreground">
+                      Você já selecionou um presente para os noivos.
+                    </p>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      Todos os presentes já foram selecionados por outros convidados.
+                    </p>
+                  )}
+                  {giftSelecting && (
+                    <p className="text-sm text-muted-foreground">
+                      Processando seleção...
+                    </p>
+                  )}
+                </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="message">Mensagem para os noivos (opcional)</Label>
