@@ -140,21 +140,15 @@ const GiftManager = () => {
     }
   };
 
-  const handleTogglePublic = async (id: string, currentValue: boolean) => {
-    const newValue = !currentValue;
-    console.log(`[GiftManager] Toggling gift ${id} from ${currentValue} to ${newValue}`);
-    
-    const { data, error } = await supabase
+  const handleTogglePublic = async (id: string, newValue: boolean) => {
+    const { error } = await supabase
       .from("gift_items")
       .update({ is_public: newValue })
-      .eq("id", id)
-      .select();
+      .eq("id", id);
 
     if (error) {
-      console.error('[GiftManager] Error toggling public:', error);
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
     } else {
-      console.log('[GiftManager] Toggle successful:', data);
       toast({ 
         title: "Atualizado", 
         description: `Presente ${newValue ? 'visível' : 'oculto'} para o público`,
@@ -164,7 +158,6 @@ const GiftManager = () => {
         action: "update",
         tableName: "gift_items",
         recordId: id,
-        oldData: { is_public: currentValue },
         newData: { is_public: newValue },
       });
       
@@ -269,7 +262,7 @@ const GiftManager = () => {
                   <div className="flex items-center gap-2">
                     <Switch
                       checked={item.is_public}
-                      onCheckedChange={() => handleTogglePublic(item.id, item.is_public)}
+                      onCheckedChange={(checked) => handleTogglePublic(item.id, checked)}
                     />
                     <Button
                       variant="outline"
