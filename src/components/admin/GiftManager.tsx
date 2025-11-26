@@ -36,7 +36,10 @@ const GiftManager = () => {
       setWeddingId(wedding.id);
       const { data: itemsData } = await supabase
         .from("gift_items")
-        .select("*")
+        .select(`
+          *,
+          invitation:invitations(guest_name)
+        `)
         .eq("wedding_id", wedding.id)
         .order("display_order");
       setItems(itemsData || []);
@@ -237,6 +240,11 @@ const GiftManager = () => {
                       >
                         Ver link
                       </a>
+                    )}
+                    {item.invitation?.guest_name && (
+                      <p className="text-sm text-green-600 dark:text-green-400 font-medium mt-1">
+                        🎁 Selecionado por: {item.invitation.guest_name}
+                      </p>
                     )}
                   </div>
                   <div className="flex items-center gap-2">

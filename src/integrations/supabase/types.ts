@@ -172,6 +172,7 @@ export type Database = {
           is_public: boolean | null
           is_purchased: boolean | null
           link: string | null
+          selected_by_invitation_id: string | null
           wedding_id: string | null
         }
         Insert: {
@@ -183,6 +184,7 @@ export type Database = {
           is_public?: boolean | null
           is_purchased?: boolean | null
           link?: string | null
+          selected_by_invitation_id?: string | null
           wedding_id?: string | null
         }
         Update: {
@@ -194,9 +196,17 @@ export type Database = {
           is_public?: boolean | null
           is_purchased?: boolean | null
           link?: string | null
+          selected_by_invitation_id?: string | null
           wedding_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "gift_items_selected_by_invitation_id_fkey"
+            columns: ["selected_by_invitation_id"]
+            isOneToOne: false
+            referencedRelation: "invitations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "gift_items_wedding_id_fkey"
             columns: ["wedding_id"]

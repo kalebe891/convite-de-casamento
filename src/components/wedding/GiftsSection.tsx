@@ -16,6 +16,7 @@ interface GiftItem {
   link: string | null;
   is_purchased: boolean | null;
   is_public: boolean | null;
+  selected_by_invitation_id: string | null;
 }
 
 const GiftsSection = ({ weddingId }: GiftsSectionProps) => {
@@ -28,7 +29,10 @@ const GiftsSection = ({ weddingId }: GiftsSectionProps) => {
     const fetchGifts = async () => {
       const { data, error } = await supabase
         .from("gift_items")
-        .select("*")
+        .select(`
+          *,
+          invitation:invitations(guest_name)
+        `)
         .eq("wedding_id", weddingId)
         .eq("is_public", true)
         .order("display_order");
@@ -84,7 +88,9 @@ const GiftsSection = ({ weddingId }: GiftsSectionProps) => {
           {gifts.map((gift, index) => (
             <Card
               key={gift.id}
-              className="shadow-soft hover:shadow-elegant transition-all duration-300 animate-fade-in"
+              className={`shadow-soft hover:shadow-elegant transition-all duration-300 animate-fade-in ${
+                gift.selected_by_invitation_id ? "opacity-50" : ""
+              }`}
               style={{ animationDelay: `${index * 100}ms` }}
             >
               <CardHeader>
@@ -93,9 +99,9 @@ const GiftsSection = ({ weddingId }: GiftsSectionProps) => {
                     <Gift className="w-5 h-5 text-primary flex-shrink-0" />
                     <CardTitle className="text-lg">{gift.gift_name}</CardTitle>
                   </div>
-                  {gift.is_purchased && (
+                  {gift.selected_by_invitation_id && (
                     <Badge variant="secondary" className="ml-2">
-                      Comprado
+                      ✓ Selecionado
                     </Badge>
                   )}
                 </div>
@@ -105,7 +111,7 @@ const GiftsSection = ({ weddingId }: GiftsSectionProps) => {
                   </CardDescription>
                 )}
               </CardHeader>
-              {gift.link && !gift.is_purchased && (
+              {gift.link && !gift.selected_by_invitation_id && (
                 <CardContent>
                   <Button
                     variant="outline"
