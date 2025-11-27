@@ -250,6 +250,9 @@ const Invitation = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <p style={{textAlign:"center",color:"red",marginTop:"10px"}}>
+        🔧 TESTE VISUAL DE BUILD (não remover até aviso)
+      </p>
       <HeroSection weddingDetails={weddingDetails} />
       <EventsSection events={events} />
 
