@@ -39,12 +39,13 @@ const Invitation = () => {
       .or(`selected_by_invitation_id.is.null,selected_by_invitation_id.eq.${invitationId}`)
       .order("display_order");
     
+    console.log("🎁 Buscando presentes:", { weddingId, invitationId, giftsData });
     setGifts(giftsData || []);
-    console.log("GIFTS LOADED:", giftsData);
   };
 
   useEffect(() => {
     const fetchInvitation = async () => {
+      console.log("🔎 Iniciando fetch de convite:", code);
       if (!code) return;
 
       try {
