@@ -23,6 +23,8 @@ const GiftsSection = ({ weddingId }: GiftsSectionProps) => {
   const [gifts, setGifts] = useState<GiftItem[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [showSection, setShowSection] = useState(true);
+
   useEffect(() => {
     if (!weddingId) {
       setLoading(false);
@@ -30,7 +32,18 @@ const GiftsSection = ({ weddingId }: GiftsSectionProps) => {
     }
 
     const fetchData = async () => {
-      // Fetch all gifts (including non-public ones)
+      // Fetch wedding details to check if gifts section should be shown
+      const { data: weddingData } = await supabase
+        .from("wedding_details")
+        .select("show_gifts_section")
+        .eq("id", weddingId)
+        .single();
+
+      if (weddingData) {
+        setShowSection(weddingData.show_gifts_section ?? true);
+      }
+
+      // Fetch only public gifts
       const { data, error } = await supabase
         .from("gift_items")
         .select(`
@@ -38,6 +51,7 @@ const GiftsSection = ({ weddingId }: GiftsSectionProps) => {
           invitation:invitations(guest_name)
         `)
         .eq("wedding_id", weddingId)
+        .eq("is_public", true)
         .order("display_order");
 
       if (error) {
@@ -65,6 +79,18 @@ const GiftsSection = ({ weddingId }: GiftsSectionProps) => {
           fetchData();
         }
       )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "wedding_details",
+          filter: `id=eq.${weddingId}`,
+        },
+        () => {
+          fetchData();
+        }
+      )
       .subscribe();
 
     return () => {
@@ -72,24 +98,13 @@ const GiftsSection = ({ weddingId }: GiftsSectionProps) => {
     };
   }, [weddingId]);
 
+  if (!showSection) {
+    return null;
+  }
+
   return (
     <section className="py-20 bg-muted/30">
       <div className="container mx-auto px-4">
-        {/* DEBUG VISUAL SEMPRE VISÍVEL */}
-        <div style={{ 
-          background: "yellow", 
-          padding: "10px", 
-          fontSize: "14px",
-          border: "2px solid red",
-          marginBottom: "10px"
-        }}>
-          <strong>DEBUG PRESENTES</strong><br />
-          Total carregados: {gifts?.length ?? "SEM DADOS"} <br />
-          Lista: {gifts?.map(g => g.gift_name).join(", ") || "VAZIO"} <br />
-          Loading: {loading ? "SIM" : "NÃO"} <br />
-          WeddingId: {weddingId || "NULL"}
-        </div>
-
         {loading ? (
           <div className="text-center py-12">
             <p className="text-lg text-muted-foreground">Carregando presentes...</p>
@@ -114,7 +129,7 @@ const GiftsSection = ({ weddingId }: GiftsSectionProps) => {
                   <Card
                     key={gift.id}
                     className={`shadow-soft hover:shadow-elegant transition-all duration-300 animate-fade-in ${
-                      gift.selected_by_invitation_id ? "opacity-60 cursor-not-allowed" : ""
+                      gift.is_purchased ? "opacity-60" : ""
                     }`}
                     style={{ animationDelay: `${index * 100}ms` }}
                   >
@@ -124,9 +139,9 @@ const GiftsSection = ({ weddingId }: GiftsSectionProps) => {
                           <Gift className="w-5 h-5 text-primary flex-shrink-0" />
                           <CardTitle className="text-lg">{gift.gift_name}</CardTitle>
                         </div>
-                        {gift.selected_by_invitation_id && (
+                        {gift.is_purchased && (
                           <Badge variant="secondary" className="ml-2">
-                            ✓ Indisponível
+                            ✓ Adquirido
                           </Badge>
                         )}
                       </div>
@@ -141,11 +156,10 @@ const GiftsSection = ({ weddingId }: GiftsSectionProps) => {
                         <Button
                           variant="outline"
                           className="w-full"
-                          onClick={() => !gift.selected_by_invitation_id && window.open(gift.link!, "_blank")}
-                          disabled={!!gift.selected_by_invitation_id}
+                          onClick={() => window.open(gift.link!, "_blank")}
                         >
                           <ExternalLink className="w-4 h-4 mr-2" />
-                          {gift.selected_by_invitation_id ? "Indisponível" : "Ver Presente"}
+                          Ver Presente
                         </Button>
                       </CardContent>
                     )}

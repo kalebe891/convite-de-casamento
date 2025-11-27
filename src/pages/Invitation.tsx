@@ -10,7 +10,7 @@ import { Heart, HeartOff, Loader2 } from "lucide-react";
 import { z } from "zod";
 import HeroSection from "@/components/wedding/HeroSection";
 import EventsSection from "@/components/wedding/EventsSection";
-import GiftsSection from "@/components/wedding/GiftsSection";
+import InvitationGifts from "@/components/wedding/InvitationGifts";
 import ThemeToggle from "@/components/ThemeToggle";
 
 const rsvpResponseSchema = z.object({
@@ -42,8 +42,6 @@ const Invitation = () => {
   const [formData, setFormData] = useState({
     message: "",
   });
-  const [gifts, setGifts] = useState([]);
-  const [debugInfo, setDebugInfo] = useState<{ weddingId: string | null, invitationId: string | null, giftsCount: number, giftsData: any[] } | null>(null);
 
   // Fetch wedding data
   useEffect(() => {
@@ -68,31 +66,6 @@ const Invitation = () => {
 
     fetchWeddingData();
   }, []);
-
-  // Fetch gifts data
-  useEffect(() => {
-    const fetchGiftItems = async () => {
-      if (!weddingDetails?.id || !invitationData?.id) return;
-
-      const { data: giftsData } = await supabase
-        .from("gift_items")
-        .select("*")
-        .eq("wedding_id", weddingDetails.id)
-        .order("display_order");
-
-      setGifts(giftsData || []);
-      
-      // Set debug info
-      setDebugInfo({
-        weddingId: weddingDetails.id,
-        invitationId: invitationData.id,
-        giftsCount: giftsData?.length || 0,
-        giftsData: giftsData || []
-      });
-    };
-
-    fetchGiftItems();
-  }, [weddingDetails, invitationData]);
 
   // Fetch invitation data
   useEffect(() => {
@@ -356,30 +329,10 @@ const Invitation = () => {
         <HeroSection weddingDetails={weddingDetails} />
         {renderRSVPSection()}
         <EventsSection events={events} />
-        
-        {/* DEBUG BLOCK - VISIBLE */}
-        {debugInfo && (
-          <section className="py-8 bg-yellow-100 dark:bg-yellow-900">
-            <div className="container mx-auto px-4">
-              <div className="max-w-4xl mx-auto p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
-                <h2 className="text-2xl font-bold mb-4 text-black dark:text-white">🔍 DEBUG PRESENTES</h2>
-                <div className="space-y-2 text-sm font-mono text-black dark:text-white">
-                  <p><strong>wedding_id:</strong> {debugInfo.weddingId}</p>
-                  <p><strong>invitation_id:</strong> {debugInfo.invitationId}</p>
-                  <p><strong>Total presentes recebidos:</strong> {debugInfo.giftsCount}</p>
-                  <div className="mt-4">
-                    <strong>JSON:</strong>
-                    <pre className="mt-2 p-4 bg-gray-100 dark:bg-gray-900 rounded overflow-auto max-h-96 text-xs">
-                      {JSON.stringify(debugInfo.giftsData, null, 2)}
-                    </pre>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-        )}
-        
-        <GiftsSection weddingId={weddingDetails?.id || null} />
+        <InvitationGifts 
+          weddingId={weddingDetails?.id || null}
+          invitationId={invitationData?.id || null}
+        />
       </main>
 
       <footer className="bg-card border-t border-border py-8 mt-20">
