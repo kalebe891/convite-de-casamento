@@ -37,6 +37,7 @@ interface InvitationData {
   dietary_restrictions: string | null;
   message: string | null;
   wedding_id: string | null;
+  selected_gift_id?: string | null;
 }
 
 interface GiftItem {
@@ -66,6 +67,7 @@ const Invitation = () => {
   const [selectedGiftId, setSelectedGiftId] = useState<string>("");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [savingGift, setSavingGift] = useState(false);
+  const [hasExistingGift, setHasExistingGift] = useState(false);
 
   // Fetch wedding data
   useEffect(() => {
@@ -159,6 +161,9 @@ const Invitation = () => {
         const alreadySelected = data?.find(g => g.selected_by_invitation_id === invitationData.id);
         if (alreadySelected) {
           setSelectedGiftId(alreadySelected.id);
+          setHasExistingGift(true);
+        } else {
+          setHasExistingGift(false);
         }
       }
       setLoadingGifts(false);
@@ -271,6 +276,18 @@ const Invitation = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
+        
+        // Verificar se é erro 403 (já tem presente)
+        if (response.status === 403) {
+          toast({
+            title: "Alteração não permitida",
+            description: errorData.error || "Você já selecionou um presente. Para alterar, solicite um novo link.",
+            variant: "destructive",
+          });
+          setDrawerOpen(false);
+          return;
+        }
+        
         throw new Error(errorData.error || 'Erro ao salvar presente');
       }
 
@@ -482,20 +499,34 @@ const Invitation = () => {
                   ? "Carregando presentes..." 
                   : gifts.length === 0 
                     ? "Ainda não há presentes cadastrados"
-                    : invitationData?.responded_at
-                      ? "Você pode alterar sua escolha de presente"
-                      : "Escolha um presente especial para os noivos (opcional)"
+                    : invitationData?.responded_at && hasExistingGift
+                      ? "Você já selecionou um presente. Para alterar, solicite um novo link."
+                      : invitationData?.responded_at
+                        ? "Você pode alterar sua escolha de presente"
+                        : "Escolha um presente especial para os noivos (opcional)"
                 }
               </DrawerDescription>
             </DrawerHeader>
             
             {!loadingGifts && gifts.length > 0 && (
               <div className="px-4 overflow-y-auto max-h-[60vh]">
-                <RadioGroup value={selectedGiftId} onValueChange={setSelectedGiftId}>
-                  <div className="space-y-3 pb-4">
-                    {gifts.map((gift) => {
-                      const isSelectedByOther = gift.selected_by_invitation_id && gift.selected_by_invitation_id !== invitationData?.id;
-                      const isSelectedByMe = gift.selected_by_invitation_id === invitationData?.id;
+                {invitationData?.responded_at && hasExistingGift ? (
+                  <div className="text-center py-8 space-y-4">
+                    <div className="w-16 h-16 mx-auto bg-muted rounded-full flex items-center justify-center">
+                      <Gift className="w-8 h-8 text-muted-foreground" />
+                    </div>
+                    <p className="text-muted-foreground">
+                      Você já selecionou um presente com este link.
+                      <br />
+                      Para alterar sua escolha, solicite um novo link aos noivos.
+                    </p>
+                  </div>
+                ) : (
+                  <RadioGroup value={selectedGiftId} onValueChange={setSelectedGiftId}>
+                    <div className="space-y-3 pb-4">
+                      {gifts.map((gift) => {
+                        const isSelectedByOther = gift.selected_by_invitation_id && gift.selected_by_invitation_id !== invitationData?.id;
+                        const isSelectedByMe = gift.selected_by_invitation_id === invitationData?.id;
 
                       return (
                         <div
@@ -556,15 +587,16 @@ const Invitation = () => {
                             )}
                           </div>
                         </div>
-                      );
-                    })}
-                  </div>
-                </RadioGroup>
+                        );
+                      })}
+                    </div>
+                  </RadioGroup>
+                )}
               </div>
             )}
 
             <DrawerFooter>
-              {invitationData?.responded_at ? (
+              {invitationData?.responded_at && !hasExistingGift ? (
                 <>
                   <Button 
                     onClick={handleSaveGiftChange} 
@@ -583,6 +615,10 @@ const Invitation = () => {
                     <Button variant="outline">Cancelar</Button>
                   </DrawerClose>
                 </>
+              ) : invitationData?.responded_at && hasExistingGift ? (
+                <DrawerClose asChild>
+                  <Button variant="outline">Fechar</Button>
+                </DrawerClose>
               ) : (
                 <>
                   <DrawerClose asChild>

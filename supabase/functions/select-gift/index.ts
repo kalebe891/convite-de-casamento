@@ -83,11 +83,27 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Primeiro, desmarcar qualquer presente anterior deste convite
-    await supabase
+    // Verificar se este convite já tem um presente selecionado
+    const { data: existingGift, error: checkError } = await supabase
       .from('gift_items')
-      .update({ selected_by_invitation_id: null })
-      .eq('selected_by_invitation_id', invitation_id);
+      .select('id, gift_name')
+      .eq('selected_by_invitation_id', invitation_id)
+      .single();
+
+    if (checkError && checkError.code !== 'PGRST116') {
+      console.error('[select-gift] Erro ao verificar presente existente:', checkError);
+    }
+
+    if (existingGift) {
+      console.warn('[select-gift] Convite já possui presente selecionado:', existingGift.gift_name);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Você já selecionou um presente. Para alterar, solicite um novo link.',
+          current_gift: existingGift.gift_name
+        }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     console.log('[select-gift] Tentando reservar presente:', gift_id);
 
