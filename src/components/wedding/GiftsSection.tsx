@@ -101,6 +101,16 @@ const GiftsSection = ({ weddingId }: GiftsSectionProps) => {
   return (
     <section className="py-20 bg-muted/30">
       <div className="container mx-auto px-4">
+        {/* DEBUG BLOCK - VISIBLE */}
+        <div style={{ background: 'yellow', padding: '20px', marginBottom: '20px', textAlign: 'center' }}>
+          <h3 style={{ color: 'black', fontWeight: 'bold', fontSize: '20px' }}>🔍 DEBUG LISTAGEM</h3>
+          <p style={{ color: 'black', fontSize: '16px' }}>Quantidade de presentes recebidos: {gifts.length}</p>
+        </div>
+
+        <ul style={{ background: 'pink', padding: '10px', marginBottom: '20px' }}>
+          {gifts?.map((g) => <li key={g.id} style={{ color: 'black' }}>{g.gift_name}</li>)}
+        </ul>
+
         <div className="text-center mb-12">
           <h2 className="text-5xl font-serif font-bold mb-4 text-foreground">
             Lista de Presentes
