@@ -6,12 +6,23 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Heart, HeartOff, Loader2 } from "lucide-react";
+import { Heart, HeartOff, Loader2, Gift, ExternalLink } from "lucide-react";
 import { z } from "zod";
 import HeroSection from "@/components/wedding/HeroSection";
 import EventsSection from "@/components/wedding/EventsSection";
-import InvitationGifts from "@/components/wedding/InvitationGifts";
 import ThemeToggle from "@/components/ThemeToggle";
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Badge } from "@/components/ui/badge";
 
 const rsvpResponseSchema = z.object({
   message: z.string().trim().max(1000).optional().or(z.literal("")),
@@ -28,6 +39,14 @@ interface InvitationData {
   wedding_id: string | null;
 }
 
+interface GiftItem {
+  id: string;
+  gift_name: string;
+  description: string | null;
+  link: string | null;
+  selected_by_invitation_id: string | null;
+}
+
 const Invitation = () => {
   const { invitation_code } = useParams<{ invitation_code?: string }>();
   const navigate = useNavigate();
@@ -42,6 +61,10 @@ const Invitation = () => {
   const [formData, setFormData] = useState({
     message: "",
   });
+  const [gifts, setGifts] = useState<GiftItem[]>([]);
+  const [loadingGifts, setLoadingGifts] = useState(false);
+  const [selectedGiftId, setSelectedGiftId] = useState<string>("");
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   // Fetch wedding data
   useEffect(() => {
@@ -110,6 +133,39 @@ const Invitation = () => {
     fetchInvitationData();
   }, [invitation_code]);
 
+  // Fetch gifts
+  useEffect(() => {
+    if (!weddingDetails?.id || !invitationData?.id) {
+      setLoadingGifts(false);
+      return;
+    }
+
+    const fetchGifts = async () => {
+      setLoadingGifts(true);
+      const { data, error } = await supabase
+        .from("gift_items")
+        .select("*")
+        .eq("wedding_id", weddingDetails.id)
+        .or(`selected_by_invitation_id.is.null,selected_by_invitation_id.eq.${invitationData.id}`)
+        .order("display_order");
+
+      if (error) {
+        console.error("Error fetching gifts:", error);
+      } else {
+        setGifts(data || []);
+        
+        // Set already selected gift
+        const alreadySelected = data?.find(g => g.selected_by_invitation_id === invitationData.id);
+        if (alreadySelected) {
+          setSelectedGiftId(alreadySelected.id);
+        }
+      }
+      setLoadingGifts(false);
+    };
+
+    fetchGifts();
+  }, [weddingDetails?.id, invitationData?.id]);
+
   const handleRSVPResponse = async (attending: boolean) => {
     if (!invitation_code || !invitationData) return;
 
@@ -117,6 +173,7 @@ const Invitation = () => {
       const validatedData = rsvpResponseSchema.parse(formData);
       setSubmitting(true);
 
+      // First, respond to RSVP
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/rsvp-respond`,
         {
@@ -136,6 +193,24 @@ const Invitation = () => {
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Erro ao processar resposta');
+      }
+
+      // Then, save gift selection if attending and gift selected
+      if (attending && selectedGiftId) {
+        await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/select-gift`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+            },
+            body: JSON.stringify({
+              invitation_id: invitationData.id,
+              gift_id: selectedGiftId,
+            }),
+          }
+        );
       }
 
       // Update local state to show final status
@@ -329,10 +404,6 @@ const Invitation = () => {
         <HeroSection weddingDetails={weddingDetails} />
         {renderRSVPSection()}
         <EventsSection events={events} />
-        <InvitationGifts 
-          weddingId={weddingDetails?.id || null}
-          invitationId={invitationData?.id || null}
-        />
       </main>
 
       <footer className="bg-card border-t border-border py-8 mt-20">
@@ -340,6 +411,123 @@ const Invitation = () => {
           <p>© 2025 Convite de Casamento. Todos os direitos reservados.</p>
         </div>
       </footer>
+
+      {/* Drawer inferior para lista de presentes */}
+      {invitation_code && !invitationData?.responded_at && (
+        <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
+          <DrawerTrigger asChild>
+            <Button 
+              className="fixed bottom-6 right-6 rounded-full shadow-lg px-6 py-6 text-lg z-50"
+              size="lg"
+            >
+              <Gift className="w-5 h-5 mr-2" />
+              Lista de Presentes
+            </Button>
+          </DrawerTrigger>
+          <DrawerContent className="max-h-[85vh]">
+            <DrawerHeader>
+              <DrawerTitle className="text-2xl font-serif flex items-center justify-center gap-2">
+                <Gift className="w-6 h-6 text-primary" />
+                Lista de Presentes
+              </DrawerTitle>
+              <DrawerDescription className="text-center">
+                {loadingGifts 
+                  ? "Carregando presentes..." 
+                  : gifts.length === 0 
+                    ? "Ainda não há presentes cadastrados"
+                    : "Escolha um presente especial para os noivos (opcional)"
+                }
+              </DrawerDescription>
+            </DrawerHeader>
+            
+            {!loadingGifts && gifts.length > 0 && (
+              <div className="px-4 overflow-y-auto max-h-[60vh]">
+                <RadioGroup value={selectedGiftId} onValueChange={setSelectedGiftId}>
+                  <div className="space-y-3 pb-4">
+                    {gifts.map((gift) => {
+                      const isSelectedByOther = gift.selected_by_invitation_id && gift.selected_by_invitation_id !== invitationData?.id;
+                      const isSelectedByMe = gift.selected_by_invitation_id === invitationData?.id;
+
+                      return (
+                        <div
+                          key={gift.id}
+                          className={`flex items-start space-x-3 rounded-lg border p-4 transition-all ${
+                            isSelectedByOther
+                              ? "opacity-50 cursor-not-allowed bg-muted"
+                              : isSelectedByMe
+                              ? "border-primary bg-primary/5"
+                              : selectedGiftId === gift.id
+                              ? "border-primary bg-primary/5"
+                              : "hover:border-primary/50 cursor-pointer"
+                          }`}
+                        >
+                          <RadioGroupItem 
+                            value={gift.id} 
+                            id={gift.id}
+                            disabled={isSelectedByOther}
+                            className="mt-1"
+                          />
+                          <div className="flex-1 space-y-1">
+                            <Label
+                              htmlFor={gift.id}
+                              className={`font-medium flex items-center gap-2 ${
+                                isSelectedByOther ? "cursor-not-allowed" : "cursor-pointer"
+                              }`}
+                            >
+                              {gift.gift_name}
+                              {isSelectedByOther && (
+                                <Badge variant="secondary" className="text-xs">
+                                  Selecionado
+                                </Badge>
+                              )}
+                              {selectedGiftId === gift.id && !isSelectedByOther && (
+                                <Badge variant="default" className="text-xs">
+                                  Escolhido
+                                </Badge>
+                              )}
+                            </Label>
+                            {gift.description && (
+                              <p className="text-sm text-muted-foreground">
+                                {gift.description}
+                              </p>
+                            )}
+                            {gift.link && !isSelectedByOther && (
+                              <Button
+                                variant="link"
+                                size="sm"
+                                className="h-auto p-0 text-primary"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  window.open(gift.link!, "_blank");
+                                }}
+                              >
+                                <ExternalLink className="w-3 h-3 mr-1" />
+                                Ver detalhes
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </RadioGroup>
+              </div>
+            )}
+
+            <DrawerFooter>
+              <DrawerClose asChild>
+                <Button variant="outline">Fechar</Button>
+              </DrawerClose>
+              <p className="text-xs text-muted-foreground text-center mt-2">
+                {selectedGiftId 
+                  ? "Presente será registrado ao confirmar sua presença"
+                  : "A escolha de presente é opcional"
+                }
+              </p>
+            </DrawerFooter>
+          </DrawerContent>
+        </Drawer>
+      )}
     </div>
   );
 };
