@@ -94,74 +94,84 @@ const GiftsSection = ({ weddingId }: GiftsSectionProps) => {
     };
   }, [weddingId]);
 
-  if (loading) return null;
-  if (!showSection) return null;
-  if (gifts.length === 0) return null;
-
   return (
     <section className="py-20 bg-muted/30">
       <div className="container mx-auto px-4">
-        {/* DEBUG BLOCK - VISIBLE */}
-        <div style={{ background: 'yellow', padding: '20px', marginBottom: '20px', textAlign: 'center' }}>
-          <h3 style={{ color: 'black', fontWeight: 'bold', fontSize: '20px' }}>🔍 DEBUG LISTAGEM</h3>
-          <p style={{ color: 'black', fontSize: '16px' }}>Quantidade de presentes recebidos: {gifts.length}</p>
+        {/* DEBUG VISUAL SEMPRE VISÍVEL */}
+        <div style={{ 
+          background: "yellow", 
+          padding: "10px", 
+          fontSize: "14px",
+          border: "2px solid red",
+          marginBottom: "10px"
+        }}>
+          <strong>DEBUG PRESENTES</strong><br />
+          Total carregados: {gifts?.length ?? "SEM DADOS"} <br />
+          Lista: {gifts?.map(g => g.gift_name).join(", ") || "VAZIO"} <br />
+          Loading: {loading ? "SIM" : "NÃO"} <br />
+          ShowSection: {showSection ? "SIM" : "NÃO"} <br />
+          WeddingId: {weddingId || "NULL"}
         </div>
 
-        <ul style={{ background: 'pink', padding: '10px', marginBottom: '20px' }}>
-          {gifts?.map((g) => <li key={g.id} style={{ color: 'black' }}>{g.gift_name}</li>)}
-        </ul>
+        {loading && <p style={{ color: 'white' }}>Carregando presentes...</p>}
+        {!showSection && <p style={{ color: 'white' }}>Seção de presentes desabilitada</p>}
+        {!loading && showSection && gifts.length === 0 && <p style={{ color: 'white' }}>Nenhum presente encontrado</p>}
 
-        <div className="text-center mb-12">
-          <h2 className="text-5xl font-serif font-bold mb-4 text-foreground">
-            Lista de Presentes
-          </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Se você deseja nos presentear, aqui estão algumas sugestões especiais
-          </p>
-        </div>
+        {!loading && showSection && gifts.length > 0 && (
+          <>
+            <div className="text-center mb-12">
+              <h2 className="text-5xl font-serif font-bold mb-4 text-foreground">
+                Lista de Presentes
+              </h2>
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                Se você deseja nos presentear, aqui estão algumas sugestões especiais
+              </p>
+            </div>
 
-        <div className="max-w-6xl mx-auto grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {gifts.map((gift, index) => (
-            <Card
-              key={gift.id}
-              className={`shadow-soft hover:shadow-elegant transition-all duration-300 animate-fade-in ${
-                gift.selected_by_invitation_id ? "opacity-50" : ""
-              }`}
-              style={{ animationDelay: `${index * 100}ms` }}
-            >
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-2 flex-1">
-                    <Gift className="w-5 h-5 text-primary flex-shrink-0" />
-                    <CardTitle className="text-lg">{gift.gift_name}</CardTitle>
-                  </div>
-                  {gift.selected_by_invitation_id && (
-                    <Badge variant="secondary" className="ml-2">
-                      ✓ Selecionado
-                    </Badge>
+            <div className="max-w-6xl mx-auto grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {gifts.map((gift, index) => (
+                <Card
+                  key={gift.id}
+                  className={`shadow-soft hover:shadow-elegant transition-all duration-300 animate-fade-in ${
+                    gift.selected_by_invitation_id ? "opacity-50" : ""
+                  }`}
+                  style={{ animationDelay: `${index * 100}ms` }}
+                >
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-2 flex-1">
+                        <Gift className="w-5 h-5 text-primary flex-shrink-0" />
+                        <CardTitle className="text-lg">{gift.gift_name}</CardTitle>
+                      </div>
+                      {gift.selected_by_invitation_id && (
+                        <Badge variant="secondary" className="ml-2">
+                          ✓ Selecionado
+                        </Badge>
+                      )}
+                    </div>
+                    {gift.description && (
+                      <CardDescription className="mt-2">
+                        {gift.description}
+                      </CardDescription>
+                    )}
+                  </CardHeader>
+                  {gift.link && !gift.selected_by_invitation_id && (
+                    <CardContent>
+                      <Button
+                        variant="outline"
+                        className="w-full"
+                        onClick={() => window.open(gift.link!, "_blank")}
+                      >
+                        <ExternalLink className="w-4 h-4 mr-2" />
+                        Ver Presente
+                      </Button>
+                    </CardContent>
                   )}
-                </div>
-                {gift.description && (
-                  <CardDescription className="mt-2">
-                    {gift.description}
-                  </CardDescription>
-                )}
-              </CardHeader>
-              {gift.link && !gift.selected_by_invitation_id && (
-                <CardContent>
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => window.open(gift.link!, "_blank")}
-                  >
-                    <ExternalLink className="w-4 h-4 mr-2" />
-                    Ver Presente
-                  </Button>
-                </CardContent>
-              )}
-            </Card>
-          ))}
-        </div>
+                </Card>
+              ))}
+            </div>
+          </>
+        )}
       </div>
     </section>
   );
