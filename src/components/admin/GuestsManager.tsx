@@ -110,6 +110,25 @@ const GuestsManager = () => {
       return;
     }
 
+    // Get related invitations first
+    const { data: invitations } = await supabase
+      .from("invitations")
+      .select("id")
+      .or(`guest_email.eq.${guest.email},guest_phone.eq.${guest.phone}`);
+
+    // Unassociate gifts from invitations
+    if (invitations && invitations.length > 0) {
+      const invitationIds = invitations.map(inv => inv.id);
+      const { error: giftError } = await supabase
+        .from("gift_items")
+        .update({ selected_by_invitation_id: null })
+        .in("selected_by_invitation_id", invitationIds);
+
+      if (giftError) {
+        console.error("Error unassociating gifts:", giftError);
+      }
+    }
+
     // Delete related rsvp_tokens
     const { error: tokenError } = await supabase
       .from("rsvp_tokens")
@@ -121,11 +140,11 @@ const GuestsManager = () => {
     }
 
     // Delete related invitations
-    if (guest.email) {
+    if (guest.email || guest.phone) {
       const { error: invitationError } = await supabase
         .from("invitations")
         .delete()
-        .eq("guest_email", guest.email);
+        .or(`guest_email.eq.${guest.email},guest_phone.eq.${guest.phone}`);
 
       if (invitationError) {
         console.error("Error deleting invitation:", invitationError);
