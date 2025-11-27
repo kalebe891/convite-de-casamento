@@ -228,7 +228,12 @@ const Invitation = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <div className="text-center">
+          <p style={{color:"red", fontSize:"18px", fontWeight:"bold", marginBottom:"20px"}}>
+            🔧 TESTE VISUAL DE BUILD (não remover)
+          </p>
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
       </div>
     );
   }
@@ -236,14 +241,19 @@ const Invitation = () => {
   if (!invitation) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Card className="max-w-md">
-          <CardHeader>
-            <CardTitle>Convite não encontrado</CardTitle>
-            <CardDescription>
-              O link do convite parece estar incorreto.
-            </CardDescription>
-          </CardHeader>
-        </Card>
+        <div>
+          <p style={{color:"red", fontSize:"18px", fontWeight:"bold", textAlign:"center", marginBottom:"20px"}}>
+            🔧 TESTE VISUAL DE BUILD (não remover)
+          </p>
+          <Card className="max-w-md">
+            <CardHeader>
+              <CardTitle>Convite não encontrado</CardTitle>
+              <CardDescription>
+                O link do convite parece estar incorreto.
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        </div>
       </div>
     );
   }
