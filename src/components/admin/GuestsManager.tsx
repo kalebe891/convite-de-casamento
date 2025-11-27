@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Mail, MessageSquare, Trash2, Copy, ExternalLink, RefreshCw, AlertTriangle } from "lucide-react";
+import { Mail, MessageSquare, Trash2, Copy, ExternalLink, RefreshCw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { guestSchema } from "@/lib/validationSchemas";
@@ -30,7 +30,6 @@ const GuestsManager = () => {
   const [selectedGuest, setSelectedGuest] = useState<Guest | null>(null);
   const [whatsAppMessage, setWhatsAppMessage] = useState("");
   const [whatsAppLink, setWhatsAppLink] = useState("");
-  const [orphanedInvitations, setOrphanedInvitations] = useState(0);
   const [newGuest, setNewGuest] = useState({
     name: "",
     phone: "",
@@ -51,85 +50,8 @@ const GuestsManager = () => {
     }
   };
 
-  const checkOrphanedInvitations = async () => {
-    const { data: invitations } = await supabase
-      .from("invitations")
-      .select("id, guest_email, guest_phone");
-
-    if (!invitations) return;
-
-    const { data: guests } = await supabase
-      .from("guests")
-      .select("email, phone");
-
-    if (!guests) return;
-
-    const guestEmails = new Set(guests.map(g => g.email).filter(Boolean));
-    const guestPhones = new Set(guests.map(g => g.phone).filter(Boolean));
-
-    const orphaned = invitations.filter(inv => {
-      const hasEmailMatch = inv.guest_email && guestEmails.has(inv.guest_email);
-      const hasPhoneMatch = inv.guest_phone && guestPhones.has(inv.guest_phone);
-      return !hasEmailMatch && !hasPhoneMatch;
-    });
-
-    setOrphanedInvitations(orphaned.length);
-  };
-
-  const cleanOrphanedInvitations = async () => {
-    const { data: invitations } = await supabase
-      .from("invitations")
-      .select("id, guest_email, guest_phone");
-
-    if (!invitations) return;
-
-    const { data: guests } = await supabase
-      .from("guests")
-      .select("email, phone");
-
-    if (!guests) return;
-
-    const guestEmails = new Set(guests.map(g => g.email).filter(Boolean));
-    const guestPhones = new Set(guests.map(g => g.phone).filter(Boolean));
-
-    const orphanedIds = invitations
-      .filter(inv => {
-        const hasEmailMatch = inv.guest_email && guestEmails.has(inv.guest_email);
-        const hasPhoneMatch = inv.guest_phone && guestPhones.has(inv.guest_phone);
-        return !hasEmailMatch && !hasPhoneMatch;
-      })
-      .map(inv => inv.id);
-
-    if (orphanedIds.length === 0) {
-      toast.info("Nenhuma mensagem órfã encontrada");
-      return;
-    }
-
-    // Unassociate gifts first
-    await supabase
-      .from("gift_items")
-      .update({ selected_by_invitation_id: null })
-      .in("selected_by_invitation_id", orphanedIds);
-
-    // Delete orphaned invitations
-    const { error } = await supabase
-      .from("invitations")
-      .delete()
-      .in("id", orphanedIds);
-
-    if (error) {
-      toast.error("Erro ao limpar mensagens órfãs");
-      console.error(error);
-      return;
-    }
-
-    toast.success(`${orphanedIds.length} mensagens órfãs removidas`);
-    setOrphanedInvitations(0);
-  };
-
   useEffect(() => {
     fetchGuests();
-    checkOrphanedInvitations();
 
     // Subscribe to realtime changes
     const channel = supabase
@@ -143,7 +65,6 @@ const GuestsManager = () => {
         },
         () => {
           fetchGuests();
-          checkOrphanedInvitations();
         }
       )
       .subscribe();
@@ -237,6 +158,44 @@ const GuestsManager = () => {
       console.error("Error deleting guest:", error);
       toast.error(getSafeErrorMessage(error));
     } else {
+      // Clean orphaned invitations after deleting guest
+      const { data: allInvitations } = await supabase
+        .from("invitations")
+        .select("id, guest_email, guest_phone");
+
+      if (allInvitations) {
+        const { data: allGuests } = await supabase
+          .from("guests")
+          .select("email, phone");
+
+        if (allGuests) {
+          const guestEmails = new Set(allGuests.map(g => g.email).filter(Boolean));
+          const guestPhones = new Set(allGuests.map(g => g.phone).filter(Boolean));
+
+          const orphanedIds = allInvitations
+            .filter(inv => {
+              const hasEmailMatch = inv.guest_email && guestEmails.has(inv.guest_email);
+              const hasPhoneMatch = inv.guest_phone && guestPhones.has(inv.guest_phone);
+              return !hasEmailMatch && !hasPhoneMatch;
+            })
+            .map(inv => inv.id);
+
+          if (orphanedIds.length > 0) {
+            // Unassociate gifts from orphaned invitations
+            await supabase
+              .from("gift_items")
+              .update({ selected_by_invitation_id: null })
+              .in("selected_by_invitation_id", orphanedIds);
+
+            // Delete orphaned invitations
+            await supabase
+              .from("invitations")
+              .delete()
+              .in("id", orphanedIds);
+          }
+        }
+      }
+
       toast.success("Convidado excluído com sucesso!");
       fetchGuests();
     }
@@ -309,7 +268,28 @@ const GuestsManager = () => {
       if (error) throw error;
 
       const link = data.link;
-      const message = `Olá, ${guest.name}! 🎉\n\nSe desejar alterar sua confirmação de presença para o nosso casamento, acesse o link abaixo:\n\n${link}\n\nO link é válido por 30 dias.`;
+      
+      // Get invitation and selected gift for this guest
+      const { data: invitation } = await supabase
+        .from("invitations")
+        .select("id")
+        .or(`guest_email.eq.${guest.email},guest_phone.eq.${guest.phone}`)
+        .single();
+
+      let giftInfo = "";
+      if (invitation) {
+        const { data: selectedGift } = await supabase
+          .from("gift_items")
+          .select("gift_name")
+          .eq("selected_by_invitation_id", invitation.id)
+          .single();
+
+        if (selectedGift) {
+          giftInfo = `\n\n🎁 Presente selecionado anteriormente: ${selectedGift.gift_name}\nVocê pode alterar sua escolha através do link.`;
+        }
+      }
+
+      const message = `Olá, ${guest.name}! 🎉\n\nSe desejar alterar sua confirmação de presença para o nosso casamento, acesse o link abaixo:\n\n${link}${giftInfo}\n\nO link é válido por 30 dias.`;
 
       setWhatsAppMessage(message);
       setWhatsAppLink(link);
@@ -383,17 +363,6 @@ const GuestsManager = () => {
           <div className="flex justify-between items-center">
             <CardTitle>Convidados</CardTitle>
             <div className="flex gap-2">
-              {orphanedInvitations > 0 && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={cleanOrphanedInvitations}
-                  className="border-amber-500 text-amber-700 hover:bg-amber-50 dark:text-amber-400 dark:border-amber-600 dark:hover:bg-amber-950"
-                >
-                  <AlertTriangle className="h-4 w-4 mr-2" />
-                  Limpar {orphanedInvitations} mensagens órfãs
-                </Button>
-              )}
               <GuestMessagesDialog />
               <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
               <DialogTrigger asChild>

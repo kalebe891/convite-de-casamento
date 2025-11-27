@@ -65,6 +65,7 @@ const Invitation = () => {
   const [loadingGifts, setLoadingGifts] = useState(false);
   const [selectedGiftId, setSelectedGiftId] = useState<string>("");
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [savingGift, setSavingGift] = useState(false);
 
   // Fetch wedding data
   useEffect(() => {
@@ -247,6 +248,52 @@ const Invitation = () => {
     }
   };
 
+  const handleSaveGiftChange = async () => {
+    if (!invitationData || !invitationData.responded_at) return;
+
+    try {
+      setSavingGift(true);
+      
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/select-gift`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+          },
+          body: JSON.stringify({
+            invitation_id: invitationData.id,
+            gift_id: selectedGiftId || null,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Erro ao salvar presente');
+      }
+
+      toast({
+        title: "Presente atualizado!",
+        description: selectedGiftId 
+          ? "Sua escolha de presente foi alterada com sucesso"
+          : "Seleção de presente removida",
+      });
+
+      setDrawerOpen(false);
+    } catch (error) {
+      console.error('[Invitation] Erro ao salvar presente:', error);
+      toast({
+        title: "Erro",
+        description: error instanceof Error ? error.message : "Erro ao salvar presente",
+        variant: "destructive",
+      });
+    } finally {
+      setSavingGift(false);
+    }
+  };
+
   const renderRSVPSection = () => {
     if (!invitation_code) return null;
 
@@ -413,7 +460,7 @@ const Invitation = () => {
       </footer>
 
       {/* Drawer inferior para lista de presentes */}
-      {invitation_code && !invitationData?.responded_at && (
+      {invitation_code && invitationData && (
         <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
           <DrawerTrigger asChild>
             <Button 
@@ -435,7 +482,9 @@ const Invitation = () => {
                   ? "Carregando presentes..." 
                   : gifts.length === 0 
                     ? "Ainda não há presentes cadastrados"
-                    : "Escolha um presente especial para os noivos (opcional)"
+                    : invitationData?.responded_at
+                      ? "Você pode alterar sua escolha de presente"
+                      : "Escolha um presente especial para os noivos (opcional)"
                 }
               </DrawerDescription>
             </DrawerHeader>
@@ -515,15 +564,38 @@ const Invitation = () => {
             )}
 
             <DrawerFooter>
-              <DrawerClose asChild>
-                <Button variant="outline">Fechar</Button>
-              </DrawerClose>
-              <p className="text-xs text-muted-foreground text-center mt-2">
-                {selectedGiftId 
-                  ? "Presente será registrado ao confirmar sua presença"
-                  : "A escolha de presente é opcional"
-                }
-              </p>
+              {invitationData?.responded_at ? (
+                <>
+                  <Button 
+                    onClick={handleSaveGiftChange} 
+                    disabled={savingGift || loadingGifts}
+                  >
+                    {savingGift ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Salvando...
+                      </>
+                    ) : (
+                      "Salvar Alteração"
+                    )}
+                  </Button>
+                  <DrawerClose asChild>
+                    <Button variant="outline">Cancelar</Button>
+                  </DrawerClose>
+                </>
+              ) : (
+                <>
+                  <DrawerClose asChild>
+                    <Button variant="outline">Fechar</Button>
+                  </DrawerClose>
+                  <p className="text-xs text-muted-foreground text-center mt-2">
+                    {selectedGiftId 
+                      ? "Presente será registrado ao confirmar sua presença"
+                      : "A escolha de presente é opcional"
+                    }
+                  </p>
+                </>
+              )}
             </DrawerFooter>
           </DrawerContent>
         </Drawer>
