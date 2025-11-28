@@ -5,10 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 
 interface EventsSectionProps {
   events: any[] | null;
-  weddingDetails: any | null;
 }
 
-const EventsSection = ({ events, weddingDetails }: EventsSectionProps) => {
+const EventsSection = ({ events }: EventsSectionProps) => {
   // Mostrar skeleton enquanto carrega
   if (!events) {
     return (
@@ -46,26 +45,9 @@ const EventsSection = ({ events, weddingDetails }: EventsSectionProps) => {
     );
   }
 
-  // Se não houver eventos mas houver dados de local no wedding_details, criar card genérico
-  const hasVenueInfo = weddingDetails?.venue_name || weddingDetails?.venue_address;
-  
-  if (events.length === 0 && !hasVenueInfo) {
+  if (events.length === 0) {
     return null;
   }
-
-  // Se não houver eventos mas houver dados de local, criar evento genérico
-  const displayEvents = events.length > 0 
-    ? events 
-    : hasVenueInfo 
-    ? [{
-        event_name: weddingDetails.venue_name || "Celebração",
-        event_date: weddingDetails.wedding_date,
-        location: weddingDetails.venue_name || "",
-        address: weddingDetails.venue_address || "",
-        description: "Detalhes do local da celebração",
-        maps_url: weddingDetails.venue_map_url || null,
-      }]
-    : [];
 
   return (
     <section className="py-20 bg-background">
@@ -75,7 +57,7 @@ const EventsSection = ({ events, weddingDetails }: EventsSectionProps) => {
         </h2>
         
         <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-          {displayEvents.map((event, index) => (
+          {events.map((event, index) => (
             <Card key={index} className="shadow-soft hover:shadow-elegant transition-shadow duration-300 animate-fade-in">
               <CardHeader>
                 <CardTitle className="text-3xl font-serif text-primary">

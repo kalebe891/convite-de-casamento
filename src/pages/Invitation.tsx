@@ -472,7 +472,7 @@ const Invitation = () => {
       <main className="pt-20">
         <HeroSection weddingDetails={weddingDetails} />
         {renderRSVPSection()}
-        <EventsSection events={events} weddingDetails={weddingDetails} />
+        <EventsSection events={events} />
       </main>
 
       <footer className="bg-card border-t border-border py-8 mt-20">
