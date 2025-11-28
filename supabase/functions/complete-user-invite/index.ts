@@ -81,43 +81,68 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // 2. Create user with admin API
-    const { data: newUser, error: createUserError } = await supabase.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true, // Auto-confirm email
-      user_metadata: {
-        full_name,
-      },
-    });
-
-    if (createUserError || !newUser.user) {
-      console.error('[complete-user-invite] Error creating user:', createUserError);
+    // 2. Check if user already exists
+    const { data: existingUsers } = await supabase.auth.admin.listUsers();
+    const existingUser = existingUsers?.users?.find(u => u.email === email);
+    
+    let userId: string;
+    
+    if (existingUser) {
+      console.log('[complete-user-invite] User already exists, updating credentials:', existingUser.id);
       
-      // Handle specific errors
-      if (createUserError?.message?.includes('already registered')) {
+      // Update existing user's password
+      const { error: updateError } = await supabase.auth.admin.updateUserById(
+        existingUser.id,
+        { 
+          password,
+          email_confirm: true,
+          user_metadata: { full_name }
+        }
+      );
+      
+      if (updateError) {
+        console.error('[complete-user-invite] Error updating user:', JSON.stringify(updateError, null, 2));
         return new Response(
-          JSON.stringify({ error: 'Este e-mail já está cadastrado' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          JSON.stringify({ error: 'Erro ao atualizar credenciais do usuário', details: updateError }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
       
-      return new Response(
-        JSON.stringify({ error: 'Erro ao criar usuário. Tente novamente.' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      userId = existingUser.id;
+    } else {
+      // Create new user
+      const { data: newUser, error: createUserError } = await supabase.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: { full_name },
+      });
+
+      if (createUserError || !newUser.user) {
+        console.error('[complete-user-invite] Error creating user:', JSON.stringify(createUserError, null, 2));
+        return new Response(
+          JSON.stringify({ error: 'Erro ao criar usuário. Tente novamente.' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      console.log('[complete-user-invite] User created:', newUser.user.id);
+      userId = newUser.user.id;
     }
 
-    console.log('[complete-user-invite] User created:', newUser.user.id);
-
-    // 3. Update profile with full name
+    // 3. Update or insert profile
     const { error: profileError } = await supabase
       .from('profiles')
-      .update({ full_name, email })
-      .eq('id', newUser.user.id);
+      .upsert({ 
+        id: userId,
+        full_name, 
+        email 
+      }, {
+        onConflict: 'id'
+      });
 
     if (profileError) {
-      console.error('[complete-user-invite] Error updating profile:', JSON.stringify(profileError, null, 2));
+      console.error('[complete-user-invite] Error upserting profile:', JSON.stringify(profileError, null, 2));
       return new Response(
         JSON.stringify({ error: 'Erro ao atualizar perfil do usuário', details: profileError }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -126,12 +151,14 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log('[complete-user-invite] Profile updated successfully');
 
-    // 4. Assign role to user
+    // 4. Assign or update role
     const { error: roleError } = await supabase
       .from('user_roles')
-      .insert({
-        user_id: newUser.user.id,
+      .upsert({
+        user_id: userId,
         role: pendingUser.papel,
+      }, {
+        onConflict: 'user_id,role'
       });
 
     if (roleError) {
