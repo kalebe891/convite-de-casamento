@@ -1,10 +1,9 @@
 import { Users, UserCheck, Calendar, UtensilsCrossed, Images, BarChart3, ScrollText, Heart, Music, Gift, CalendarDays } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { MenuKey, hasPermission } from "@/lib/permissions";
+import { usePermissions } from "@/hooks/usePermissions";
+import { MenuKey } from "@/lib/permissions";
 
 import {
   Sidebar,
@@ -22,8 +21,8 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const location = useLocation();
   const currentPath = location.pathname;
-  const { user, role } = useAuth();
-  const [visibleItems, setVisibleItems] = useState<typeof allItems>([]);
+  const { role } = useAuth();
+  const { hasPermission, loading } = usePermissions();
 
   const allItems = [
     { title: "Detalhes", url: "/admin/detalhes", icon: Heart, adminOnly: false, menuKey: "detalhes" as MenuKey },
@@ -40,38 +39,17 @@ export function AppSidebar() {
     { title: "Logs", url: "/admin/logs", icon: ScrollText, adminOnly: true, menuKey: "logs" as MenuKey },
   ];
 
-  useEffect(() => {
-    const checkPermissions = async () => {
-      if (!user) {
-        setVisibleItems([]);
-        return;
-      }
-
-      // Admins veem todos os itens
-      if (role === "admin") {
-        setVisibleItems(allItems);
-        return;
-      }
-
-      // Para outros usuários, verificar permissões
-      const itemsWithPermission = await Promise.all(
-        allItems.map(async (item) => {
-          // Se é adminOnly e não é admin, não mostrar
-          if (item.adminOnly) {
-            return null;
-          }
-          
-          // Verificar se tem permissão de visualizar
-          const canView = await hasPermission(user.id, item.menuKey, "can_view");
-          return canView ? item : null;
-        })
-      );
-
-      setVisibleItems(itemsWithPermission.filter(Boolean) as typeof allItems);
-    };
-
-    checkPermissions();
-  }, [user, role]);
+  // Filtrar itens baseado em permissões
+  const visibleItems = allItems.filter((item) => {
+    // Admins veem tudo
+    if (role === "admin") return true;
+    
+    // Se é adminOnly e não é admin, esconder
+    if (item.adminOnly) return false;
+    
+    // Verificar permissão de visualização
+    return hasPermission(item.menuKey, "view");
+  });
 
   const isCollapsed = state === "collapsed";
 

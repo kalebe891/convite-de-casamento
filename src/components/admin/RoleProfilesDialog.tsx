@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Pencil, Trash2, Loader2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, Shield } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,6 +22,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import RolePermissionsManager from "./RolePermissionsManager";
 
 interface RoleProfile {
   id: string;
@@ -43,6 +44,7 @@ const RoleProfilesDialog = ({ open, onOpenChange, onRoleChange }: RoleProfilesDi
   const [editingRole, setEditingRole] = useState<RoleProfile | null>(null);
   const [deletingRoleId, setDeletingRoleId] = useState<string | null>(null);
   const [formData, setFormData] = useState({ role_key: "", role_label: "" });
+  const [viewingPermissionsRole, setViewingPermissionsRole] = useState<RoleProfile | null>(null);
 
   useEffect(() => {
     if (open) {
@@ -126,8 +128,14 @@ const RoleProfilesDialog = ({ open, onOpenChange, onRoleChange }: RoleProfilesDi
   };
 
   const handleEdit = (role: RoleProfile) => {
+    setViewingPermissionsRole(null);
     setEditingRole(role);
     setFormData({ role_key: role.role_key, role_label: role.role_label });
+  };
+
+  const handleViewPermissions = (role: RoleProfile) => {
+    setEditingRole(null);
+    setViewingPermissionsRole(role);
   };
 
   const handleDelete = async (roleId: string) => {
@@ -163,6 +171,7 @@ const RoleProfilesDialog = ({ open, onOpenChange, onRoleChange }: RoleProfilesDi
   const resetForm = () => {
     setFormData({ role_key: "", role_label: "" });
     setEditingRole(null);
+    setViewingPermissionsRole(null);
   };
 
   return (
@@ -176,100 +185,130 @@ const RoleProfilesDialog = ({ open, onOpenChange, onRoleChange }: RoleProfilesDi
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="role_key">Chave do Papel</Label>
-              <Input
-                id="role_key"
-                value={formData.role_key}
-                onChange={(e) => setFormData({ ...formData, role_key: e.target.value })}
-                placeholder="ex: photographer"
-                required
-                disabled={loading || (editingRole?.is_system ?? false)}
-              />
-              <p className="text-xs text-muted-foreground">
-                Identificador único (apenas letras minúsculas e underscores)
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="role_label">Nome do Papel</Label>
-              <Input
-                id="role_label"
-                value={formData.role_label}
-                onChange={(e) => setFormData({ ...formData, role_label: e.target.value })}
-                placeholder="ex: Fotógrafo"
-                required
-                disabled={loading}
-              />
-              <p className="text-xs text-muted-foreground">
-                Nome que será exibido no sistema
-              </p>
-            </div>
-
-            <div className="flex gap-2">
-              <Button type="submit" disabled={loading} className="flex-1">
-                {loading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Salvando...
-                  </>
-                ) : (
-                  <>
-                    {editingRole ? <Pencil className="w-4 h-4 mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
-                    {editingRole ? "Atualizar Papel" : "Criar Papel"}
-                  </>
-                )}
+          {viewingPermissionsRole ? (
+            <div className="space-y-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setViewingPermissionsRole(null)}
+              >
+                Voltar
               </Button>
-              {editingRole && (
-                <Button type="button" variant="outline" onClick={resetForm} disabled={loading}>
-                  Cancelar
-                </Button>
-              )}
+              <RolePermissionsManager
+                roleKey={viewingPermissionsRole.role_key}
+                roleLabel={viewingPermissionsRole.role_label}
+              />
             </div>
-          </form>
-
-          <div className="border-t pt-4 mt-4">
-            <h3 className="font-medium mb-3">Papéis Existentes</h3>
-            <div className="space-y-2">
-              {roles.map((role) => (
-                <div
-                  key={role.id}
-                  className="flex items-center justify-between p-3 border rounded-lg"
-                >
-                  <div>
-                    <p className="font-medium">{role.role_label}</p>
-                    <p className="text-xs text-muted-foreground">
-                      Chave: {role.role_key}
-                      {role.is_system && " • Sistema"}
-                    </p>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleEdit(role)}
-                      disabled={loading}
-                    >
-                      <Pencil className="w-4 h-4" />
-                    </Button>
-                    {!role.is_system && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setDeletingRoleId(role.id)}
-                        disabled={loading}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    )}
-                  </div>
+          ) : (
+            <>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="role_key">Chave do Papel</Label>
+                  <Input
+                    id="role_key"
+                    value={formData.role_key}
+                    onChange={(e) => setFormData({ ...formData, role_key: e.target.value })}
+                    placeholder="ex: photographer"
+                    required
+                    disabled={loading || (editingRole?.is_system ?? false)}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Identificador único (apenas letras minúsculas e underscores)
+                  </p>
                 </div>
-              ))}
-            </div>
-          </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="role_label">Nome do Papel</Label>
+                  <Input
+                    id="role_label"
+                    value={formData.role_label}
+                    onChange={(e) => setFormData({ ...formData, role_label: e.target.value })}
+                    placeholder="ex: Fotógrafo"
+                    required
+                    disabled={loading}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Nome que será exibido no sistema
+                  </p>
+                </div>
+
+                <div className="flex gap-2">
+                  <Button type="submit" disabled={loading} className="flex-1">
+                    {loading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Salvando...
+                      </>
+                    ) : (
+                      <>
+                        {editingRole ? <Pencil className="w-4 h-4 mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
+                        {editingRole ? "Atualizar Papel" : "Criar Papel"}
+                      </>
+                    )}
+                  </Button>
+                  {editingRole && (
+                    <Button type="button" variant="outline" onClick={resetForm} disabled={loading}>
+                      Cancelar
+                    </Button>
+                  )}
+                </div>
+              </form>
+
+              <div className="border-t pt-4 mt-4">
+                <h3 className="font-medium mb-3">Papéis Existentes</h3>
+                <div className="space-y-2">
+                  {roles.map((role) => (
+                    <div
+                      key={role.id}
+                      className="flex items-center justify-between p-3 border rounded-lg"
+                    >
+                      <div>
+                        <p className="font-medium">{role.role_label}</p>
+                        <p className="text-xs text-muted-foreground">
+                          Chave: {role.role_key}
+                          {role.is_system && " • Sistema"}
+                        </p>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleViewPermissions(role)}
+                          disabled={loading}
+                          title="Gerenciar permissões"
+                        >
+                          <Shield className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEdit(role)}
+                          disabled={loading}
+                          title="Editar papel"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </Button>
+                        {!role.is_system && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setDeletingRoleId(role.id)}
+                            disabled={loading}
+                            title="Excluir papel"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
         </DialogContent>
       </Dialog>
 

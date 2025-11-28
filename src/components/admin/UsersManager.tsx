@@ -6,22 +6,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
 import { Loader2, Copy, Mail, MessageCircle, Settings } from "lucide-react";
 import UsersList from "./UsersList";
 import PendingInvitesList from "./PendingInvitesList";
 import RoleProfilesDialog from "./RoleProfilesDialog";
-
-interface UsersManagerProps {
-  onSelectUser?: (user: { id: string; name: string } | null) => void;
-}
 
 interface RoleProfile {
   role_key: string;
   role_label: string;
 }
 
-const UsersManager = ({ onSelectUser }: UsersManagerProps = {}) => {
+const UsersManager = () => {
   const { toast } = useToast();
   const [email, setEmail] = useState("");
   const [nome, setNome] = useState("");
@@ -288,7 +283,7 @@ const UsersManager = ({ onSelectUser }: UsersManagerProps = {}) => {
 
       <PendingInvitesList refreshTrigger={refreshKey} />
       
-      <UsersList refreshKey={refreshKey} onSelectUser={onSelectUser} />
+      <UsersList refreshKey={refreshKey} />
 
       <RoleProfilesDialog
         open={roleDialogOpen}

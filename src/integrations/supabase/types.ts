@@ -59,8 +59,8 @@ export type Database = {
           created_at: string | null
           id: string
           menu_key: string
+          role_key: string
           updated_at: string | null
-          user_id: string
         }
         Insert: {
           can_add?: boolean
@@ -70,8 +70,8 @@ export type Database = {
           created_at?: string | null
           id?: string
           menu_key: string
+          role_key: string
           updated_at?: string | null
-          user_id: string
         }
         Update: {
           can_add?: boolean
@@ -81,8 +81,8 @@ export type Database = {
           created_at?: string | null
           id?: string
           menu_key?: string
+          role_key?: string
           updated_at?: string | null
-          user_id?: string
         }
         Relationships: []
       }

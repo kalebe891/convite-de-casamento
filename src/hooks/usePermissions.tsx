@@ -1,72 +1,71 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
-import { getUserPermissions, hasPermission, MenuKey, PermissionType, Permission } from "@/lib/permissions";
+import { Permission, MenuKey } from "@/lib/permissions";
 
-export const usePermissions = (menuKey?: MenuKey) => {
-  const { user, role } = useAuth();
+interface PermissionsState {
+  permissions: Permission[];
+  loading: boolean;
+  hasPermission: (menuKey: MenuKey, type: "view" | "add" | "edit" | "delete") => boolean;
+}
+
+export const usePermissions = (): PermissionsState => {
+  const { user, role, loading: authLoading } = useAuth();
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchPermissions = async () => {
-      if (!user) {
-        setPermissions([]);
-        setLoading(false);
-        return;
-      }
-
-      // Admins têm todas as permissões
-      if (role === "admin") {
-        setLoading(false);
-        return;
-      }
-
-      const userPermissions = await getUserPermissions(user.id);
-      setPermissions(userPermissions);
+    if (!authLoading && role) {
+      fetchPermissions();
+    } else if (!authLoading && !role) {
       setLoading(false);
-    };
+      setPermissions([]);
+    }
+  }, [role, authLoading]);
 
-    fetchPermissions();
-  }, [user, role]);
+  const fetchPermissions = async () => {
+    if (!role) {
+      setLoading(false);
+      return;
+    }
 
-  const checkPermission = async (
-    permissionType: PermissionType,
-    targetMenuKey?: MenuKey
-  ): Promise<boolean> => {
-    if (!user) return false;
-    
-    // Admins têm todas as permissões
+    try {
+      // Fetch permissions based on user's role
+      const { data, error } = await supabase
+        .from("admin_permissions")
+        .select("*")
+        .eq("role_key", role);
+
+      if (error) {
+        console.error("Error fetching permissions:", error);
+        setPermissions([]);
+      } else {
+        setPermissions((data || []) as Permission[]);
+      }
+    } catch (error) {
+      console.error("Error in fetchPermissions:", error);
+      setPermissions([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const hasPermission = (
+    menuKey: MenuKey,
+    type: "view" | "add" | "edit" | "delete"
+  ): boolean => {
+    // Admins have all permissions
     if (role === "admin") return true;
 
-    const key = targetMenuKey || menuKey;
-    if (!key) return false;
+    const permission = permissions.find((p) => p.menu_key === menuKey);
+    if (!permission) return false;
 
-    return await hasPermission(user.id, key, permissionType);
-  };
-
-  const canView = async (targetMenuKey?: MenuKey): Promise<boolean> => {
-    return checkPermission("can_view", targetMenuKey);
-  };
-
-  const canAdd = async (targetMenuKey?: MenuKey): Promise<boolean> => {
-    return checkPermission("can_add", targetMenuKey);
-  };
-
-  const canEdit = async (targetMenuKey?: MenuKey): Promise<boolean> => {
-    return checkPermission("can_edit", targetMenuKey);
-  };
-
-  const canDelete = async (targetMenuKey?: MenuKey): Promise<boolean> => {
-    return checkPermission("can_delete", targetMenuKey);
+    return permission[`can_${type}`] || false;
   };
 
   return {
     permissions,
     loading,
-    isAdmin: role === "admin",
-    canView,
-    canAdd,
-    canEdit,
-    canDelete,
+    hasPermission,
   };
 };

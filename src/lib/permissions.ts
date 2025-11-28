@@ -18,7 +18,7 @@ export type PermissionType = "can_view" | "can_add" | "can_edit" | "can_delete";
 
 export interface Permission {
   id: string;
-  user_id: string;
+  role_key: string;
   menu_key: MenuKey;
   can_view: boolean;
   can_add: boolean;
@@ -42,87 +42,102 @@ export const MENU_LABELS: Record<MenuKey, string> = {
 };
 
 /**
- * Busca todas as permissões de um usuário
+ * Get all permissions for a specific role
  */
-export const getUserPermissions = async (userId: string): Promise<Permission[]> => {
-  const { data, error } = await supabase
-    .from("admin_permissions")
-    .select("*")
-    .eq("user_id", userId);
+export const getRolePermissions = async (roleKey: string): Promise<Permission[]> => {
+  try {
+    const { data, error } = await supabase
+      .from("admin_permissions")
+      .select("*")
+      .eq("role_key", roleKey);
 
-  if (error) {
-    console.error("Error fetching permissions:", error);
+    if (error) {
+      console.error("Error fetching role permissions:", error);
+      return [];
+    }
+
+    return (data || []) as Permission[];
+  } catch (error) {
+    console.error("Error in getRolePermissions:", error);
     return [];
   }
-
-  return (data || []) as Permission[];
 };
 
 /**
- * Verifica se um usuário tem uma permissão específica
+ * Check if a role has a specific permission for a menu
  */
-export const hasPermission = async (
-  userId: string,
+export const hasRolePermission = async (
+  roleKey: string,
   menuKey: MenuKey,
-  permissionType: PermissionType
+  permissionType: "view" | "add" | "edit" | "delete"
 ): Promise<boolean> => {
-  const { data, error } = await supabase
-    .from("admin_permissions")
-    .select(permissionType)
-    .eq("user_id", userId)
-    .eq("menu_key", menuKey)
-    .maybeSingle();
+  try {
+    const { data, error } = await supabase
+      .from("admin_permissions")
+      .select(`can_${permissionType}`)
+      .eq("role_key", roleKey)
+      .eq("menu_key", menuKey)
+      .maybeSingle();
 
-  if (error) {
-    console.error("Error checking permission:", error);
+    if (error) {
+      console.error("Error checking permission:", error);
+      return false;
+    }
+
+    if (!data) return false;
+
+    return data[`can_${permissionType}`] || false;
+  } catch (error) {
+    console.error("Error in hasRolePermission:", error);
     return false;
   }
-
-  return data?.[permissionType] || false;
 };
 
 /**
- * Atualiza ou cria uma permissão
+ * Upsert a permission for a role
  */
 export const upsertPermission = async (
-  userId: string,
+  roleKey: string,
   menuKey: MenuKey,
-  permissions: Partial<Omit<Permission, "id" | "user_id" | "menu_key">>
-): Promise<boolean> => {
-  const { error } = await supabase
-    .from("admin_permissions")
-    .upsert(
-      {
-        user_id: userId,
-        menu_key: menuKey,
-        ...permissions,
-      },
-      {
-        onConflict: "user_id,menu_key",
-      }
-    );
+  permissions: Partial<Omit<Permission, "id" | "role_key" | "menu_key">>
+): Promise<void> => {
+  try {
+    const { error } = await supabase
+      .from("admin_permissions")
+      .upsert([
+        {
+          role_key: roleKey,
+          menu_key: menuKey,
+          ...permissions,
+        },
+      ]);
 
-  if (error) {
-    console.error("Error upserting permission:", error);
-    return false;
+    if (error) {
+      console.error("Error upserting permission:", error);
+      throw error;
+    }
+  } catch (error) {
+    console.error("Error in upsertPermission:", error);
+    throw error;
   }
-
-  return true;
 };
 
 /**
- * Deleta todas as permissões de um usuário
+ * Delete all permissions for a role
  */
-export const deleteUserPermissions = async (userId: string): Promise<boolean> => {
-  const { error } = await supabase
-    .from("admin_permissions")
-    .delete()
-    .eq("user_id", userId);
+export const deleteRolePermissions = async (roleKey: string): Promise<void> => {
+  try {
+    const { error } = await supabase
+      .from("admin_permissions")
+      .delete()
+      .eq("role_key", roleKey);
 
-  if (error) {
-    console.error("Error deleting permissions:", error);
-    return false;
+    if (error) {
+      console.error("Error deleting role permissions:", error);
+      throw error;
+    }
+  } catch (error) {
+    console.error("Error in deleteRolePermissions:", error);
+    throw error;
   }
-
-  return true;
 };
