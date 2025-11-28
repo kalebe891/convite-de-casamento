@@ -32,9 +32,7 @@ const GallerySection = ({ photos }: GallerySectionProps) => {
     return null;
   }
 
-  const displayPhotos = photos
-    .filter(p => !p.is_main && !p.is_secondary)
-    .map(p => ({ photo_url: p.photo_url, caption: p.caption }));
+  const displayPhotos = photos.map(p => ({ photo_url: p.photo_url, caption: p.caption }));
 
   return (
     <section className="py-20 bg-gradient-elegant">

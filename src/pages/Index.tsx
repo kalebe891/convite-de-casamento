@@ -92,7 +92,7 @@ const Index = () => {
       <main className="pt-20">
         <HeroSection weddingDetails={weddingDetails} />
         <StorySection weddingDetails={weddingDetails} />
-        <EventsSection events={events} />
+        <EventsSection events={events} weddingDetails={weddingDetails} />
         <TimelineSection weddingId={weddingDetails?.id || null} />
         <BuffetSection weddingId={weddingDetails?.id || null} />
         <PlaylistSection weddingId={weddingDetails?.id || null} />
