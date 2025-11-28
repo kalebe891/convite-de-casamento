@@ -234,10 +234,10 @@ const Invitation = () => {
           : "Sentiremos sua falta 💔 Você será redirecionado em instantes...",
       });
 
-      // Redirecionar após 5 segundos
+      // Redirecionar após 7 segundos
       setTimeout(() => {
         window.location.href = "https://convite-casamento-beatriz-diogo.lovable.app/";
-      }, 5000);
+      }, 7000);
     } catch (error) {
       console.error('[Invitation] Erro ao responder RSVP:', error);
       if (error instanceof z.ZodError) {
