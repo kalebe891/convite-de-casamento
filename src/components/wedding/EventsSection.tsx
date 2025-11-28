@@ -8,41 +8,9 @@ interface EventsSectionProps {
 }
 
 const EventsSection = ({ events }: EventsSectionProps) => {
-  // Mostrar skeleton enquanto carrega
+  // Não renderiza nada enquanto os dados não estiverem carregados
   if (!events) {
-    return (
-      <section className="py-20 bg-background">
-        <div className="container mx-auto px-4">
-          <div className="h-12 w-80 mx-auto bg-muted/50 rounded-lg animate-pulse mb-16" />
-          
-          <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-            {Array.from({ length: 2 }).map((_, index) => (
-              <div key={index} className="bg-card rounded-lg shadow-soft p-6 space-y-4 animate-fade-in">
-                <div className="h-8 w-32 bg-muted/50 rounded animate-pulse" />
-                <div className="h-4 w-full bg-muted/50 rounded animate-pulse" />
-                <div className="space-y-3 mt-4">
-                  <div className="flex gap-3">
-                    <div className="w-5 h-5 bg-muted/50 rounded animate-pulse" />
-                    <div className="h-4 w-full bg-muted/50 rounded animate-pulse" />
-                  </div>
-                  <div className="flex gap-3">
-                    <div className="w-5 h-5 bg-muted/50 rounded animate-pulse" />
-                    <div className="h-4 w-24 bg-muted/50 rounded animate-pulse" />
-                  </div>
-                  <div className="flex gap-3">
-                    <div className="w-5 h-5 bg-muted/50 rounded animate-pulse" />
-                    <div className="space-y-2 flex-1">
-                      <div className="h-4 w-32 bg-muted/50 rounded animate-pulse" />
-                      <div className="h-3 w-full bg-muted/50 rounded animate-pulse" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-    );
+    return null;
   }
 
   if (events.length === 0) {

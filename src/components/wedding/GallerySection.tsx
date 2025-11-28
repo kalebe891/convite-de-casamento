@@ -7,25 +7,9 @@ interface GallerySectionProps {
 const GallerySection = ({ photos }: GallerySectionProps) => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
-  // Mostrar skeleton enquanto carrega
+  // Não renderiza nada enquanto os dados não estiverem carregados
   if (!photos) {
-    return (
-      <section className="py-20 bg-gradient-elegant">
-        <div className="container mx-auto px-4">
-          <div className="h-12 w-64 mx-auto bg-muted/50 rounded-lg animate-pulse mb-16" />
-          
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-6xl mx-auto">
-            {Array.from({ length: 8 }).map((_, index) => (
-              <div
-                key={index}
-                className="aspect-square bg-muted/50 rounded-lg animate-pulse"
-                style={{ animationDelay: `${index * 100}ms` }}
-              />
-            ))}
-          </div>
-        </div>
-      </section>
-    );
+    return null;
   }
 
   if (photos.length === 0) {

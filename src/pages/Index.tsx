@@ -21,7 +21,6 @@ const Index = () => {
   const [weddingDetails, setWeddingDetails] = useState(null);
   const [events, setEvents] = useState(null);
   const [photos, setPhotos] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -60,8 +59,6 @@ const Index = () => {
         setEvents(eventsData || null);
         setPhotos(photosData || null);
       }
-      
-      setIsLoading(false);
     };
 
     fetchWeddingData();

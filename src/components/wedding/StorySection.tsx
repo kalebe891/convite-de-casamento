@@ -7,14 +7,10 @@ interface StorySectionProps {
 
 const StorySection = ({ weddingDetails }: StorySectionProps) => {
   const [secondaryPhoto, setSecondaryPhoto] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchSecondaryPhoto = async () => {
-      if (!weddingDetails?.id) {
-        setIsLoading(false);
-        return;
-      }
+      if (!weddingDetails?.id) return;
 
       const { data } = await supabase
         .from("photos")
@@ -26,8 +22,6 @@ const StorySection = ({ weddingDetails }: StorySectionProps) => {
       if (data) {
         setSecondaryPhoto(data.photo_url);
       }
-      
-      setIsLoading(false);
     };
 
     fetchSecondaryPhoto();
@@ -53,36 +47,7 @@ const StorySection = ({ weddingDetails }: StorySectionProps) => {
     };
   }, [weddingDetails?.id]);
 
-  // Mostrar skeleton enquanto carrega
-  if (!weddingDetails || isLoading) {
-    return (
-      <section className="py-20 bg-gradient-elegant">
-        <div className="container mx-auto px-4">
-          <div className="h-12 w-64 mx-auto bg-muted/50 rounded-lg animate-pulse mb-16" />
-          
-          <div className="grid md:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
-            <div className="animate-fade-in">
-              <div className="aspect-[4/3] w-full bg-muted/50 rounded-lg animate-pulse" />
-            </div>
-            
-            <div className="space-y-6 animate-fade-in-up">
-              <div className="h-4 w-full bg-muted/50 rounded animate-pulse" />
-              <div className="h-4 w-full bg-muted/50 rounded animate-pulse" />
-              <div className="h-4 w-3/4 bg-muted/50 rounded animate-pulse" />
-              <div className="h-4 w-full bg-muted/50 rounded animate-pulse mt-6" />
-              <div className="h-4 w-full bg-muted/50 rounded animate-pulse" />
-              <div className="h-4 w-2/3 bg-muted/50 rounded animate-pulse" />
-              <div className="pt-6">
-                <div className="h-8 w-56 bg-muted/50 rounded animate-pulse" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-    );
-  }
-
-  if (!secondaryPhoto) {
+  if (!weddingDetails || !secondaryPhoto) {
     return null;
   }
 

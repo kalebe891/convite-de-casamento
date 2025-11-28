@@ -17,13 +17,9 @@ interface TimelineSectionProps {
 
 const TimelineSection = ({ weddingId }: TimelineSectionProps) => {
   const [events, setEvents] = useState<TimelineEvent[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (!weddingId) {
-      setIsLoading(false);
-      return;
-    }
+    if (!weddingId) return;
 
     const fetchEvents = async () => {
       const { data } = await supabase
@@ -34,39 +30,10 @@ const TimelineSection = ({ weddingId }: TimelineSectionProps) => {
         .order("time", { ascending: true });
 
       setEvents(data || []);
-      setIsLoading(false);
     };
 
     fetchEvents();
   }, [weddingId]);
-
-  if (isLoading) {
-    return (
-      <section className="py-20 bg-muted/30">
-        <div className="container mx-auto px-4">
-          <div className="h-12 w-48 mx-auto bg-muted/50 rounded-lg animate-pulse mb-16" />
-
-          <div className="max-w-3xl mx-auto space-y-6">
-            {Array.from({ length: 4 }).map((_, index) => (
-              <div
-                key={index}
-                className="flex items-start gap-4 p-6 bg-card rounded-lg shadow-soft animate-fade-in"
-                style={{ animationDelay: `${index * 100}ms` }}
-              >
-                <div className="flex-shrink-0 w-20 text-right">
-                  <div className="h-6 w-16 bg-muted/50 rounded animate-pulse ml-auto" />
-                </div>
-                <div className="flex-1 pt-1 space-y-2">
-                  <div className="h-6 w-48 bg-muted/50 rounded animate-pulse" />
-                  <div className="h-4 w-full bg-muted/50 rounded animate-pulse" />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-    );
-  }
 
   if (events.length === 0) return null;
 
