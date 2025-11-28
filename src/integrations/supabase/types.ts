@@ -345,6 +345,7 @@ export type Database = {
           display_order: number | null
           id: string
           is_main: boolean | null
+          is_secondary: boolean | null
           photo_url: string
           wedding_id: string | null
         }
@@ -354,6 +355,7 @@ export type Database = {
           display_order?: number | null
           id?: string
           is_main?: boolean | null
+          is_secondary?: boolean | null
           photo_url: string
           wedding_id?: string | null
         }
@@ -363,6 +365,7 @@ export type Database = {
           display_order?: number | null
           id?: string
           is_main?: boolean | null
+          is_secondary?: boolean | null
           photo_url?: string
           wedding_id?: string | null
         }

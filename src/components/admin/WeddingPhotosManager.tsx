@@ -14,12 +14,14 @@ interface Photo {
   caption: string | null;
   display_order: number | null;
   is_main: boolean;
+  is_secondary: boolean;
 }
 
 const WeddingPhotosManager = () => {
   const { toast } = useToast();
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [mainPhoto, setMainPhoto] = useState<Photo | null>(null);
+  const [secondaryPhoto, setSecondaryPhoto] = useState<Photo | null>(null);
   const [weddingId, setWeddingId] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
 
@@ -45,6 +47,7 @@ const WeddingPhotosManager = () => {
       if (photosData) {
         setPhotos(photosData);
         setMainPhoto(photosData.find(p => p.is_main) || null);
+        setSecondaryPhoto(photosData.find(p => p.is_secondary) || null);
       }
     }
   };
@@ -77,6 +80,7 @@ const WeddingPhotosManager = () => {
           photo_url: publicUrl,
           display_order: photos.length,
           is_main: false,
+          is_secondary: false,
         })
         .select()
         .single();
@@ -119,6 +123,9 @@ const WeddingPhotosManager = () => {
       if (mainPhoto?.id === id) {
         setMainPhoto(null);
       }
+      if (secondaryPhoto?.id === id) {
+        setSecondaryPhoto(null);
+      }
 
       toast({
         title: "Sucesso!",
@@ -153,6 +160,36 @@ const WeddingPhotosManager = () => {
       toast({
         title: "Sucesso!",
         description: "Foto principal atualizada.",
+      });
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: getSafeErrorMessage(error),
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleSetSecondaryPhoto = async (photoId: string) => {
+    try {
+      const { error } = await supabase
+        .from("photos")
+        .update({ is_secondary: true })
+        .eq("id", photoId);
+
+      if (error) throw error;
+
+      const updatedPhotos = photos.map(p => ({
+        ...p,
+        is_secondary: p.id === photoId
+      }));
+      
+      setPhotos(updatedPhotos);
+      setSecondaryPhoto(updatedPhotos.find(p => p.id === photoId) || null);
+
+      toast({
+        title: "Sucesso!",
+        description: "Foto secundária atualizada.",
       });
     } catch (error) {
       toast({
@@ -212,11 +249,31 @@ const WeddingPhotosManager = () => {
         </Card>
       )}
 
+      {secondaryPhoto && (
+        <Card className="shadow-elegant">
+          <CardHeader>
+            <CardTitle className="text-2xl font-serif flex items-center gap-2">
+              <Star className="w-6 h-6 fill-green-600 text-green-600" />
+              Foto Secundária
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex justify-center">
+              <img
+                src={secondaryPhoto.photo_url}
+                alt="Foto secundária do casamento"
+                className="rounded-lg shadow-elegant w-full h-auto object-cover"
+              />
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <Card className="shadow-elegant">
         <CardHeader>
           <CardTitle className="text-2xl font-serif">Galeria de Fotos</CardTitle>
           <CardDescription>
-            Clique na estrela para definir como foto principal
+            Clique na estrela amarela para definir como foto principal ou na estrela verde para foto secundária
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -242,6 +299,15 @@ const WeddingPhotosManager = () => {
                       title="Definir como foto principal"
                     >
                       <Star className={`w-4 h-4 ${photo.is_main ? 'fill-current' : ''}`} />
+                    </Button>
+                    <Button
+                      variant={photo.is_secondary ? "default" : "secondary"}
+                      size="icon"
+                      className="h-8 w-8 bg-green-600 hover:bg-green-700"
+                      onClick={() => handleSetSecondaryPhoto(photo.id)}
+                      title="Definir como foto secundária"
+                    >
+                      <Star className={`w-4 h-4 ${photo.is_secondary ? 'fill-current' : ''}`} />
                     </Button>
                     <Button
                       variant="destructive"
