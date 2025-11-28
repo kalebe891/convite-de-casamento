@@ -1,5 +1,7 @@
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import heroImage from "@/assets/hero-wedding.jpg";
 import { Heart } from "lucide-react";
 
@@ -8,14 +10,48 @@ interface HeroSectionProps {
 }
 
 const HeroSection = ({ weddingDetails }: HeroSectionProps) => {
+  const [mainPhoto, setMainPhoto] = useState<string | null>(null);
+  const [imageLoaded, setImageLoaded] = useState(false);
+
+  useEffect(() => {
+    const fetchMainPhoto = async () => {
+      if (!weddingDetails?.id) return;
+
+      const { data, error } = await supabase
+        .from("photos")
+        .select("photo_url")
+        .eq("wedding_id", weddingDetails.id)
+        .eq("is_main", true)
+        .single();
+
+      if (!error && data) {
+        setMainPhoto(data.photo_url);
+      }
+    };
+
+    fetchMainPhoto();
+  }, [weddingDetails?.id]);
+
+  const backgroundImage = mainPhoto || heroImage;
+
   return (
     <section className="relative h-screen flex items-center justify-center overflow-hidden">
       <div
-        className="absolute inset-0 bg-cover bg-center"
-        style={{ backgroundImage: `url(${heroImage})` }}
+        className={`absolute inset-0 bg-cover bg-center transition-opacity duration-500 ${
+          imageLoaded ? "animate-fade-in" : "opacity-0"
+        }`}
+        style={{ backgroundImage: `url(${backgroundImage})` }}
       >
         <div className="absolute inset-0 bg-gradient-to-b from-background/30 via-background/50 to-background"></div>
       </div>
+
+      {/* Preload image */}
+      <img
+        src={backgroundImage}
+        alt="Hero"
+        className="hidden"
+        onLoad={() => setImageLoaded(true)}
+      />
 
       <div className="relative z-10 text-center px-4 animate-fade-in-up">
         <Heart className="w-16 h-16 mx-auto mb-6 text-primary animate-scale-in" />
