@@ -123,6 +123,7 @@ export type Database = {
       }
       events: {
         Row: {
+          address: string | null
           created_at: string | null
           description: string | null
           event_date: string
@@ -130,9 +131,11 @@ export type Database = {
           event_type: string
           id: string
           location: string | null
+          maps_url: string | null
           wedding_id: string | null
         }
         Insert: {
+          address?: string | null
           created_at?: string | null
           description?: string | null
           event_date: string
@@ -140,9 +143,11 @@ export type Database = {
           event_type: string
           id?: string
           location?: string | null
+          maps_url?: string | null
           wedding_id?: string | null
         }
         Update: {
+          address?: string | null
           created_at?: string | null
           description?: string | null
           event_date?: string
@@ -150,6 +155,7 @@ export type Database = {
           event_type?: string
           id?: string
           location?: string | null
+          maps_url?: string | null
           wedding_id?: string | null
         }
         Relationships: [
