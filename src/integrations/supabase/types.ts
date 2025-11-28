@@ -489,6 +489,33 @@ export type Database = {
         }
         Relationships: []
       }
+      role_profiles: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_system: boolean
+          role_key: string
+          role_label: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_system?: boolean
+          role_key: string
+          role_label: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_system?: boolean
+          role_key?: string
+          role_label?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       rsvp_tokens: {
         Row: {
           created_at: string
