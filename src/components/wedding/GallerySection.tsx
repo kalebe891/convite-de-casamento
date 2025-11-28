@@ -16,8 +16,14 @@ const GallerySection = ({ photos }: GallerySectionProps) => {
     { photo_url: heroImage, caption: "Perfect day" },
   ];
 
-  const displayPhotos = photos.length > 0 
-    ? photos.map(p => ({ photo_url: p.photo_url, caption: p.caption }))
+  // Buscar foto secundária
+  const secondaryPhoto = photos.find(p => p.is_secondary);
+  
+  // Filtrar fotos para galeria (excluir principal e secundária)
+  const galleryPhotos = photos.filter(p => !p.is_main && !p.is_secondary);
+  
+  const displayPhotos = galleryPhotos.length > 0 
+    ? galleryPhotos.map(p => ({ photo_url: p.photo_url, caption: p.caption }))
     : defaultPhotos;
 
   return (
@@ -26,6 +32,18 @@ const GallerySection = ({ photos }: GallerySectionProps) => {
         <h2 className="text-5xl font-serif font-bold text-center mb-16 text-foreground">
           Nossos Momentos
         </h2>
+        
+        {/* Foto Secundária em Destaque */}
+        {secondaryPhoto && (
+          <div className="flex justify-center mb-12 animate-fade-in">
+            <img
+              src={secondaryPhoto.photo_url}
+              alt={secondaryPhoto.caption || "Foto secundária do casal"}
+              className="rounded-lg shadow-elegant w-full h-auto object-cover max-w-4xl cursor-pointer"
+              onClick={() => setSelectedImage(secondaryPhoto.photo_url)}
+            />
+          </div>
+        )}
         
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-6xl mx-auto">
           {displayPhotos.map((photo, index) => (

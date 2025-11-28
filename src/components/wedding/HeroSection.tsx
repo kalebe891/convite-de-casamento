@@ -30,6 +30,26 @@ const HeroSection = ({ weddingDetails }: HeroSectionProps) => {
     };
 
     fetchMainPhoto();
+
+    // Realtime para atualizar foto principal automaticamente
+    const photosChannel = supabase
+      .channel('hero-photos-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'photos'
+        },
+        () => {
+          fetchMainPhoto();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(photosChannel);
+    };
   }, [weddingDetails?.id]);
 
   const backgroundImage = mainPhoto || heroImage;
