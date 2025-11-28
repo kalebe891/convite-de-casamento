@@ -14,7 +14,7 @@ export type MenuKey =
   | "usuarios"
   | "logs";
 
-export type PermissionType = "can_view" | "can_add" | "can_edit" | "can_delete";
+export type PermissionType = "can_view" | "can_add" | "can_edit" | "can_delete" | "can_publish";
 
 export interface Permission {
   id: string;
@@ -24,6 +24,7 @@ export interface Permission {
   can_add: boolean;
   can_edit: boolean;
   can_delete: boolean;
+  can_publish: boolean;
 }
 
 export const MENU_LABELS: Record<MenuKey, string> = {

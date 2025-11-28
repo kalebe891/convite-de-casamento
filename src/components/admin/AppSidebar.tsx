@@ -27,7 +27,7 @@ export function AppSidebar() {
   const allItems = [
     { title: "Detalhes", url: "/admin/detalhes", icon: Heart, adminOnly: false, menuKey: "detalhes" as MenuKey },
     { title: "Usuários", url: "/admin/usuarios", icon: Users, adminOnly: true, menuKey: "usuarios" as MenuKey },
-    { title: "Eventos", url: "/admin/eventos", icon: CalendarDays, adminOnly: true, menuKey: "eventos" as MenuKey },
+    { title: "Eventos", url: "/admin/eventos", icon: CalendarDays, adminOnly: false, menuKey: "eventos" as MenuKey },
     { title: "Convidados", url: "/admin/convidados", icon: UserCheck, adminOnly: false, menuKey: "convidados" as MenuKey },
     { title: "Check-in", url: "/admin/checkin", icon: UserCheck, adminOnly: false, menuKey: "checkin" as MenuKey },
     { title: "Presentes", url: "/admin/presentes", icon: Gift, adminOnly: false, menuKey: "presentes" as MenuKey },
@@ -36,7 +36,7 @@ export function AppSidebar() {
     { title: "Playlist", url: "/admin/playlist", icon: Music, adminOnly: false, menuKey: "playlist" as MenuKey },
     { title: "Momentos", url: "/admin/momentos", icon: Images, adminOnly: false, menuKey: "momentos" as MenuKey },
     { title: "Estatísticas", url: "/admin/estatisticas", icon: BarChart3, adminOnly: false, menuKey: "estatisticas" as MenuKey },
-    { title: "Logs", url: "/admin/logs", icon: ScrollText, adminOnly: true, menuKey: "logs" as MenuKey },
+    { title: "Logs", url: "/admin/logs", icon: ScrollText, adminOnly: false, menuKey: "logs" as MenuKey },
   ];
 
   // Filtrar itens baseado em permissões

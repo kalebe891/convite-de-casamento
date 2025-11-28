@@ -5,7 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
-import { Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Loader2, CheckSquare } from "lucide-react";
 import { MENU_LABELS, MenuKey } from "@/lib/permissions";
 
 interface Permission {
@@ -14,12 +15,37 @@ interface Permission {
   can_add: boolean;
   can_edit: boolean;
   can_delete: boolean;
+  can_publish: boolean;
 }
 
 interface RolePermissionsManagerProps {
   roleKey: string;
   roleLabel: string;
 }
+
+// Define which menus have which permissions
+const MENU_PERMISSIONS: Record<MenuKey, Array<"view" | "add" | "edit" | "delete" | "publish">> = {
+  estatisticas: ["view"],
+  detalhes: ["view", "edit"],
+  convidados: ["view", "add", "edit", "delete"],
+  eventos: ["view", "add", "edit", "delete"],
+  cronograma: ["view", "add", "edit", "delete", "publish"],
+  buffet: ["view", "add", "edit", "delete", "publish"],
+  playlist: ["view", "add", "edit", "delete", "publish"],
+  presentes: ["view", "add", "edit", "delete", "publish"],
+  momentos: ["view", "add", "edit", "delete"],
+  checkin: ["view"],
+  usuarios: ["view", "add", "edit", "delete"],
+  logs: ["view"],
+};
+
+const PERMISSION_LABELS: Record<string, string> = {
+  view: "Pode visualizar menu",
+  add: "Pode adicionar itens",
+  edit: "Pode alterar",
+  delete: "Pode excluir itens",
+  publish: "Pode tornar público",
+};
 
 const RolePermissionsManager = ({ roleKey, roleLabel }: RolePermissionsManagerProps) => {
   const { toast } = useToast();
@@ -55,6 +81,7 @@ const RolePermissionsManager = ({ roleKey, roleLabel }: RolePermissionsManagerPr
           can_add: existing?.can_add || false,
           can_edit: existing?.can_edit || false,
           can_delete: existing?.can_delete || false,
+          can_publish: existing?.can_publish || false,
         };
       });
 
@@ -68,6 +95,48 @@ const RolePermissionsManager = ({ roleKey, roleLabel }: RolePermissionsManagerPr
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSelectAll = async () => {
+    setSaving(true);
+    try {
+      const updates = permissions.map((permission) => {
+        const availablePermissions = MENU_PERMISSIONS[permission.menu_key];
+        return {
+          role_key: roleKey,
+          menu_key: permission.menu_key,
+          can_view: availablePermissions.includes("view"),
+          can_add: availablePermissions.includes("add"),
+          can_edit: availablePermissions.includes("edit"),
+          can_delete: availablePermissions.includes("delete"),
+          can_publish: availablePermissions.includes("publish"),
+        };
+      });
+
+      const { error } = await supabase
+        .from("admin_permissions")
+        .upsert(updates, {
+          onConflict: "role_key,menu_key"
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Todas as permissões habilitadas",
+        description: "Todas as permissões disponíveis foram ativadas.",
+      });
+
+      fetchPermissions();
+    } catch (error: any) {
+      console.error("Error selecting all permissions:", error);
+      toast({
+        title: "Erro ao habilitar permissões",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -90,6 +159,7 @@ const RolePermissionsManager = ({ roleKey, roleLabel }: RolePermissionsManagerPr
           can_add: false,
           can_edit: false,
           can_delete: false,
+          can_publish: false,
         };
       }
 
@@ -108,6 +178,7 @@ const RolePermissionsManager = ({ roleKey, roleLabel }: RolePermissionsManagerPr
             can_add: updatedPermission.can_add,
             can_edit: updatedPermission.can_edit,
             can_delete: updatedPermission.can_delete,
+            can_publish: updatedPermission.can_publish,
           },
           {
             onConflict: "role_key,menu_key"
@@ -147,108 +218,70 @@ const RolePermissionsManager = ({ roleKey, roleLabel }: RolePermissionsManagerPr
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Permissões: {roleLabel}</CardTitle>
-        <CardDescription>
-          Configure as permissões para este papel em cada menu do sistema
-        </CardDescription>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle>Permissões: {roleLabel}</CardTitle>
+            <CardDescription>
+              Configure as permissões para este papel em cada menu do sistema
+            </CardDescription>
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleSelectAll}
+            disabled={saving}
+          >
+            <CheckSquare className="w-4 h-4 mr-2" />
+            Selecionar Todas
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {permissions.map((permission, index) => (
-          <div key={permission.menu_key}>
-            {index > 0 && <Separator className="my-4" />}
-            <div className="space-y-3">
-              <Label className="text-base font-semibold">
-                {MENU_LABELS[permission.menu_key]}
-              </Label>
+        {permissions.map((permission, index) => {
+          const availablePermissions = MENU_PERMISSIONS[permission.menu_key];
+          
+          return (
+            <div key={permission.menu_key}>
+              {index > 0 && <Separator className="my-4" />}
+              <div className="space-y-3">
+                <Label className="text-base font-semibold">
+                  {MENU_LABELS[permission.menu_key]}
+                </Label>
 
-              <div className="space-y-2 pl-4">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`${permission.menu_key}-view`}
-                    checked={permission.can_view}
-                    onCheckedChange={(checked) =>
-                      updatePermission(
-                        permission.menu_key,
-                        "can_view",
-                        checked as boolean
-                      )
-                    }
-                    disabled={saving}
-                  />
-                  <Label
-                    htmlFor={`${permission.menu_key}-view`}
-                    className="text-sm font-normal cursor-pointer"
-                  >
-                    Pode visualizar menu
-                  </Label>
-                </div>
-
-                <div className="flex items-center space-x-2 pl-6">
-                  <Checkbox
-                    id={`${permission.menu_key}-add`}
-                    checked={permission.can_add}
-                    onCheckedChange={(checked) =>
-                      updatePermission(
-                        permission.menu_key,
-                        "can_add",
-                        checked as boolean
-                      )
-                    }
-                    disabled={!permission.can_view || saving}
-                  />
-                  <Label
-                    htmlFor={`${permission.menu_key}-add`}
-                    className="text-sm font-normal cursor-pointer"
-                  >
-                    Pode adicionar itens
-                  </Label>
-                </div>
-
-                <div className="flex items-center space-x-2 pl-6">
-                  <Checkbox
-                    id={`${permission.menu_key}-edit`}
-                    checked={permission.can_edit}
-                    onCheckedChange={(checked) =>
-                      updatePermission(
-                        permission.menu_key,
-                        "can_edit",
-                        checked as boolean
-                      )
-                    }
-                    disabled={!permission.can_view || saving}
-                  />
-                  <Label
-                    htmlFor={`${permission.menu_key}-edit`}
-                    className="text-sm font-normal cursor-pointer"
-                  >
-                    Pode alterar itens
-                  </Label>
-                </div>
-
-                <div className="flex items-center space-x-2 pl-6">
-                  <Checkbox
-                    id={`${permission.menu_key}-delete`}
-                    checked={permission.can_delete}
-                    onCheckedChange={(checked) =>
-                      updatePermission(
-                        permission.menu_key,
-                        "can_delete",
-                        checked as boolean
-                      )
-                    }
-                    disabled={!permission.can_view || saving}
-                  />
-                  <Label
-                    htmlFor={`${permission.menu_key}-delete`}
-                    className="text-sm font-normal cursor-pointer"
-                  >
-                    Pode excluir itens
-                  </Label>
+                <div className="space-y-2 pl-4">
+                  {availablePermissions.map((permType) => (
+                    <div 
+                      key={permType}
+                      className={`flex items-center space-x-2 ${permType !== "view" ? "pl-6" : ""}`}
+                    >
+                      <Checkbox
+                        id={`${permission.menu_key}-${permType}`}
+                        checked={permission[`can_${permType}` as keyof Permission] as boolean}
+                        onCheckedChange={(checked) =>
+                          updatePermission(
+                            permission.menu_key,
+                            `can_${permType}` as keyof Omit<Permission, "menu_key">,
+                            checked as boolean
+                          )
+                        }
+                        disabled={
+                          (permType !== "view" && !permission.can_view) || saving
+                        }
+                      />
+                      <Label
+                        htmlFor={`${permission.menu_key}-${permType}`}
+                        className="text-sm font-normal cursor-pointer"
+                      >
+                        {PERMISSION_LABELS[permType]}
+                      </Label>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </CardContent>
     </Card>
   );
