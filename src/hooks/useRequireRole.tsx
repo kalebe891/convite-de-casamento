@@ -7,7 +7,7 @@ import { useAuth, UserRole } from "./useAuth";
  * Redireciona para /auth se não estiver logado.
  * Redireciona para /acesso-negado se não tiver permissão.
  */
-export const useRequireRole = (requiredRole: UserRole | UserRole[]) => {
+export const useRequireRole = (requiredRole: string | string[]) => {
   const navigate = useNavigate();
   const { user, role, loading } = useAuth();
 

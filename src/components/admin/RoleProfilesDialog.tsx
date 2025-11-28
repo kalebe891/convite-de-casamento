@@ -210,7 +210,7 @@ const RoleProfilesDialog = ({ open, onOpenChange, onRoleChange }: RoleProfilesDi
                     onChange={(e) => setFormData({ ...formData, role_key: e.target.value })}
                     placeholder="ex: photographer"
                     required
-                    disabled={loading || (editingRole?.is_system ?? false)}
+                    disabled={loading || editingRole?.role_key === 'admin'}
                   />
                   <p className="text-xs text-muted-foreground">
                     Identificador único (apenas letras minúsculas e underscores)
@@ -285,8 +285,8 @@ const RoleProfilesDialog = ({ open, onOpenChange, onRoleChange }: RoleProfilesDi
                           variant="outline"
                           size="sm"
                           onClick={() => handleEdit(role)}
-                          disabled={loading || role.is_system}
-                          title={role.is_system ? "Papéis do sistema não podem ser editados" : "Editar papel"}
+                          disabled={loading || role.role_key === 'admin'}
+                          title={role.role_key === 'admin' ? "O papel de administrador não pode ser editado" : "Editar papel"}
                         >
                           <Pencil className="w-4 h-4" />
                         </Button>
@@ -295,8 +295,8 @@ const RoleProfilesDialog = ({ open, onOpenChange, onRoleChange }: RoleProfilesDi
                           variant="outline"
                           size="sm"
                           onClick={() => setDeletingRoleId(role.id)}
-                          disabled={loading || role.is_system}
-                          title={role.is_system ? "Papéis do sistema não podem ser excluídos" : "Excluir papel"}
+                          disabled={loading || role.role_key === 'admin'}
+                          title={role.role_key === 'admin' ? "O papel de administrador não pode ser excluído" : "Excluir papel"}
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
