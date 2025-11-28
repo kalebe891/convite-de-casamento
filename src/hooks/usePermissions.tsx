@@ -6,6 +6,7 @@ import { Permission, MenuKey } from "@/lib/permissions";
 interface PermissionsState {
   permissions: Permission[];
   loading: boolean;
+  initialized: boolean;
   hasPermission: (menuKey: MenuKey, type: "view" | "add" | "edit" | "delete" | "publish") => boolean;
 }
 
@@ -13,23 +14,30 @@ export const usePermissions = (): PermissionsState => {
   const { user, role, loading: authLoading } = useAuth();
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [loading, setLoading] = useState(true);
+  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
+    console.log('🔍 [usePermissions] Effect triggered:', { role, authLoading, initialized });
     if (!authLoading && role) {
       fetchPermissions();
     } else if (!authLoading && !role) {
+      console.log('⚠️ [usePermissions] No role after auth loaded');
       setLoading(false);
       setPermissions([]);
+      setInitialized(true);
     }
   }, [role, authLoading]);
 
   const fetchPermissions = async () => {
     if (!role) {
+      console.log('⚠️ [usePermissions] No role provided, skipping fetch');
       setLoading(false);
+      setInitialized(true);
       return;
     }
 
     try {
+      console.log('🔍 [usePermissions] Fetching permissions for role:', role);
       // Fetch permissions based on user's role
       const { data, error } = await supabase
         .from("admin_permissions")
@@ -37,16 +45,20 @@ export const usePermissions = (): PermissionsState => {
         .eq("role_key", role);
 
       if (error) {
-        console.error("Error fetching permissions:", error);
+        console.error("❌ [usePermissions] Error fetching permissions:", error);
         setPermissions([]);
       } else {
-        setPermissions((data || []) as Permission[]);
+        const perms = (data || []) as Permission[];
+        console.log('✅ [usePermissions] Permissions fetched:', perms.length, 'items');
+        console.log('📋 [usePermissions] Permission details:', perms.map(p => `${p.menu_key}:${p.can_view}`).join(', '));
+        setPermissions(perms);
       }
     } catch (error) {
-      console.error("Error in fetchPermissions:", error);
+      console.error("❌ [usePermissions] Exception in fetchPermissions:", error);
       setPermissions([]);
     } finally {
       setLoading(false);
+      setInitialized(true);
     }
   };
 
@@ -55,20 +67,32 @@ export const usePermissions = (): PermissionsState => {
     type: "view" | "add" | "edit" | "delete" | "publish"
   ): boolean => {
     // Admins always have all permissions
-    if (role === "admin") return true;
+    if (role === "admin") {
+      console.log(`✅ [hasPermission] Admin has full access to ${menuKey}.${type}`);
+      return true;
+    }
 
     // No permissions loaded yet
-    if (loading || !role) return false;
+    if (loading || !role) {
+      console.log(`⏳ [hasPermission] Still loading permissions for ${menuKey}.${type}`);
+      return false;
+    }
 
     const permission = permissions.find((p) => p.menu_key === menuKey);
-    if (!permission) return false;
+    if (!permission) {
+      console.log(`❌ [hasPermission] No permission entry found for ${menuKey}`);
+      return false;
+    }
 
-    return permission[`can_${type}`] || false;
+    const hasAccess = permission[`can_${type}`] || false;
+    console.log(`${hasAccess ? '✅' : '❌'} [hasPermission] ${menuKey}.${type} = ${hasAccess}`);
+    return hasAccess;
   };
 
   return {
     permissions,
     loading,
     hasPermission,
+    initialized,
   };
 };

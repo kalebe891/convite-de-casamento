@@ -149,19 +149,25 @@ const CriarSenha = () => {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
 
+      console.log('✅ [CriarSenha] Account created successfully');
       toast({
         title: "Conta criada com sucesso!",
         description: "Fazendo login...",
       });
 
       // Sign in with the new credentials
+      console.log('🔐 [CriarSenha] Signing in with new credentials');
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (signInError) throw signInError;
+      if (signInError) {
+        console.error('❌ [CriarSenha] Sign in error:', signInError);
+        throw signInError;
+      }
 
+      console.log('✅ [CriarSenha] Sign in successful, redirecting to /admin');
       toast({
         title: "Bem-vindo!",
         description: "Redirecionando para o painel administrativo...",

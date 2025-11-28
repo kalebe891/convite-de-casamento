@@ -54,6 +54,7 @@ export const useAuth = (): AuthState => {
 
   const fetchUserRole = async (userId: string) => {
     try {
+      console.log('🔍 [useAuth] Fetching role for user:', userId);
       const { data, error } = await supabase
         .from("user_roles")
         .select("role")
@@ -61,13 +62,15 @@ export const useAuth = (): AuthState => {
         .maybeSingle();
 
       if (error) {
-        console.error("Error fetching user role:", error);
+        console.error("❌ [useAuth] Error fetching user role:", error);
         setRole(null);
       } else {
-        setRole(data?.role ?? null);
+        const userRole = data?.role ?? null;
+        console.log('✅ [useAuth] Role fetched:', userRole);
+        setRole(userRole);
       }
     } catch (error) {
-      console.error("Error fetching user role:", error);
+      console.error("❌ [useAuth] Exception fetching user role:", error);
       setRole(null);
     } finally {
       setLoading(false);

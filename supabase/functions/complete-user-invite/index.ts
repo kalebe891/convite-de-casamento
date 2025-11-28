@@ -42,6 +42,7 @@ const handler = async (req: Request): Promise<Response> => {
     const { token, email, password, full_name } = validationResult.data;
 
     console.log('[complete-user-invite] Processing invite for:', email);
+    console.log('[complete-user-invite] Token:', token);
 
     // 1. Verify token exists and get pending user data
     const { data: pendingUser, error: pendingError } = await supabase
@@ -58,6 +59,8 @@ const handler = async (req: Request): Promise<Response> => {
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    console.log('[complete-user-invite] Pending user data:', JSON.stringify(pendingUser, null, 2));
 
     // Verify email matches
     if (pendingUser.email !== email) {
@@ -152,6 +155,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.log('[complete-user-invite] Profile updated successfully');
 
     // 4. Assign or update role
+    console.log('[complete-user-invite] Assigning role:', pendingUser.papel, 'to user:', userId);
     const { error: roleError } = await supabase
       .from('user_roles')
       .upsert({
@@ -169,7 +173,19 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    console.log('[complete-user-invite] Role assigned:', pendingUser.papel);
+    console.log('[complete-user-invite] Role assigned successfully');
+
+    // Verify role was actually saved
+    const { data: verifyRole, error: verifyError } = await supabase
+      .from('user_roles')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
+    
+    console.log('[complete-user-invite] Role verification:', JSON.stringify(verifyRole, null, 2));
+    if (verifyError) {
+      console.error('[complete-user-invite] Error verifying role:', verifyError);
+    }
 
     // 5. Mark token as used and remove from pending_users
     const { error: deleteError } = await supabase
@@ -186,11 +202,19 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     console.log('[complete-user-invite] Invitation completed successfully');
+    console.log('[complete-user-invite] Summary:', {
+      userId,
+      email,
+      role: pendingUser.papel,
+      fullName: full_name
+    });
 
     return new Response(
       JSON.stringify({ 
         success: true,
-        message: 'Conta criada com sucesso!'
+        message: 'Conta criada com sucesso!',
+        userId,
+        role: pendingUser.papel
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

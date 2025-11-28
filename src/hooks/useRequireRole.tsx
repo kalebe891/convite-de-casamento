@@ -14,14 +14,33 @@ export const useRequireRole = (requiredRole: string | string[]) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, role, loading: authLoading } = useAuth();
-  const { hasPermission, loading: permissionsLoading } = usePermissions();
+  const { hasPermission, loading: permissionsLoading, initialized } = usePermissions();
   const [hasRedirected, setHasRedirected] = useState(false);
 
   useEffect(() => {
-    if (authLoading || permissionsLoading || hasRedirected) return;
+    console.log('🔄 [useRequireRole] Effect triggered:', {
+      authLoading,
+      permissionsLoading,
+      initialized,
+      hasRedirected,
+      user: user?.id,
+      role,
+      pathname: location.pathname
+    });
+
+    // Aguardar carregamento completo
+    if (authLoading || permissionsLoading || !initialized || hasRedirected) {
+      console.log('⏸️ [useRequireRole] Waiting:', {
+        authLoading,
+        permissionsLoading,
+        initialized,
+        hasRedirected
+      });
+      return;
+    }
 
     if (!user) {
-      // Não autenticado
+      console.log('🚫 [useRequireRole] No user, redirecting to /auth');
       navigate("/auth", { replace: true });
       return;
     }
@@ -29,9 +48,10 @@ export const useRequireRole = (requiredRole: string | string[]) => {
     if (role !== null) {
       // Verificar se tem permissão de role
       const allowedRoles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
+      console.log('🔐 [useRequireRole] Checking role access:', { role, allowedRoles });
       
       if (!allowedRoles.includes(role)) {
-        // Não tem permissão de role
+        console.log('❌ [useRequireRole] Role not allowed, redirecting to /acesso-negado');
         navigate("/acesso-negado", { replace: true });
         setHasRedirected(true);
         return;
@@ -39,6 +59,7 @@ export const useRequireRole = (requiredRole: string | string[]) => {
 
       // Se está na rota genérica /admin, redirecionar para o primeiro menu permitido
       if (location.pathname === "/admin" || location.pathname === "/admin/") {
+        console.log('🔀 [useRequireRole] On /admin, finding first accessible menu');
         const allMenus: { menuKey: MenuKey; url: string; adminOnly: boolean }[] = [
           { menuKey: "detalhes", url: "/admin/detalhes", adminOnly: false },
           { menuKey: "usuarios", url: "/admin/usuarios", adminOnly: true },
@@ -56,23 +77,32 @@ export const useRequireRole = (requiredRole: string | string[]) => {
 
         // Encontrar o primeiro menu que o usuário tem permissão
         const firstAllowedMenu = allMenus.find((menu) => {
+          console.log(`🔍 [useRequireRole] Checking menu: ${menu.menuKey}`);
           // Se é adminOnly e não é admin, pular
-          if (menu.adminOnly && role !== "admin") return false;
+          if (menu.adminOnly && role !== "admin") {
+            console.log(`  ⏭️ Admin-only menu, skipping`);
+            return false;
+          }
           // Verificar permissão de visualização
-          return hasPermission(menu.menuKey, "view");
+          const hasAccess = hasPermission(menu.menuKey, "view");
+          console.log(`  ${hasAccess ? '✅' : '❌'} Access: ${hasAccess}`);
+          return hasAccess;
         });
 
         if (firstAllowedMenu) {
+          console.log('✅ [useRequireRole] First accessible menu found:', firstAllowedMenu.url);
           navigate(firstAllowedMenu.url, { replace: true });
           setHasRedirected(true);
         } else {
-          // Nenhum menu permitido, vai para acesso negado
+          console.log('❌ [useRequireRole] No accessible menu found, redirecting to /acesso-negado');
           navigate("/acesso-negado", { replace: true });
           setHasRedirected(true);
         }
+      } else {
+        console.log('✅ [useRequireRole] User on specific page:', location.pathname);
       }
     }
-  }, [user, role, authLoading, permissionsLoading, navigate, requiredRole, location.pathname, hasPermission, hasRedirected]);
+  }, [user, role, authLoading, permissionsLoading, initialized, navigate, requiredRole, location.pathname, hasPermission, hasRedirected]);
 
   return { user, role, loading: authLoading || permissionsLoading };
 };
