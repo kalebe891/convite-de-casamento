@@ -18,9 +18,13 @@ interface PlaylistSectionProps {
 
 const PlaylistSection = ({ weddingId }: PlaylistSectionProps) => {
   const [songs, setSongs] = useState<PlaylistSong[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (!weddingId) return;
+    if (!weddingId) {
+      setIsLoading(false);
+      return;
+    }
 
     const fetchPlaylistSongs = async () => {
       const { data } = await supabase
@@ -31,10 +35,44 @@ const PlaylistSection = ({ weddingId }: PlaylistSectionProps) => {
         .order("display_order");
 
       setSongs(data || []);
+      setIsLoading(false);
     };
 
     fetchPlaylistSongs();
   }, [weddingId]);
+
+  if (isLoading) {
+    return (
+      <section className="py-16 px-4 bg-muted/50">
+        <div className="container mx-auto max-w-4xl">
+          <div className="text-center mb-12">
+            <div className="w-12 h-12 mx-auto mb-4 bg-muted/50 rounded-full animate-pulse" />
+            <div className="h-10 w-40 mx-auto bg-muted/50 rounded-lg animate-pulse mb-2" />
+            <div className="h-4 w-72 mx-auto bg-muted/50 rounded animate-pulse" />
+          </div>
+
+          <div className="space-y-6">
+            {Array.from({ length: 2 }).map((_, index) => (
+              <div key={index} className="bg-card rounded-lg shadow-elegant p-6 animate-fade-in">
+                <div className="h-7 w-40 bg-muted/50 rounded animate-pulse mb-4" />
+                <div className="space-y-3">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <div key={i} className="flex items-start gap-3">
+                      <div className="w-5 h-5 bg-muted/50 rounded flex-shrink-0 mt-0.5" />
+                      <div className="flex-1 space-y-2">
+                        <div className="h-4 w-48 bg-muted/50 rounded animate-pulse" />
+                        <div className="h-3 w-32 bg-muted/50 rounded animate-pulse" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   if (!weddingId || songs.length === 0) return null;
 

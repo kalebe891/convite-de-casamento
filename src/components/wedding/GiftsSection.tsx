@@ -106,9 +106,34 @@ const GiftsSection = ({ weddingId }: GiftsSectionProps) => {
     <section className="py-20 bg-muted/30">
       <div className="container mx-auto px-4">
         {loading ? (
-          <div className="text-center py-12">
-            <p className="text-lg text-muted-foreground">Carregando presentes...</p>
-          </div>
+          <>
+            <div className="text-center mb-12">
+              <div className="h-12 w-64 mx-auto bg-muted/50 rounded-lg animate-pulse mb-4" />
+              <div className="h-5 w-96 max-w-full mx-auto bg-muted/50 rounded animate-pulse" />
+            </div>
+
+            <div className="max-w-6xl mx-auto grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="bg-card rounded-lg shadow-soft p-6 space-y-4 animate-fade-in"
+                  style={{ animationDelay: `${index * 100}ms` }}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-2 flex-1">
+                      <div className="w-5 h-5 bg-muted/50 rounded animate-pulse" />
+                      <div className="h-5 w-32 bg-muted/50 rounded animate-pulse" />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="h-4 w-full bg-muted/50 rounded animate-pulse" />
+                    <div className="h-4 w-3/4 bg-muted/50 rounded animate-pulse" />
+                  </div>
+                  <div className="h-10 w-full bg-muted/50 rounded animate-pulse" />
+                </div>
+              ))}
+            </div>
+          </>
         ) : (
           <>
             <div className="text-center mb-12">

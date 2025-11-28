@@ -17,9 +17,13 @@ interface BuffetSectionProps {
 
 const BuffetSection = ({ weddingId }: BuffetSectionProps) => {
   const [items, setItems] = useState<BuffetItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (!weddingId) return;
+    if (!weddingId) {
+      setIsLoading(false);
+      return;
+    }
 
     const fetchBuffetItems = async () => {
       const { data } = await supabase
@@ -30,10 +34,41 @@ const BuffetSection = ({ weddingId }: BuffetSectionProps) => {
         .order("display_order");
 
       setItems(data || []);
+      setIsLoading(false);
     };
 
     fetchBuffetItems();
   }, [weddingId]);
+
+  if (isLoading) {
+    return (
+      <section className="py-16 px-4 bg-background">
+        <div className="container mx-auto max-w-4xl">
+          <div className="text-center mb-12">
+            <div className="w-12 h-12 mx-auto mb-4 bg-muted/50 rounded-full animate-pulse" />
+            <div className="h-10 w-48 mx-auto bg-muted/50 rounded-lg animate-pulse mb-2" />
+            <div className="h-4 w-64 mx-auto bg-muted/50 rounded animate-pulse" />
+          </div>
+
+          <div className="space-y-6">
+            {Array.from({ length: 3 }).map((_, index) => (
+              <div key={index} className="bg-card rounded-lg shadow-elegant p-6 animate-fade-in">
+                <div className="h-7 w-32 bg-muted/50 rounded animate-pulse mb-4" />
+                <div className="space-y-2">
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-muted/50 flex-shrink-0" />
+                      <div className="h-4 w-full bg-muted/50 rounded animate-pulse" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   if (!weddingId || items.length === 0) return null;
 

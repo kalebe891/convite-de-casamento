@@ -14,15 +14,22 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 - Exibição da foto secundária na seção "Nossa História" da página inicial
 - Atualização realtime da foto secundária quando alterada no admin
 - Redirecionamento automático após confirmação/recusa de RSVP (7 segundos)
+- Skeleton loaders em todas as seções da página inicial
+- Componentes reutilizáveis: SkeletonImage, SkeletonText, SkeletonCard
+- Animações shimmer suaves durante carregamento
 
 ### Modificado
 - Texto do footer alterado de "Convite de Casamento" para "Convites de Casamento"
 - Foto da seção "Nossa História" agora exibe foto secundária quando disponível
 - Sistema de fotos com suporte a foto principal (is_main) e secundária (is_secondary)
+- Substituição de telas vazias por skeleton loaders durante carregamento
+- Experiência de carregamento melhorada sem flash de conteúdo
 
 ### Corrigido
 - Layout da galeria de momentos preservado sem alterações
 - Foto secundária posicionada corretamente usando classes existentes
+- Flash de conteúdo antigo durante recarregamento da página
+- Renderização de dados desatualizados antes do fetch do Supabase
 
 ## [1.0.0] - 2025-11-27
 

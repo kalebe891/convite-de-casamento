@@ -14,9 +14,13 @@ const ConfirmedGuestsSection = ({ weddingId }: ConfirmedGuestsSectionProps) => {
     show_guest_list_public: false,
     show_rsvp_status_public: false,
   });
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (!weddingId) return;
+    if (!weddingId) {
+      setIsLoading(false);
+      return;
+    }
 
     const fetchConfirmedGuests = async () => {
       // Buscar configurações de visibilidade
@@ -57,10 +61,44 @@ const ConfirmedGuestsSection = ({ weddingId }: ConfirmedGuestsSectionProps) => {
         confirmed: confirmedGuestsData?.length || 0,
         total: allGuestsData?.length || 0,
       });
+      setIsLoading(false);
     };
 
     fetchConfirmedGuests();
   }, [weddingId]);
+
+  if (isLoading) {
+    return (
+      <section className="py-20 bg-background">
+        <div className="container mx-auto px-4">
+          <div className="h-12 w-48 mx-auto bg-muted/50 rounded-lg animate-pulse mb-8" />
+
+          <div className="max-w-4xl mx-auto mb-12">
+            <div className="bg-card rounded-lg shadow-elegant p-6">
+              <div className="h-8 w-80 mx-auto bg-muted/50 rounded animate-pulse mb-4" />
+              <div className="w-full bg-muted rounded-full h-4 mb-2" />
+              <div className="h-4 w-32 mx-auto bg-muted/50 rounded animate-pulse" />
+            </div>
+          </div>
+
+          <div className="max-w-4xl mx-auto">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {Array.from({ length: 9 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="flex items-center gap-3 p-4 bg-card rounded-lg shadow-soft animate-fade-in"
+                  style={{ animationDelay: `${index * 50}ms` }}
+                >
+                  <div className="w-5 h-5 bg-muted/50 rounded-full animate-pulse" />
+                  <div className="h-4 w-32 bg-muted/50 rounded animate-pulse" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   // Não mostrar nada se não houver convidados ou se ambas as opções estiverem desabilitadas
   if (stats.total === 0 || (!settings.show_guest_list_public && !settings.show_rsvp_status_public)) return null;

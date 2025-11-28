@@ -11,10 +11,14 @@ interface HeroSectionProps {
 const HeroSection = ({ weddingDetails }: HeroSectionProps) => {
   const [mainPhoto, setMainPhoto] = useState<string | null>(null);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchMainPhoto = async () => {
-      if (!weddingDetails?.id) return;
+      if (!weddingDetails?.id) {
+        setIsLoading(false);
+        return;
+      }
 
       const { data, error } = await supabase
         .from("photos")
@@ -26,14 +30,25 @@ const HeroSection = ({ weddingDetails }: HeroSectionProps) => {
       if (!error && data) {
         setMainPhoto(data.photo_url);
       }
+      setIsLoading(false);
     };
 
     fetchMainPhoto();
   }, [weddingDetails?.id]);
 
-  // Não renderizar até ter dados do Supabase
-  if (!weddingDetails || !mainPhoto) {
-    return null;
+  // Mostrar skeleton enquanto carrega
+  if (isLoading || !weddingDetails || !mainPhoto) {
+    return (
+      <section className="relative h-screen flex items-center justify-center overflow-hidden bg-muted/30">
+        <div className="relative z-10 text-center px-4 space-y-6 animate-fade-in">
+          <div className="w-16 h-16 mx-auto mb-6 bg-muted rounded-full animate-pulse" />
+          <div className="h-16 w-96 max-w-full mx-auto bg-muted rounded-lg animate-pulse" />
+          <div className="h-px w-32 mx-auto bg-muted" />
+          <div className="h-8 w-64 mx-auto bg-muted rounded-lg animate-pulse" />
+          <div className="h-6 w-48 mx-auto bg-muted rounded-lg animate-pulse" />
+        </div>
+      </section>
+    );
   }
 
   const backgroundImage = mainPhoto;
