@@ -117,9 +117,14 @@ const handler = async (req: Request): Promise<Response> => {
       .eq('id', newUser.user.id);
 
     if (profileError) {
-      console.error('[complete-user-invite] Error updating profile:', profileError);
-      // Continue even if profile update fails
+      console.error('[complete-user-invite] Error updating profile:', JSON.stringify(profileError, null, 2));
+      return new Response(
+        JSON.stringify({ error: 'Erro ao atualizar perfil do usuário', details: profileError }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
+
+    console.log('[complete-user-invite] Profile updated successfully');
 
     // 4. Assign role to user
     const { error: roleError } = await supabase
@@ -130,9 +135,9 @@ const handler = async (req: Request): Promise<Response> => {
       });
 
     if (roleError) {
-      console.error('[complete-user-invite] Error assigning role:', roleError);
+      console.error('[complete-user-invite] Error assigning role:', JSON.stringify(roleError, null, 2));
       return new Response(
-        JSON.stringify({ error: 'Erro ao atribuir papel ao usuário' }),
+        JSON.stringify({ error: 'Erro ao atribuir papel ao usuário', details: roleError }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -146,8 +151,11 @@ const handler = async (req: Request): Promise<Response> => {
       .eq('token', token);
 
     if (deleteError) {
-      console.error('[complete-user-invite] Error removing token:', deleteError);
-      // Continue even if deletion fails
+      console.error('[complete-user-invite] Error removing token:', JSON.stringify(deleteError, null, 2));
+      return new Response(
+        JSON.stringify({ error: 'Erro ao remover token de convite', details: deleteError }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     console.log('[complete-user-invite] Invitation completed successfully');
