@@ -55,6 +55,7 @@ export type Database = {
           can_add: boolean
           can_delete: boolean
           can_edit: boolean
+          can_publish: boolean
           can_view: boolean
           created_at: string | null
           id: string
@@ -66,6 +67,7 @@ export type Database = {
           can_add?: boolean
           can_delete?: boolean
           can_edit?: boolean
+          can_publish?: boolean
           can_view?: boolean
           created_at?: string | null
           id?: string
@@ -77,6 +79,7 @@ export type Database = {
           can_add?: boolean
           can_delete?: boolean
           can_edit?: boolean
+          can_publish?: boolean
           can_view?: boolean
           created_at?: string | null
           id?: string
@@ -672,9 +675,12 @@ export type Database = {
           created_at: string | null
           groom_name: string
           id: string
+          show_buffet_section: boolean | null
           show_gifts_section: boolean | null
           show_guest_list_public: boolean | null
+          show_playlist_section: boolean | null
           show_rsvp_status_public: boolean | null
+          show_timeline_section: boolean | null
           story: string | null
           theme_color: string | null
           updated_at: string | null
@@ -689,9 +695,12 @@ export type Database = {
           created_at?: string | null
           groom_name: string
           id?: string
+          show_buffet_section?: boolean | null
           show_gifts_section?: boolean | null
           show_guest_list_public?: boolean | null
+          show_playlist_section?: boolean | null
           show_rsvp_status_public?: boolean | null
+          show_timeline_section?: boolean | null
           story?: string | null
           theme_color?: string | null
           updated_at?: string | null
@@ -706,9 +715,12 @@ export type Database = {
           created_at?: string | null
           groom_name?: string
           id?: string
+          show_buffet_section?: boolean | null
           show_gifts_section?: boolean | null
           show_guest_list_public?: boolean | null
+          show_playlist_section?: boolean | null
           show_rsvp_status_public?: boolean | null
+          show_timeline_section?: boolean | null
           story?: string | null
           theme_color?: string | null
           updated_at?: string | null

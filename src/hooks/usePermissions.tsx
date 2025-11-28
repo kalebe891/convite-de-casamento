@@ -6,7 +6,7 @@ import { Permission, MenuKey } from "@/lib/permissions";
 interface PermissionsState {
   permissions: Permission[];
   loading: boolean;
-  hasPermission: (menuKey: MenuKey, type: "view" | "add" | "edit" | "delete") => boolean;
+  hasPermission: (menuKey: MenuKey, type: "view" | "add" | "edit" | "delete" | "publish") => boolean;
 }
 
 export const usePermissions = (): PermissionsState => {
@@ -52,7 +52,7 @@ export const usePermissions = (): PermissionsState => {
 
   const hasPermission = (
     menuKey: MenuKey,
-    type: "view" | "add" | "edit" | "delete"
+    type: "view" | "add" | "edit" | "delete" | "publish"
   ): boolean => {
     // Admins have all permissions
     if (role === "admin") return true;
