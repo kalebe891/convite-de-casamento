@@ -100,7 +100,7 @@ const Index = () => {
 
       <footer className="bg-card border-t border-border py-8 mt-20">
         <div className="container mx-auto px-4 text-center text-muted-foreground">
-          <p>© 2025 Convite de Casamento. Todos os direitos reservados.</p>
+          <p>© 2025 Convites de Casamento. Todos os direitos reservados.</p>
         </div>
       </footer>
     </div>

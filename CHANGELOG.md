@@ -5,6 +5,25 @@ Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
 e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
+## [1.0.1] - 2025-11-28
+
+### Adicionado
+- Campo `is_secondary` na tabela `photos` para foto secundária
+- Botão verde no gerenciador de fotos (Momentos) para definir foto secundária
+- Trigger `ensure_single_secondary_photo` para garantir única foto secundária por casamento
+- Exibição da foto secundária na seção "Nossa História" da página inicial
+- Atualização realtime da foto secundária quando alterada no admin
+- Redirecionamento automático após confirmação/recusa de RSVP (7 segundos)
+
+### Modificado
+- Texto do footer alterado de "Convite de Casamento" para "Convites de Casamento"
+- Foto da seção "Nossa História" agora exibe foto secundária quando disponível
+- Sistema de fotos com suporte a foto principal (is_main) e secundária (is_secondary)
+
+### Corrigido
+- Layout da galeria de momentos preservado sem alterações
+- Foto secundária posicionada corretamente usando classes existentes
+
 ## [1.0.0] - 2025-11-27
 
 ### Adicionado
