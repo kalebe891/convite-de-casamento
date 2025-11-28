@@ -21,6 +21,7 @@ import Momentos from "./pages/admin/Momentos";
 import Estatisticas from "./pages/admin/Estatisticas";
 import Checkin from "./pages/admin/Checkin";
 import Logs from "./pages/admin/Logs";
+import Eventos from "./pages/admin/Eventos";
 
 const queryClient = new QueryClient();
 
@@ -44,6 +45,7 @@ const App = () => (
             <Route path="checkin" element={<Checkin />} />
             <Route path="presentes" element={<Presentes />} />
             <Route path="cronograma" element={<Cronograma />} />
+            <Route path="eventos" element={<Eventos />} />
             <Route path="buffet" element={<Buffet />} />
             <Route path="playlist" element={<Playlist />} />
             <Route path="momentos" element={<Momentos />} />

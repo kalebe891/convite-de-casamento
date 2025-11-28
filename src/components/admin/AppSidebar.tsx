@@ -1,4 +1,4 @@
-import { Users, UserCheck, Calendar, UtensilsCrossed, Images, BarChart3, ScrollText, Heart, Music, Gift } from "lucide-react";
+import { Users, UserCheck, Calendar, UtensilsCrossed, Images, BarChart3, ScrollText, Heart, Music, Gift, CalendarDays } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
@@ -43,6 +43,7 @@ export function AppSidebar() {
     { title: "Check-in", url: "/admin/checkin", icon: UserCheck, adminOnly: false },
     { title: "Presentes", url: "/admin/presentes", icon: Gift, adminOnly: false },
     { title: "Cronograma", url: "/admin/cronograma", icon: Calendar, adminOnly: false },
+    { title: "Eventos", url: "/admin/eventos", icon: CalendarDays, adminOnly: true },
     { title: "Buffet", url: "/admin/buffet", icon: UtensilsCrossed, adminOnly: false },
     { title: "Playlist", url: "/admin/playlist", icon: Music, adminOnly: false },
     { title: "Momentos", url: "/admin/momentos", icon: Images, adminOnly: false },
