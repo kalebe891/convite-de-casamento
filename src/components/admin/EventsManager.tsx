@@ -8,6 +8,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { Trash2, Plus, Edit } from "lucide-react";
 import { logAdminAction } from "@/lib/adminLogger";
+import { format, parseISO } from "date-fns";
+
+// Helper para converter data do banco mantendo o horário local
+const parseEventDate = (dateString: string) => {
+  const localDateString = dateString.replace(/[+-]\d{2}:?\d{2}$/, '').replace('Z', '');
+  return parseISO(localDateString);
+};
 
 const EventsManager = () => {
   const { toast } = useToast();
@@ -149,10 +156,14 @@ const EventsManager = () => {
 
   const handleEditEvent = (event: any) => {
     setEditingId(event.id);
+    // Formata a data para o input datetime-local mantendo horário local
+    const localDate = parseEventDate(event.event_date);
+    const formattedDate = format(localDate, "yyyy-MM-dd'T'HH:mm");
+    
     setNewEvent({
       event_type: event.event_type,
       event_name: event.event_name,
-      event_date: event.event_date.slice(0, 16), // Format for datetime-local
+      event_date: formattedDate,
       location: event.location || "",
       address: event.address || "",
       maps_url: event.maps_url || "",
@@ -321,7 +332,9 @@ const EventsManager = () => {
                   <div className="flex-1">
                     <h3 className="font-semibold text-lg">{event.event_name}</h3>
                     <p className="text-sm text-muted-foreground">{event.event_type}</p>
-                    <p className="text-sm mt-2">{new Date(event.event_date).toLocaleString('pt-BR')}</p>
+                    <p className="text-sm mt-2">
+                      {format(parseEventDate(event.event_date), "dd/MM/yyyy 'às' HH:mm")}
+                    </p>
                     {event.location && <p className="text-sm">📍 {event.location}</p>}
                     {event.address && <p className="text-sm text-muted-foreground">{event.address}</p>}
                     {event.description && <p className="text-sm mt-2">{event.description}</p>}

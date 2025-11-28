@@ -1,4 +1,4 @@
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Calendar, MapPin, Clock } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,6 +6,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 interface EventsSectionProps {
   events: any[] | null;
 }
+
+// Helper para converter data do banco mantendo o horário local
+const parseEventDate = (dateString: string) => {
+  // Remove o timezone para evitar conversão automática
+  const localDateString = dateString.replace(/[+-]\d{2}:?\d{2}$/, '').replace('Z', '');
+  return parseISO(localDateString);
+};
 
 const EventsSection = ({ events }: EventsSectionProps) => {
   // Não renderiza nada enquanto os dados não estiverem carregados
@@ -40,7 +47,7 @@ const EventsSection = ({ events }: EventsSectionProps) => {
                   <Calendar className="w-5 h-5 text-primary mt-1" />
                   <div>
                     <p className="font-medium">
-                      {format(new Date(event.event_date), "EEEE, d 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                      {format(parseEventDate(event.event_date), "EEEE, d 'de' MMMM 'de' yyyy", { locale: ptBR })}
                     </p>
                   </div>
                 </div>
@@ -48,7 +55,7 @@ const EventsSection = ({ events }: EventsSectionProps) => {
                   <Clock className="w-5 h-5 text-primary mt-1" />
                   <div>
                     <p className="font-medium">
-                      {format(new Date(event.event_date), "HH:mm")}
+                      {format(parseEventDate(event.event_date), "HH:mm")}
                     </p>
                   </div>
                 </div>
