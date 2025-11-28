@@ -80,3 +80,39 @@ export const playlistSongSchema = z.object({
     .min(1, 'Momento é obrigatório')
     .max(100, 'Momento deve ter no máximo 100 caracteres'),
 });
+
+// Event validation schema
+export const eventSchema = z.object({
+  event_type: z.string()
+    .trim()
+    .min(1, 'Tipo do evento é obrigatório')
+    .max(100, 'Tipo deve ter no máximo 100 caracteres'),
+  event_name: z.string()
+    .trim()
+    .min(1, 'Nome do evento é obrigatório')
+    .max(200, 'Nome deve ter no máximo 200 caracteres'),
+  event_date: z.string()
+    .trim()
+    .min(1, 'Data e horário são obrigatórios'),
+  location: z.string()
+    .trim()
+    .max(200, 'Local deve ter no máximo 200 caracteres')
+    .optional()
+    .or(z.literal('')),
+  address: z.string()
+    .trim()
+    .max(500, 'Endereço deve ter no máximo 500 caracteres')
+    .optional()
+    .or(z.literal('')),
+  maps_url: z.string()
+    .trim()
+    .url('URL inválida')
+    .max(500, 'URL deve ter no máximo 500 caracteres')
+    .optional()
+    .or(z.literal('')),
+  description: z.string()
+    .trim()
+    .max(1000, 'Descrição deve ter no máximo 1000 caracteres')
+    .optional()
+    .or(z.literal('')),
+});
