@@ -11,7 +11,17 @@ import { timelineEventSchema } from "@/lib/validationSchemas";
 import { getSafeErrorMessage } from "@/lib/errorHandling";
 import { logAdminAction } from "@/lib/adminLogger";
 
-const TimelineManager = () => {
+interface TimelineManagerProps {
+  permissions: {
+    canView: boolean;
+    canAdd: boolean;
+    canEdit: boolean;
+    canDelete: boolean;
+    canPublish: boolean;
+  };
+}
+
+const TimelineManager = ({ permissions }: TimelineManagerProps) => {
   const { toast } = useToast();
   const [events, setEvents] = useState<any[]>([]);
   const [weddingId, setWeddingId] = useState<string | null>(null);

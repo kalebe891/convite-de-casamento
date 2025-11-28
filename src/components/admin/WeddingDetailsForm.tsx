@@ -7,7 +7,17 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 
-const WeddingDetailsForm = () => {
+interface WeddingDetailsFormProps {
+  permissions: {
+    canView: boolean;
+    canAdd: boolean;
+    canEdit: boolean;
+    canDelete: boolean;
+    canPublish: boolean;
+  };
+}
+
+const WeddingDetailsForm = ({ permissions }: WeddingDetailsFormProps) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [weddingId, setWeddingId] = useState<string | null>(null);
@@ -106,6 +116,8 @@ const WeddingDetailsForm = () => {
                 value={formData.brideName}
                 onChange={(e) => setFormData({ ...formData, brideName: e.target.value })}
                 required
+                disabled={!permissions.canEdit}
+                readOnly={!permissions.canEdit}
               />
             </div>
             <div className="space-y-2">
@@ -115,6 +127,8 @@ const WeddingDetailsForm = () => {
                 value={formData.groomName}
                 onChange={(e) => setFormData({ ...formData, groomName: e.target.value })}
                 required
+                disabled={!permissions.canEdit}
+                readOnly={!permissions.canEdit}
               />
             </div>
           </div>
@@ -127,6 +141,8 @@ const WeddingDetailsForm = () => {
               value={formData.weddingDate}
               onChange={(e) => setFormData({ ...formData, weddingDate: e.target.value })}
               required
+              disabled={!permissions.canEdit}
+              readOnly={!permissions.canEdit}
             />
           </div>
 
@@ -136,6 +152,8 @@ const WeddingDetailsForm = () => {
               id="venueName"
               value={formData.venueName}
               onChange={(e) => setFormData({ ...formData, venueName: e.target.value })}
+              disabled={!permissions.canEdit}
+              readOnly={!permissions.canEdit}
             />
           </div>
 
@@ -145,6 +163,8 @@ const WeddingDetailsForm = () => {
               id="venueAddress"
               value={formData.venueAddress}
               onChange={(e) => setFormData({ ...formData, venueAddress: e.target.value })}
+              disabled={!permissions.canEdit}
+              readOnly={!permissions.canEdit}
             />
           </div>
 
@@ -155,11 +175,13 @@ const WeddingDetailsForm = () => {
               value={formData.story}
               onChange={(e) => setFormData({ ...formData, story: e.target.value })}
               rows={6}
+              disabled={!permissions.canEdit}
+              readOnly={!permissions.canEdit}
             />
           </div>
 
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Salvando..." : "Salvar Detalhes"}
+          <Button type="submit" className="w-full" disabled={loading || !permissions.canEdit}>
+            {loading ? "Salvando..." : permissions.canEdit ? "Salvar Detalhes" : "Somente Leitura"}
           </Button>
         </form>
       </CardContent>

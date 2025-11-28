@@ -11,10 +11,21 @@ import { buffetItemSchema } from "@/lib/validationSchemas";
 import { getSafeErrorMessage } from "@/lib/errorHandling";
 import { logAdminAction } from "@/lib/adminLogger";
 
-const BuffetManager = () => {
+interface BuffetManagerProps {
+  permissions: {
+    canView: boolean;
+    canAdd: boolean;
+    canEdit: boolean;
+    canDelete: boolean;
+    canPublish: boolean;
+  };
+}
+
+const BuffetManager = ({ permissions }: BuffetManagerProps) => {
   const { toast } = useToast();
   const [items, setItems] = useState<any[]>([]);
   const [weddingId, setWeddingId] = useState<string | null>(null);
+  const [showBuffetSection, setShowBuffetSection] = useState<boolean>(true);
   const [newItem, setNewItem] = useState({ item_name: "", category: "", is_public: true });
   const [editingId, setEditingId] = useState<string | null>(null);
 
@@ -25,11 +36,12 @@ const BuffetManager = () => {
   const fetchData = async () => {
     const { data: wedding } = await supabase
       .from("wedding_details")
-      .select("id")
+      .select("id, show_buffet_section")
       .single();
 
     if (wedding) {
       setWeddingId(wedding.id);
+      setShowBuffetSection(wedding.show_buffet_section ?? true);
       const { data: itemsData } = await supabase
         .from("buffet_items")
         .select("*")
@@ -39,8 +51,62 @@ const BuffetManager = () => {
     }
   };
 
+  const handleToggleBuffetSection = async (checked: boolean) => {
+    if (!permissions.canPublish) {
+      toast({
+        title: "Sem permissão",
+        description: "Você não tem permissão para publicar/ocultar seções",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!weddingId) return;
+
+    try {
+      const { error } = await supabase
+        .from("wedding_details")
+        .update({ show_buffet_section: checked })
+        .eq("id", weddingId);
+
+      if (error) throw error;
+
+      setShowBuffetSection(checked);
+      toast({
+        title: "Configuração atualizada!",
+        description: checked
+          ? "Seção buffet agora está visível na página pública"
+          : "Seção buffet foi ocultada da página pública",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erro",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleSave = async () => {
     if (!weddingId) return;
+
+    if (!permissions.canAdd && !editingId) {
+      toast({
+        title: "Sem permissão",
+        description: "Você não tem permissão para adicionar itens",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!permissions.canEdit && editingId) {
+      toast({
+        title: "Sem permissão",
+        description: "Você não tem permissão para editar itens",
+        variant: "destructive",
+      });
+      return;
+    }
 
     // Validate input data
     const validationResult = buffetItemSchema.safeParse({

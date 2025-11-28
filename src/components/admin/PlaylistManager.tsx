@@ -11,7 +11,17 @@ import { playlistSongSchema } from "@/lib/validationSchemas";
 import { getSafeErrorMessage } from "@/lib/errorHandling";
 import { logAdminAction } from "@/lib/adminLogger";
 
-const PlaylistManager = () => {
+interface PlaylistManagerProps {
+  permissions: {
+    canView: boolean;
+    canAdd: boolean;
+    canEdit: boolean;
+    canDelete: boolean;
+    canPublish: boolean;
+  };
+}
+
+const PlaylistManager = ({ permissions }: PlaylistManagerProps) => {
   const { toast } = useToast();
   const [songs, setSongs] = useState<any[]>([]);
   const [weddingId, setWeddingId] = useState<string | null>(null);

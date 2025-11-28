@@ -85,6 +85,7 @@ const Auth = () => {
         title: "Bem-vindo de volta!",
         description: "Login realizado com sucesso.",
       });
+      // Redirecionar para /admin - o useRequireRole vai redirecionar para o primeiro menu permitido
       navigate("/admin");
     } catch (error) {
       if (error instanceof z.ZodError) {

@@ -16,7 +16,17 @@ const parseEventDate = (dateString: string) => {
   return parseISO(localDateString);
 };
 
-const EventsManager = () => {
+interface EventsManagerProps {
+  permissions: {
+    canView: boolean;
+    canAdd: boolean;
+    canEdit: boolean;
+    canDelete: boolean;
+    canPublish: boolean;
+  };
+}
+
+const EventsManager = ({ permissions }: EventsManagerProps) => {
   const { toast } = useToast();
   const [events, setEvents] = useState<any[]>([]);
   const [weddingId, setWeddingId] = useState<string | null>(null);

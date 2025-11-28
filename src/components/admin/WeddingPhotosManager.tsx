@@ -17,7 +17,17 @@ interface Photo {
   is_secondary: boolean;
 }
 
-const WeddingPhotosManager = () => {
+interface WeddingPhotosManagerProps {
+  permissions: {
+    canView: boolean;
+    canAdd: boolean;
+    canEdit: boolean;
+    canDelete: boolean;
+    canPublish: boolean;
+  };
+}
+
+const WeddingPhotosManager = ({ permissions }: WeddingPhotosManagerProps) => {
   const { toast } = useToast();
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [mainPhoto, setMainPhoto] = useState<Photo | null>(null);

@@ -8,7 +8,17 @@ import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 
-const WeddingSettingsForm = () => {
+interface WeddingSettingsFormProps {
+  permissions: {
+    canView: boolean;
+    canAdd: boolean;
+    canEdit: boolean;
+    canDelete: boolean;
+    canPublish: boolean;
+  };
+}
+
+const WeddingSettingsForm = ({ permissions }: WeddingSettingsFormProps) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [weddingId, setWeddingId] = useState<string | null>(null);
@@ -90,6 +100,8 @@ const WeddingSettingsForm = () => {
               placeholder="https://www.google.com/maps/embed?pb=..."
               value={formData.venue_map_url}
               onChange={(e) => setFormData({ ...formData, venue_map_url: e.target.value })}
+              disabled={!permissions.canEdit}
+              readOnly={!permissions.canEdit}
             />
             <p className="text-sm text-muted-foreground">
               Cole o link de incorporação do Google Maps
@@ -104,6 +116,8 @@ const WeddingSettingsForm = () => {
               value={formData.couple_message}
               onChange={(e) => setFormData({ ...formData, couple_message: e.target.value })}
               rows={4}
+              disabled={!permissions.canEdit}
+              readOnly={!permissions.canEdit}
             />
           </div>
 
@@ -119,6 +133,7 @@ const WeddingSettingsForm = () => {
                 id="show_guest_list_public"
                 checked={formData.show_guest_list_public}
                 onCheckedChange={(checked) => setFormData({ ...formData, show_guest_list_public: checked })}
+                disabled={!permissions.canPublish}
               />
             </div>
 
@@ -133,6 +148,7 @@ const WeddingSettingsForm = () => {
                 id="show_rsvp_status_public"
                 checked={formData.show_rsvp_status_public}
                 onCheckedChange={(checked) => setFormData({ ...formData, show_rsvp_status_public: checked })}
+                disabled={!permissions.canPublish}
               />
             </div>
 
@@ -147,6 +163,7 @@ const WeddingSettingsForm = () => {
                 id="show_timeline_section"
                 checked={formData.show_timeline_section}
                 onCheckedChange={(checked) => setFormData({ ...formData, show_timeline_section: checked })}
+                disabled={!permissions.canPublish}
               />
             </div>
 
@@ -161,6 +178,7 @@ const WeddingSettingsForm = () => {
                 id="show_buffet_section"
                 checked={formData.show_buffet_section}
                 onCheckedChange={(checked) => setFormData({ ...formData, show_buffet_section: checked })}
+                disabled={!permissions.canPublish}
               />
             </div>
 
@@ -175,12 +193,13 @@ const WeddingSettingsForm = () => {
                 id="show_playlist_section"
                 checked={formData.show_playlist_section}
                 onCheckedChange={(checked) => setFormData({ ...formData, show_playlist_section: checked })}
+                disabled={!permissions.canPublish}
               />
             </div>
           </div>
 
-          <Button type="submit" disabled={loading}>
-            {loading ? "Salvando..." : "Salvar Configurações"}
+          <Button type="submit" disabled={loading || !permissions.canEdit}>
+            {loading ? "Salvando..." : permissions.canEdit ? "Salvar Configurações" : "Somente Leitura"}
           </Button>
         </form>
       </CardContent>

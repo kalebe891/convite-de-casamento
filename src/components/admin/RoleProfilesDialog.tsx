@@ -275,8 +275,8 @@ const RoleProfilesDialog = ({ open, onOpenChange, onRoleChange }: RoleProfilesDi
                           variant="outline"
                           size="sm"
                           onClick={() => handleViewPermissions(role)}
-                          disabled={loading}
-                          title="Gerenciar permissões"
+                          disabled={loading || role.role_key === 'admin'}
+                          title={role.role_key === 'admin' ? "O papel de administrador possui todas as permissões automaticamente" : "Gerenciar permissões"}
                         >
                           <Shield className="w-4 h-4" />
                         </Button>

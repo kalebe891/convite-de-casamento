@@ -54,8 +54,11 @@ export const usePermissions = (): PermissionsState => {
     menuKey: MenuKey,
     type: "view" | "add" | "edit" | "delete" | "publish"
   ): boolean => {
-    // Admins have all permissions
+    // Admins always have all permissions
     if (role === "admin") return true;
+
+    // No permissions loaded yet
+    if (loading || !role) return false;
 
     const permission = permissions.find((p) => p.menu_key === menuKey);
     if (!permission) return false;

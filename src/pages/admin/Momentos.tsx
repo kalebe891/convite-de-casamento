@@ -1,6 +1,17 @@
 import WeddingPhotosManager from "@/components/admin/WeddingPhotosManager";
+import { usePagePermissions } from "@/hooks/usePagePermissions";
 
 const Momentos = () => {
+  const permissions = usePagePermissions("momentos");
+
+  if (permissions.loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <p className="text-muted-foreground">Carregando...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -9,7 +20,7 @@ const Momentos = () => {
           Gerencie as fotos exibidas na galeria do site
         </p>
       </div>
-      <WeddingPhotosManager />
+      <WeddingPhotosManager permissions={permissions} />
     </div>
   );
 };

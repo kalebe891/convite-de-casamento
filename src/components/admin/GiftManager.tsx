@@ -10,7 +10,17 @@ import { Trash2, Plus, Pencil, X } from "lucide-react";
 import { getSafeErrorMessage } from "@/lib/errorHandling";
 import { logAdminAction } from "@/lib/adminLogger";
 
-const GiftManager = () => {
+interface GiftManagerProps {
+  permissions: {
+    canView: boolean;
+    canAdd: boolean;
+    canEdit: boolean;
+    canDelete: boolean;
+    canPublish: boolean;
+  };
+}
+
+const GiftManager = ({ permissions }: GiftManagerProps) => {
   const { toast } = useToast();
   const [items, setItems] = useState<any[]>([]);
   const [weddingId, setWeddingId] = useState<string | null>(null);
