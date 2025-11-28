@@ -48,15 +48,36 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const { email, nome, role }: InviteRequest = await req.json();
-    console.log(`Creating invitation for: ${email} with role: ${role}`);
+    console.log(`[invite-admin] Starting invitation process for: ${email} with role: ${role}, name: ${nome || 'N/A'}`);
 
     // Delete any existing pending invite for this email to generate a new token
-    await supabase
+    console.log(`[invite-admin] Deleting existing pending invites for: ${email}`);
+    const { error: deleteError } = await supabase
       .from('pending_users')
       .delete()
       .eq('email', email);
+    
+    if (deleteError) {
+      console.error('[invite-admin] Error deleting existing invites:', deleteError);
+    }
+
+    // Validate role exists in role_profiles
+    console.log(`[invite-admin] Validating role '${role}' exists in role_profiles`);
+    const { data: roleExists, error: roleError } = await supabase
+      .from('role_profiles')
+      .select('role_key')
+      .eq('role_key', role)
+      .single();
+    
+    if (roleError || !roleExists) {
+      console.error(`[invite-admin] Invalid role '${role}':`, roleError);
+      throw new Error(`Papel inválido: ${role}. O papel não existe no sistema.`);
+    }
+    
+    console.log(`[invite-admin] Role '${role}' validated successfully`);
 
     // Create new pending user with fresh token
+    console.log(`[invite-admin] Creating pending user record`);
     const { data: pendingUser, error: pendingError } = await supabase
       .from('pending_users')
       .insert({
@@ -69,17 +90,24 @@ const handler = async (req: Request): Promise<Response> => {
       .single();
 
     if (pendingError) {
-      console.error('Error creating pending user:', pendingError);
+      console.error('[invite-admin] Error creating pending user:', pendingError);
+      console.error('[invite-admin] Attempted insert data:', {
+        email,
+        nome: nome || email.split('@')[0],
+        papel: role,
+        usado: false,
+      });
       throw pendingError;
     }
 
-    console.log('Pending user created with new token:', pendingUser.id);
+    console.log(`[invite-admin] Pending user created successfully with token: ${pendingUser.token}`);
 
     // Generate invitation link
     const origin = req.headers.get('origin') || req.headers.get('referer')?.split('/').slice(0, 3).join('/') || '';
     const invitationLink = `${origin}/criar-senha?t=${pendingUser.token}`;
 
     // Try to send email via Resend
+    console.log(`[invite-admin] Attempting to send email to: ${email}`);
     let emailSent = false;
     try {
       const mailResp = await resend.emails.send({
@@ -107,14 +135,16 @@ const handler = async (req: Request): Promise<Response> => {
       });
       if (!(mailResp as any)?.error) {
         emailSent = true;
-        console.log('Email sent via Resend');
+        console.log(`[invite-admin] Email sent successfully via Resend to: ${email}`);
       } else {
-        console.error('Resend error:', (mailResp as any).error);
+        console.error('[invite-admin] Resend API returned error:', (mailResp as any).error);
       }
     } catch (emailErr) {
-      console.error('Error sending email (non-blocking):', emailErr);
+      console.error('[invite-admin] Error sending email (non-blocking):', emailErr);
     }
 
+    console.log(`[invite-admin] Successfully created invitation for: ${email}`);
+    
     return new Response(
       JSON.stringify({ 
         success: true, 
@@ -132,7 +162,13 @@ const handler = async (req: Request): Promise<Response> => {
       }
     );
   } catch (error: any) {
-    console.error("Error in invite-admin function:", error);
+    console.error("[invite-admin] Critical error in function:", error);
+    console.error("[invite-admin] Error details:", {
+      message: error.message,
+      code: error.code,
+      details: error.details,
+      hint: error.hint,
+    });
     
     // Return safe error message to client, log full error for debugging
     const safeErrorMessage = error.message?.toLowerCase().includes('unauthorized') || error.message?.toLowerCase().includes('admin')
