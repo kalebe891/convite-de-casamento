@@ -62,27 +62,6 @@ const Index = () => {
     };
 
     fetchWeddingData();
-
-    // Realtime para atualizar fotos automaticamente
-    const photosChannel = supabase
-      .channel('photos-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'photos'
-        },
-        () => {
-          // Refetch photos quando houver mudanças
-          fetchWeddingData();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(photosChannel);
-    };
   }, []);
 
   return (
