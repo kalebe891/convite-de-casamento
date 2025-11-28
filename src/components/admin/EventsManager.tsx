@@ -6,13 +6,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, Plus } from "lucide-react";
+import { Trash2, Plus, Edit } from "lucide-react";
 import { logAdminAction } from "@/lib/adminLogger";
 
 const EventsManager = () => {
   const { toast } = useToast();
   const [events, setEvents] = useState<any[]>([]);
   const [weddingId, setWeddingId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [newEvent, setNewEvent] = useState({
     event_type: "",
     event_name: "",
@@ -46,7 +47,7 @@ const EventsManager = () => {
     fetchData();
   }, []);
 
-  const handleAddEvent = async (e: React.FormEvent) => {
+  const handleSubmitEvent = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!weddingId) {
@@ -59,31 +60,75 @@ const EventsManager = () => {
     }
 
     try {
-      const { data, error } = await supabase
-        .from("events")
-        .insert({
-          wedding_id: weddingId,
-          event_type: newEvent.event_type,
-          event_name: newEvent.event_name,
-          event_date: newEvent.event_date,
-          location: newEvent.location || null,
-          address: newEvent.address || null,
-          maps_url: newEvent.maps_url || null,
-          description: newEvent.description || null,
-        })
-        .select()
-        .single();
+      if (editingId) {
+        // Update existing event
+        const oldEvent = events.find((e) => e.id === editingId);
+        const { data, error } = await supabase
+          .from("events")
+          .update({
+            event_type: newEvent.event_type,
+            event_name: newEvent.event_name,
+            event_date: newEvent.event_date,
+            location: newEvent.location || null,
+            address: newEvent.address || null,
+            maps_url: newEvent.maps_url || null,
+            description: newEvent.description || null,
+          })
+          .eq("id", editingId)
+          .select()
+          .single();
 
-      if (error) throw error;
+        if (error) throw error;
 
-      await logAdminAction({
-        action: "insert",
-        tableName: "events",
-        recordId: data.id,
-        newData: data,
-      });
+        await logAdminAction({
+          action: "update",
+          tableName: "events",
+          recordId: editingId,
+          oldData: oldEvent,
+          newData: data,
+        });
 
-      setEvents([...events, data]);
+        setEvents(events.map((e) => (e.id === editingId ? data : e)));
+        setEditingId(null);
+
+        toast({
+          title: "Sucesso!",
+          description: "Evento atualizado com sucesso.",
+        });
+      } else {
+        // Insert new event
+        const { data, error } = await supabase
+          .from("events")
+          .insert({
+            wedding_id: weddingId,
+            event_type: newEvent.event_type,
+            event_name: newEvent.event_name,
+            event_date: newEvent.event_date,
+            location: newEvent.location || null,
+            address: newEvent.address || null,
+            maps_url: newEvent.maps_url || null,
+            description: newEvent.description || null,
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        await logAdminAction({
+          action: "insert",
+          tableName: "events",
+          recordId: data.id,
+          newData: data,
+        });
+
+        setEvents([...events, data]);
+
+        toast({
+          title: "Sucesso!",
+          description: "Evento adicionado com sucesso.",
+        });
+      }
+
       setNewEvent({
         event_type: "",
         event_name: "",
@@ -93,18 +138,40 @@ const EventsManager = () => {
         maps_url: "",
         description: "",
       });
-
-      toast({
-        title: "Sucesso!",
-        description: "Evento adicionado com sucesso.",
-      });
     } catch (error) {
       toast({
         title: "Erro",
-        description: "Falha ao adicionar evento.",
+        description: editingId ? "Falha ao atualizar evento." : "Falha ao adicionar evento.",
         variant: "destructive",
       });
     }
+  };
+
+  const handleEditEvent = (event: any) => {
+    setEditingId(event.id);
+    setNewEvent({
+      event_type: event.event_type,
+      event_name: event.event_name,
+      event_date: event.event_date.slice(0, 16), // Format for datetime-local
+      location: event.location || "",
+      address: event.address || "",
+      maps_url: event.maps_url || "",
+      description: event.description || "",
+    });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setNewEvent({
+      event_type: "",
+      event_name: "",
+      event_date: "",
+      location: "",
+      address: "",
+      maps_url: "",
+      description: "",
+    });
   };
 
   const handleDeleteEvent = async (id: string) => {
@@ -142,13 +209,15 @@ const EventsManager = () => {
       <Card className="shadow-elegant">
         <CardHeader>
           <CardTitle className="text-3xl font-serif flex items-center gap-2">
-            <Plus className="w-6 h-6" />
-            Adicionar Novo Evento
+            {editingId ? <Edit className="w-6 h-6" /> : <Plus className="w-6 h-6" />}
+            {editingId ? "Editar Evento" : "Adicionar Novo Evento"}
           </CardTitle>
-          <CardDescription>Adicione cerimônia, recepção ou outros eventos</CardDescription>
+          <CardDescription>
+            {editingId ? "Edite os detalhes do evento" : "Adicione cerimônia, recepção ou outros eventos"}
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleAddEvent} className="space-y-4">
+          <form onSubmit={handleSubmitEvent} className="space-y-4">
             <div className="grid md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="event_type">Tipo do Evento</Label>
@@ -224,7 +293,16 @@ const EventsManager = () => {
               />
             </div>
 
-            <Button type="submit" className="w-full">Adicionar Evento</Button>
+            <div className="flex gap-2">
+              <Button type="submit" className="flex-1">
+                {editingId ? "Salvar Alterações" : "Adicionar Evento"}
+              </Button>
+              {editingId && (
+                <Button type="button" variant="outline" onClick={handleCancelEdit}>
+                  Cancelar
+                </Button>
+              )}
+            </div>
           </form>
         </CardContent>
       </Card>
@@ -248,13 +326,22 @@ const EventsManager = () => {
                     {event.address && <p className="text-sm text-muted-foreground">{event.address}</p>}
                     {event.description && <p className="text-sm mt-2">{event.description}</p>}
                   </div>
-                  <Button
-                    variant="destructive"
-                    size="icon"
-                    onClick={() => handleDeleteEvent(event.id)}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => handleEditEvent(event)}
+                    >
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      onClick={() => handleDeleteEvent(event.id)}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>
