@@ -63,9 +63,10 @@ const roleColors = {
 
 interface UsersListProps {
   refreshKey?: number;
+  onSelectUser?: (user: { id: string; name: string } | null) => void;
 }
 
-const UsersList = ({ refreshKey }: UsersListProps) => {
+const UsersList = ({ refreshKey, onSelectUser }: UsersListProps) => {
   const { toast } = useToast();
   const [users, setUsers] = useState<UserWithRole[]>([]);
   const [loading, setLoading] = useState(true);
@@ -394,6 +395,16 @@ const UsersList = ({ refreshKey }: UsersListProps) => {
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex gap-2 justify-end">
+                            {onSelectUser && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => onSelectUser({ id: user.id, name: user.full_name || user.email || "Usuário" })}
+                                title="Configurar permissões"
+                              >
+                                <Shield className="h-4 w-4" />
+                              </Button>
+                            )}
                             <Button
                               variant="ghost"
                               size="sm"

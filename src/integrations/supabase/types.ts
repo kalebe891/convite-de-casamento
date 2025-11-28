@@ -50,6 +50,42 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_permissions: {
+        Row: {
+          can_add: boolean
+          can_delete: boolean
+          can_edit: boolean
+          can_view: boolean
+          created_at: string | null
+          id: string
+          menu_key: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          can_add?: boolean
+          can_delete?: boolean
+          can_edit?: boolean
+          can_view?: boolean
+          created_at?: string | null
+          id?: string
+          menu_key: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          can_add?: boolean
+          can_delete?: boolean
+          can_edit?: boolean
+          can_view?: boolean
+          created_at?: string | null
+          id?: string
+          menu_key?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       buffet_items: {
         Row: {
           category: string | null

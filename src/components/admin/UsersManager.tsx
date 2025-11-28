@@ -10,7 +10,11 @@ import { Loader2, Copy, Mail, MessageCircle } from "lucide-react";
 import UsersList from "./UsersList";
 import PendingInvitesList from "./PendingInvitesList";
 
-const UsersManager = () => {
+interface UsersManagerProps {
+  onSelectUser?: (user: { id: string; name: string } | null) => void;
+}
+
+const UsersManager = ({ onSelectUser }: UsersManagerProps = {}) => {
   const { toast } = useToast();
   const [email, setEmail] = useState("");
   const [nome, setNome] = useState("");
@@ -242,7 +246,7 @@ const UsersManager = () => {
 
       <PendingInvitesList refreshTrigger={refreshKey} />
       
-      <UsersList refreshKey={refreshKey} />
+      <UsersList refreshKey={refreshKey} onSelectUser={onSelectUser} />
     </div>
   );
 };
