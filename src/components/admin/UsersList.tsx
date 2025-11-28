@@ -41,7 +41,7 @@ interface UserProfile {
 }
 
 interface UserRole {
-  role: "admin" | "couple" | "planner";
+  role: string;
 }
 
 interface UserWithRole extends UserProfile {
@@ -49,18 +49,6 @@ interface UserWithRole extends UserProfile {
   isEditingName?: boolean;
   editNameValue?: string;
 }
-
-const roleLabels = {
-  admin: "Administrador",
-  couple: "Casal",
-  planner: "Cerimonialista",
-};
-
-const roleColors = {
-  admin: "destructive",
-  couple: "default",
-  planner: "secondary",
-} as const;
 
 interface UsersListProps {
   refreshKey?: number;
@@ -102,7 +90,7 @@ const UsersList = ({ refreshKey, roleProfiles, onRoleProfilesChange }: UsersList
         ...profile,
         roles: (userRoles || [])
           .filter((role) => role.user_id === profile.id)
-          .map((role) => ({ role: role.role as "admin" | "couple" | "planner" })),
+          .map((role) => ({ role: role.role as string })),
       }));
 
       setUsers(usersWithRoles);
@@ -122,7 +110,7 @@ const UsersList = ({ refreshKey, roleProfiles, onRoleProfilesChange }: UsersList
     fetchUsers();
   }, [refreshKey]);
 
-  const handleRoleChange = async (userId: string, newRole: "admin" | "couple" | "planner") => {
+  const handleRoleChange = async (userId: string, newRole: string) => {
     try {
       // Remove existing roles
       const { error: deleteError } = await supabase
@@ -132,10 +120,10 @@ const UsersList = ({ refreshKey, roleProfiles, onRoleProfilesChange }: UsersList
 
       if (deleteError) throw deleteError;
 
-      // Add new role
+      // Add new role - cast to any to bypass TypeScript enum restriction
       const { error: insertError } = await supabase
         .from("user_roles")
-        .insert({ user_id: userId, role: newRole });
+        .insert({ user_id: userId, role: newRole as any });
 
       if (insertError) throw insertError;
 
@@ -264,6 +252,25 @@ const UsersList = ({ refreshKey, roleProfiles, onRoleProfilesChange }: UsersList
     );
   });
 
+  const getRoleLabel = (roleKey: string) => {
+    const profile = roleProfiles.find(p => p.role_key === roleKey);
+    return profile?.role_label || roleKey;
+  };
+
+  const getRoleColor = (roleKey: string): "destructive" | "default" | "secondary" | "outline" => {
+    switch (roleKey) {
+      case "admin":
+        return "destructive";
+      case "couple":
+        return "default";
+      case "planner":
+      case "cerimonial":
+        return "secondary";
+      default:
+        return "outline";
+    }
+  };
+
   const getRoleIcon = (role: string) => {
     switch (role) {
       case "admin":
@@ -271,9 +278,10 @@ const UsersList = ({ refreshKey, roleProfiles, onRoleProfilesChange }: UsersList
       case "couple":
         return <UsersIcon className="w-3 h-3" />;
       case "planner":
+      case "cerimonial":
         return <UserCog className="w-3 h-3" />;
       default:
-        return null;
+        return <Settings className="w-3 h-3" />;
     }
   };
 
@@ -383,9 +391,9 @@ const UsersList = ({ refreshKey, roleProfiles, onRoleProfilesChange }: UsersList
                         <TableCell>{user.email}</TableCell>
                         <TableCell>
                           {currentRole ? (
-                            <Badge variant={roleColors[currentRole]} className="gap-1">
+                            <Badge variant={getRoleColor(currentRole)} className="gap-1">
                               {getRoleIcon(currentRole)}
-                              {roleLabels[currentRole]}
+                              {getRoleLabel(currentRole)}
                             </Badge>
                           ) : (
                             <Badge variant="outline">Sem papel</Badge>
@@ -395,16 +403,18 @@ const UsersList = ({ refreshKey, roleProfiles, onRoleProfilesChange }: UsersList
                           <Select
                             value={currentRole || ""}
                             onValueChange={(value) =>
-                              handleRoleChange(user.id, value as "admin" | "couple" | "planner")
+                              handleRoleChange(user.id, value)
                             }
                           >
                             <SelectTrigger className="w-[180px]">
                               <SelectValue placeholder="Selecione um papel" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="admin">Administrador</SelectItem>
-                              <SelectItem value="couple">Casal</SelectItem>
-                              <SelectItem value="planner">Cerimonialista</SelectItem>
+                              {roleProfiles.map((profile) => (
+                                <SelectItem key={profile.role_key} value={profile.role_key}>
+                                  {profile.role_label}
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                         </TableCell>

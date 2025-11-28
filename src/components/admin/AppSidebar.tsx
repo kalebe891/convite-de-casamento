@@ -41,13 +41,10 @@ export function AppSidebar() {
 
   // Filtrar itens baseado em permissões
   const visibleItems = allItems.filter((item) => {
-    // Admins veem tudo
-    if (role === "admin") return true;
-    
     // Se é adminOnly e não é admin, esconder
-    if (item.adminOnly) return false;
+    if (item.adminOnly && role !== "admin") return false;
     
-    // Verificar permissão de visualização
+    // Verificar permissão de visualização para todos os usuários (incluindo admins)
     return hasPermission(item.menuKey, "view");
   });
 

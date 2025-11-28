@@ -285,23 +285,21 @@ const RoleProfilesDialog = ({ open, onOpenChange, onRoleChange }: RoleProfilesDi
                           variant="outline"
                           size="sm"
                           onClick={() => handleEdit(role)}
-                          disabled={loading}
-                          title="Editar papel"
+                          disabled={loading || role.is_system}
+                          title={role.is_system ? "Papéis do sistema não podem ser editados" : "Editar papel"}
                         >
                           <Pencil className="w-4 h-4" />
                         </Button>
-                        {!role.is_system && (
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setDeletingRoleId(role.id)}
-                            disabled={loading}
-                            title="Excluir papel"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        )}
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setDeletingRoleId(role.id)}
+                          disabled={loading || role.is_system}
+                          title={role.is_system ? "Papéis do sistema não podem ser excluídos" : "Excluir papel"}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
                       </div>
                     </div>
                   ))}
