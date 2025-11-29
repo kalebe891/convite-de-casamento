@@ -74,13 +74,56 @@ const WeddingPhotosManager = ({ permissions }: WeddingPhotosManagerProps) => {
     }
 
     const file = e.target.files?.[0];
-    if (!file || !weddingId) return;
+    if (!file || !weddingId) {
+      e.target.value = '';
+      return;
+    }
+
+    // Validações de segurança no frontend
+    const allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+    const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    const maxFileSize = 10485760; // 10MB
+
+    const fileExt = file.name.split(".").pop()?.toLowerCase();
+    
+    // Validar extensão
+    if (!fileExt || !allowedExtensions.includes(fileExt)) {
+      toast({
+        title: "Formato inválido",
+        description: "Apenas arquivos JPG, PNG, GIF e WEBP são permitidos.",
+        variant: "destructive",
+      });
+      e.target.value = '';
+      return;
+    }
+
+    // Validar MIME type
+    if (!allowedMimeTypes.includes(file.type)) {
+      toast({
+        title: "Tipo de arquivo inválido",
+        description: "O tipo do arquivo não é permitido. Apenas imagens JPG, PNG, GIF e WEBP.",
+        variant: "destructive",
+      });
+      e.target.value = '';
+      return;
+    }
+
+    // Validar tamanho
+    if (file.size > maxFileSize) {
+      toast({
+        title: "Arquivo muito grande",
+        description: "O tamanho máximo permitido é 10MB.",
+        variant: "destructive",
+      });
+      e.target.value = '';
+      return;
+    }
 
     setUploading(true);
 
     try {
-      const fileExt = file.name.split(".").pop();
-      const fileName = `${Math.random()}.${fileExt}`;
+      // Gerar nome seguro usando crypto.randomUUID() ao invés de Math.random()
+      const fileName = `${crypto.randomUUID()}.${fileExt}`;
       const filePath = `${weddingId}/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
@@ -263,7 +306,7 @@ const WeddingPhotosManager = ({ permissions }: WeddingPhotosManagerProps) => {
             <Input
               id="photo-upload"
               type="file"
-              accept="image/*"
+              accept=".jpg,.jpeg,.png,.gif,.webp"
               onChange={handleFileUpload}
               disabled={uploading || !weddingId || !permissions.canAdd}
             />

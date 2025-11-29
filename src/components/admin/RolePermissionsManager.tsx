@@ -57,10 +57,17 @@ const MENU_PERMISSIONS: Record<MenuKey, Array<"view" | "add" | "edit" | "delete"
 
 const PERMISSION_LABELS: Record<string, string> = {
   view: "Pode visualizar menu",
-  add: "Pode adicionar itens",
+  add: "Pode adicionar",
   edit: "Pode alterar",
-  delete: "Pode excluir itens",
+  delete: "Pode excluir",
   publish: "Pode tornar público",
+};
+
+// Menus que usam "acessar" ao invés de "visualizar"
+const ACCESS_MENUS: MenuKey[] = ["estatisticas", "logs", "checkin"];
+
+const getViewLabel = (menuKey: MenuKey): string => {
+  return ACCESS_MENUS.includes(menuKey) ? "Pode acessar menu" : "Pode visualizar menu";
 };
 
 const RolePermissionsManager = ({ roleKey, roleLabel }: RolePermissionsManagerProps) => {
@@ -289,7 +296,7 @@ const RolePermissionsManager = ({ roleKey, roleLabel }: RolePermissionsManagerPr
                         htmlFor={`${permission.menu_key}-${permType}`}
                         className="text-sm font-normal cursor-pointer"
                       >
-                        {PERMISSION_LABELS[permType]}
+                        {permType === "view" ? getViewLabel(permission.menu_key) : PERMISSION_LABELS[permType]}
                       </Label>
                     </div>
                   ))}
