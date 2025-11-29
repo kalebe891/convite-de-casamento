@@ -53,7 +53,7 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
           invitation:invitations(guest_name)
         `)
         .eq("wedding_id", wedding.id)
-        .order("display_order");
+        .order("gift_name", { ascending: true });
       setItems(itemsData || []);
     }
   };

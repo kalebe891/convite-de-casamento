@@ -46,7 +46,7 @@ const BuffetManager = ({ permissions }: BuffetManagerProps) => {
         .from("buffet_items")
         .select("*")
         .eq("wedding_id", wedding.id)
-        .order("display_order");
+        .order("item_name", { ascending: true });
       setItems(itemsData || []);
     }
   };

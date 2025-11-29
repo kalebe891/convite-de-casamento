@@ -9,6 +9,22 @@ import { Button } from "@/components/ui/button";
 import { Loader2, CheckSquare } from "lucide-react";
 import { MENU_LABELS, MenuKey } from "@/lib/permissions";
 
+// Define menu order matching the sidebar
+const MENU_ORDER: MenuKey[] = [
+  "detalhes",
+  "usuarios", 
+  "eventos",
+  "convidados",
+  "checkin",
+  "presentes",
+  "cronograma",
+  "buffet",
+  "playlist",
+  "momentos",
+  "estatisticas",
+  "logs"
+];
+
 interface Permission {
   menu_key: MenuKey;
   can_view: boolean;
@@ -72,11 +88,11 @@ const RolePermissionsManager = ({ roleKey, roleLabel }: RolePermissionsManagerPr
         (data || []).map((p) => [p.menu_key, p])
       );
 
-      // Initialize permissions for all menus
-      const allPermissions: Permission[] = Object.keys(MENU_LABELS).map((key) => {
-        const existing = permissionsMap.get(key as MenuKey);
+      // Initialize permissions for all menus in the same order as sidebar
+      const allPermissions: Permission[] = MENU_ORDER.map((key) => {
+        const existing = permissionsMap.get(key);
         return {
-          menu_key: key as MenuKey,
+          menu_key: key,
           can_view: existing?.can_view || false,
           can_add: existing?.can_add || false,
           can_edit: existing?.can_edit || false,
