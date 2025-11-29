@@ -30,8 +30,8 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Não autorizado");
     }
 
-    const token = authHeader.replace("Bearer ", "");
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    const authToken = authHeader.replace("Bearer ", "");
+    const { data: { user }, error: authError } = await supabase.auth.getUser(authToken);
 
     if (authError || !user) {
       throw new Error("Não autorizado");

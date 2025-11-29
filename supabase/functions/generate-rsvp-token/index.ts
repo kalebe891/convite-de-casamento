@@ -119,7 +119,7 @@ const handler = async (req: Request): Promise<Response> => {
     const origin = req.headers.get("origin") || "http://localhost:8080";
     const invitationLink = `${origin}/convite/${invitation.unique_code}`;
 
-    console.log("Invitation generated successfully:", { guest_id, invitation_code: invitation.unique_code });
+    console.log("Invitation generated successfully for guest:", guest_id);
 
     return new Response(
       JSON.stringify({ 

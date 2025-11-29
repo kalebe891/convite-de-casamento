@@ -7,6 +7,13 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Security helpers
+const maskToken = (token: string): string => token ? token.slice(0, 8) + '...(hidden)' : 'N/A';
+const maskEmail = (email: string): string => {
+  const [user, domain] = email.split('@');
+  return user.slice(0, 2) + '***@' + domain;
+};
+
 // Validation schema
 const requestSchema = z.object({
   token: z.string().uuid('Token inválido'),
@@ -20,6 +27,8 @@ const handler = async (req: Request): Promise<Response> => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
+
+  const isDev = Deno.env.get("ENVIRONMENT") !== "production";
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -41,8 +50,10 @@ const handler = async (req: Request): Promise<Response> => {
 
     const { token, email, password, full_name } = validationResult.data;
 
-    console.log('[complete-user-invite] Processing invite for:', email);
-    console.log('[complete-user-invite] Token:', token);
+    if (isDev) {
+      console.log('[complete-user-invite] Processing invite for:', maskEmail(email));
+      console.log('[complete-user-invite] Token:', maskToken(token));
+    }
 
     // 1. Verify token exists and get pending user data
     const { data: pendingUser, error: pendingError } = await supabase
@@ -60,7 +71,13 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    console.log('[complete-user-invite] Pending user data:', JSON.stringify(pendingUser, null, 2));
+    if (isDev) {
+      console.log('[complete-user-invite] Pending user found:', {
+        email: maskEmail(pendingUser.email),
+        role: pendingUser.papel,
+        used: pendingUser.usado
+      });
+    }
 
     // Verify email matches
     if (pendingUser.email !== email) {
@@ -104,9 +121,9 @@ const handler = async (req: Request): Promise<Response> => {
       );
       
       if (updateError) {
-        console.error('[complete-user-invite] Error updating user:', JSON.stringify(updateError, null, 2));
+        console.error('[complete-user-invite] Error updating user credentials');
         return new Response(
-          JSON.stringify({ error: 'Erro ao atualizar credenciais do usuário', details: updateError }),
+          JSON.stringify({ error: 'Erro ao atualizar credenciais do usuário' }),
           { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
@@ -122,7 +139,7 @@ const handler = async (req: Request): Promise<Response> => {
       });
 
       if (createUserError || !newUser.user) {
-        console.error('[complete-user-invite] Error creating user:', JSON.stringify(createUserError, null, 2));
+        console.error('[complete-user-invite] Error creating user');
         return new Response(
           JSON.stringify({ error: 'Erro ao criar usuário. Tente novamente.' }),
           { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -145,9 +162,9 @@ const handler = async (req: Request): Promise<Response> => {
       });
 
     if (profileError) {
-      console.error('[complete-user-invite] Error upserting profile:', JSON.stringify(profileError, null, 2));
+      console.error('[complete-user-invite] Error upserting profile');
       return new Response(
-        JSON.stringify({ error: 'Erro ao atualizar perfil do usuário', details: profileError }),
+        JSON.stringify({ error: 'Erro ao atualizar perfil do usuário' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -166,9 +183,9 @@ const handler = async (req: Request): Promise<Response> => {
       });
 
     if (roleError) {
-      console.error('[complete-user-invite] Error assigning role:', JSON.stringify(roleError, null, 2));
+      console.error('[complete-user-invite] Error assigning role');
       return new Response(
-        JSON.stringify({ error: 'Erro ao atribuir papel ao usuário', details: roleError }),
+        JSON.stringify({ error: 'Erro ao atribuir papel ao usuário' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -178,13 +195,13 @@ const handler = async (req: Request): Promise<Response> => {
     // Verify role was actually saved
     const { data: verifyRole, error: verifyError } = await supabase
       .from('user_roles')
-      .select('*')
+      .select('role')
       .eq('user_id', userId)
       .single();
     
-    console.log('[complete-user-invite] Role verification:', JSON.stringify(verifyRole, null, 2));
+    console.log('[complete-user-invite] Role verification:', verifyRole ? 'Success' : 'Failed');
     if (verifyError) {
-      console.error('[complete-user-invite] Error verifying role:', verifyError);
+      console.error('[complete-user-invite] Error verifying role');
     }
 
     // 5. Mark token as used and remove from pending_users
@@ -194,9 +211,9 @@ const handler = async (req: Request): Promise<Response> => {
       .eq('token', token);
 
     if (deleteError) {
-      console.error('[complete-user-invite] Error removing token:', JSON.stringify(deleteError, null, 2));
+      console.error('[complete-user-invite] Error removing token');
       return new Response(
-        JSON.stringify({ error: 'Erro ao remover token de convite', details: deleteError }),
+        JSON.stringify({ error: 'Erro ao remover token de convite' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -204,9 +221,8 @@ const handler = async (req: Request): Promise<Response> => {
     console.log('[complete-user-invite] Invitation completed successfully');
     console.log('[complete-user-invite] Summary:', {
       userId,
-      email,
-      role: pendingUser.papel,
-      fullName: full_name
+      email: maskEmail(email),
+      role: pendingUser.papel
     });
 
     return new Response(
