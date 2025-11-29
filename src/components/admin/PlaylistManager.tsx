@@ -25,6 +25,7 @@ const PlaylistManager = ({ permissions }: PlaylistManagerProps) => {
   const { toast } = useToast();
   const [songs, setSongs] = useState<any[]>([]);
   const [weddingId, setWeddingId] = useState<string | null>(null);
+  const [showPlaylistSection, setShowPlaylistSection] = useState<boolean>(true);
   const [newSong, setNewSong] = useState({ moment: "", song_name: "", artist: "", is_public: true });
   const [editingId, setEditingId] = useState<string | null>(null);
 
@@ -35,17 +36,54 @@ const PlaylistManager = ({ permissions }: PlaylistManagerProps) => {
   const fetchData = async () => {
     const { data: wedding } = await supabase
       .from("wedding_details")
-      .select("id")
+      .select("id, show_playlist_section")
       .single();
 
     if (wedding) {
       setWeddingId(wedding.id);
+      setShowPlaylistSection(wedding.show_playlist_section ?? true);
       const { data: songsData } = await supabase
         .from("playlist_songs")
         .select("*")
         .eq("wedding_id", wedding.id)
         .order("song_name", { ascending: true });
       setSongs(songsData || []);
+    }
+  };
+
+  const handleTogglePlaylistSection = async (checked: boolean) => {
+    if (!permissions.canPublish) {
+      toast({
+        title: "Sem permissão",
+        description: "Você não tem permissão para publicar/ocultar seções",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!weddingId) return;
+
+    try {
+      const { error } = await supabase
+        .from("wedding_details")
+        .update({ show_playlist_section: checked })
+        .eq("id", weddingId);
+
+      if (error) throw error;
+
+      setShowPlaylistSection(checked);
+      toast({
+        title: "Configuração atualizada!",
+        description: checked
+          ? "Seção playlist agora está visível na página pública"
+          : "Seção playlist foi ocultada da página pública",
+      });
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: getSafeErrorMessage(error),
+        variant: "destructive",
+      });
     }
   };
 
@@ -168,6 +206,28 @@ const PlaylistManager = ({ permissions }: PlaylistManagerProps) => {
 
   return (
     <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Visibilidade da Seção</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label htmlFor="show_playlist_section">Exibir Seção na Página Pública</Label>
+              <p className="text-sm text-muted-foreground">
+                Controla se a seção de playlist aparece na página pública do convite
+              </p>
+            </div>
+            <Switch
+              id="show_playlist_section"
+              checked={showPlaylistSection}
+              onCheckedChange={handleTogglePlaylistSection}
+              disabled={!permissions.canPublish}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle>{editingId ? "Editar Música" : "Adicionar Música à Playlist"}</CardTitle>

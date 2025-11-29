@@ -25,6 +25,7 @@ const TimelineManager = ({ permissions }: TimelineManagerProps) => {
   const { toast } = useToast();
   const [events, setEvents] = useState<any[]>([]);
   const [weddingId, setWeddingId] = useState<string | null>(null);
+  const [showTimelineSection, setShowTimelineSection] = useState<boolean>(true);
   const [newEvent, setNewEvent] = useState({ time: "", activity: "", observation: "", is_public: true });
   const [editingId, setEditingId] = useState<string | null>(null);
 
@@ -35,17 +36,54 @@ const TimelineManager = ({ permissions }: TimelineManagerProps) => {
   const fetchData = async () => {
     const { data: wedding } = await supabase
       .from("wedding_details")
-      .select("id")
+      .select("id, show_timeline_section")
       .single();
 
     if (wedding) {
       setWeddingId(wedding.id);
+      setShowTimelineSection(wedding.show_timeline_section ?? true);
       const { data: eventsData } = await supabase
         .from("timeline_events")
         .select("*")
         .eq("wedding_id", wedding.id)
         .order("time", { ascending: true });
       setEvents(eventsData || []);
+    }
+  };
+
+  const handleToggleTimelineSection = async (checked: boolean) => {
+    if (!permissions.canPublish) {
+      toast({
+        title: "Sem permissão",
+        description: "Você não tem permissão para publicar/ocultar seções",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!weddingId) return;
+
+    try {
+      const { error } = await supabase
+        .from("wedding_details")
+        .update({ show_timeline_section: checked })
+        .eq("id", weddingId);
+
+      if (error) throw error;
+
+      setShowTimelineSection(checked);
+      toast({
+        title: "Configuração atualizada!",
+        description: checked
+          ? "Seção cronograma agora está visível na página pública"
+          : "Seção cronograma foi ocultada da página pública",
+      });
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: getSafeErrorMessage(error),
+        variant: "destructive",
+      });
     }
   };
 
@@ -167,6 +205,28 @@ const TimelineManager = ({ permissions }: TimelineManagerProps) => {
 
   return (
     <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Visibilidade da Seção</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label htmlFor="show_timeline_section">Exibir Seção na Página Pública</Label>
+              <p className="text-sm text-muted-foreground">
+                Controla se a seção de cronograma aparece na página pública do convite
+              </p>
+            </div>
+            <Switch
+              id="show_timeline_section"
+              checked={showTimelineSection}
+              onCheckedChange={handleToggleTimelineSection}
+              disabled={!permissions.canPublish}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle>{editingId ? "Editar Evento" : "Adicionar Evento ao Cronograma"}</CardTitle>

@@ -27,9 +27,6 @@ const WeddingSettingsForm = ({ permissions }: WeddingSettingsFormProps) => {
     couple_message: "",
     show_guest_list_public: false,
     show_rsvp_status_public: false,
-    show_timeline_section: true,
-    show_buffet_section: true,
-    show_playlist_section: true,
   });
 
   useEffect(() => {
@@ -49,9 +46,6 @@ const WeddingSettingsForm = ({ permissions }: WeddingSettingsFormProps) => {
         couple_message: data.couple_message || "",
         show_guest_list_public: data.show_guest_list_public || false,
         show_rsvp_status_public: data.show_rsvp_status_public || false,
-        show_timeline_section: data.show_timeline_section ?? true,
-        show_buffet_section: data.show_buffet_section ?? true,
-        show_playlist_section: data.show_playlist_section ?? true,
       });
     }
   };
@@ -148,51 +142,6 @@ const WeddingSettingsForm = ({ permissions }: WeddingSettingsFormProps) => {
                 id="show_rsvp_status_public"
                 checked={formData.show_rsvp_status_public}
                 onCheckedChange={(checked) => setFormData({ ...formData, show_rsvp_status_public: checked })}
-                disabled={!permissions.canPublish}
-              />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label htmlFor="show_timeline_section">Exibir Seção Cronograma</Label>
-                <p className="text-sm text-muted-foreground">
-                  Mostra a seção de cronograma na página pública
-                </p>
-              </div>
-              <Switch
-                id="show_timeline_section"
-                checked={formData.show_timeline_section}
-                onCheckedChange={(checked) => setFormData({ ...formData, show_timeline_section: checked })}
-                disabled={!permissions.canPublish}
-              />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label htmlFor="show_buffet_section">Exibir Seção Buffet</Label>
-                <p className="text-sm text-muted-foreground">
-                  Mostra a seção de buffet na página pública
-                </p>
-              </div>
-              <Switch
-                id="show_buffet_section"
-                checked={formData.show_buffet_section}
-                onCheckedChange={(checked) => setFormData({ ...formData, show_buffet_section: checked })}
-                disabled={!permissions.canPublish}
-              />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label htmlFor="show_playlist_section">Exibir Seção Playlist</Label>
-                <p className="text-sm text-muted-foreground">
-                  Mostra a seção de playlist na página pública
-                </p>
-              </div>
-              <Switch
-                id="show_playlist_section"
-                checked={formData.show_playlist_section}
-                onCheckedChange={(checked) => setFormData({ ...formData, show_playlist_section: checked })}
                 disabled={!permissions.canPublish}
               />
             </div>
