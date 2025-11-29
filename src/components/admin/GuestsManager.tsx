@@ -47,7 +47,7 @@ const GuestsManager = () => {
     const { data, error } = await supabase
       .from("guests")
       .select("*")
-      .order("created_at", { ascending: false });
+      .order("name", { ascending: true });
 
     if (error) {
       console.error("Error fetching guests:", error);

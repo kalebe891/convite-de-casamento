@@ -48,6 +48,7 @@ const RoleProfilesDialog = ({ open, onOpenChange, onRoleChange }: RoleProfilesDi
 
   useEffect(() => {
     if (open) {
+      setViewingPermissionsRole(null); // Always reset to main screen when opening
       fetchRoles();
     }
   }, [open]);

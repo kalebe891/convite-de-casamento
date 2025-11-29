@@ -44,7 +44,7 @@ const PlaylistManager = ({ permissions }: PlaylistManagerProps) => {
         .from("playlist_songs")
         .select("*")
         .eq("wedding_id", wedding.id)
-        .order("display_order");
+        .order("song_name", { ascending: true });
       setSongs(songsData || []);
     }
   };

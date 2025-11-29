@@ -39,7 +39,7 @@ const GuestMessagesDialog = () => {
         .from("invitations")
         .select("id, guest_name, message, attending, responded_at")
         .not("message", "is", null)
-        .order("responded_at", { ascending: false });
+        .order("guest_name", { ascending: true });
 
       if (error) throw error;
       setMessages(data || []);
