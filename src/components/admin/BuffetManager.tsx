@@ -174,6 +174,14 @@ const BuffetManager = ({ permissions }: BuffetManagerProps) => {
   };
 
   const handleEdit = (item: any) => {
+    if (!permissions.canEdit) {
+      toast({
+        title: "Sem permissão",
+        description: "Você não tem permissão para editar itens",
+        variant: "destructive",
+      });
+      return;
+    }
     setEditingId(item.id);
     setNewItem({
       item_name: item.item_name,
@@ -188,6 +196,14 @@ const BuffetManager = ({ permissions }: BuffetManagerProps) => {
   };
 
   const handleDelete = async (id: string) => {
+    if (!permissions.canDelete) {
+      toast({
+        title: "Sem permissão",
+        description: "Você não tem permissão para excluir itens",
+        variant: "destructive",
+      });
+      return;
+    }
     const deletedItem = items.find(item => item.id === id);
     const { error } = await supabase.from("buffet_items").delete().eq("id", id);
 
@@ -206,6 +222,14 @@ const BuffetManager = ({ permissions }: BuffetManagerProps) => {
   };
 
   const handleTogglePublic = async (id: string, currentValue: boolean) => {
+    if (!permissions.canPublish) {
+      toast({
+        title: "Sem permissão",
+        description: "Você não tem permissão para tornar itens públicos/privados",
+        variant: "destructive",
+      });
+      return;
+    }
     const { error } = await supabase
       .from("buffet_items")
       .update({ is_public: !currentValue })
@@ -222,6 +246,28 @@ const BuffetManager = ({ permissions }: BuffetManagerProps) => {
     <div className="space-y-6">
       <Card>
         <CardHeader>
+          <CardTitle>Visibilidade da Seção</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label htmlFor="show_buffet_section">Exibir Seção na Página Pública</Label>
+              <p className="text-sm text-muted-foreground">
+                Controla se a seção de buffet aparece na página pública do convite
+              </p>
+            </div>
+            <Switch
+              id="show_buffet_section"
+              checked={showBuffetSection}
+              onCheckedChange={handleToggleBuffetSection}
+              disabled={!permissions.canPublish}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle>{editingId ? "Editar Item" : "Adicionar Item ao Buffet"}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -231,6 +277,7 @@ const BuffetManager = ({ permissions }: BuffetManagerProps) => {
               placeholder="Ex: Arroz à grega"
               value={newItem.item_name}
               onChange={(e) => setNewItem({ ...newItem, item_name: e.target.value })}
+              disabled={editingId ? !permissions.canEdit : !permissions.canAdd}
             />
           </div>
           <div>
@@ -239,17 +286,22 @@ const BuffetManager = ({ permissions }: BuffetManagerProps) => {
               placeholder="Ex: Entrada, Prato principal, Sobremesa"
               value={newItem.category}
               onChange={(e) => setNewItem({ ...newItem, category: e.target.value })}
+              disabled={editingId ? !permissions.canEdit : !permissions.canAdd}
             />
           </div>
           <div className="flex items-center gap-2">
             <Switch
               checked={newItem.is_public}
               onCheckedChange={(checked) => setNewItem({ ...newItem, is_public: checked })}
+              disabled={!permissions.canPublish}
             />
             <Label>Exibir publicamente</Label>
           </div>
           <div className="flex gap-2">
-            <Button onClick={handleSave} disabled={!newItem.item_name}>
+            <Button 
+              onClick={handleSave} 
+              disabled={!newItem.item_name || (editingId ? !permissions.canEdit : !permissions.canAdd)}
+            >
               {editingId ? (
                 <>
                   <Pencil className="w-4 h-4 mr-2" />
@@ -293,11 +345,13 @@ const BuffetManager = ({ permissions }: BuffetManagerProps) => {
                     <Switch
                       checked={item.is_public}
                       onCheckedChange={() => handleTogglePublic(item.id, item.is_public)}
+                      disabled={!permissions.canPublish}
                     />
                     <Button
                       variant="outline"
                       size="icon"
                       onClick={() => handleEdit(item)}
+                      disabled={!permissions.canEdit}
                     >
                       <Pencil className="w-4 h-4" />
                     </Button>
@@ -305,6 +359,7 @@ const BuffetManager = ({ permissions }: BuffetManagerProps) => {
                       variant="destructive"
                       size="icon"
                       onClick={() => handleDelete(item.id)}
+                      disabled={!permissions.canDelete}
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>

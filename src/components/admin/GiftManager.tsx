@@ -64,6 +64,24 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
       return;
     }
 
+    if (!permissions.canAdd && !editingId) {
+      toast({
+        title: "Sem permissão",
+        description: "Você não tem permissão para adicionar itens",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!permissions.canEdit && editingId) {
+      toast({
+        title: "Sem permissão",
+        description: "Você não tem permissão para editar itens",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (editingId) {
       // Update existing gift
       const oldItem = items.find(item => item.id === editingId);
@@ -120,6 +138,14 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
   };
 
   const handleEdit = (item: any) => {
+    if (!permissions.canEdit) {
+      toast({
+        title: "Sem permissão",
+        description: "Você não tem permissão para editar itens",
+        variant: "destructive",
+      });
+      return;
+    }
     setEditingId(item.id);
     setNewItem({
       gift_name: item.gift_name,
@@ -135,6 +161,14 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
   };
 
   const handleDelete = async (id: string) => {
+    if (!permissions.canDelete) {
+      toast({
+        title: "Sem permissão",
+        description: "Você não tem permissão para excluir itens",
+        variant: "destructive",
+      });
+      return;
+    }
     const deletedItem = items.find(item => item.id === id);
     const { error } = await supabase.from("gift_items").delete().eq("id", id);
 
@@ -153,6 +187,14 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
   };
 
   const handleTogglePublic = async (id: string, newValue: boolean) => {
+    if (!permissions.canPublish) {
+      toast({
+        title: "Sem permissão",
+        description: "Você não tem permissão para tornar itens públicos/privados",
+        variant: "destructive",
+      });
+      return;
+    }
     const { error } = await supabase
       .from("gift_items")
       .update({ is_public: newValue })
@@ -178,6 +220,14 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
   };
 
   const handleToggleGiftsSection = async (newValue: boolean) => {
+    if (!permissions.canPublish) {
+      toast({
+        title: "Sem permissão",
+        description: "Você não tem permissão para publicar/ocultar seções",
+        variant: "destructive",
+      });
+      return;
+    }
     if (!weddingId) return;
 
     const { error } = await supabase
@@ -221,6 +271,7 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
             <Switch
               checked={showGiftsSection}
               onCheckedChange={handleToggleGiftsSection}
+              disabled={!permissions.canPublish}
             />
           </div>
         </CardContent>
@@ -237,6 +288,7 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
               placeholder="Ex: Jogo de panelas"
               value={newItem.gift_name}
               onChange={(e) => setNewItem({ ...newItem, gift_name: e.target.value })}
+              disabled={editingId ? !permissions.canEdit : !permissions.canAdd}
             />
           </div>
           <div>
@@ -245,6 +297,7 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
               placeholder="Ex: Jogo com 5 peças antiaderente"
               value={newItem.description}
               onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
+              disabled={editingId ? !permissions.canEdit : !permissions.canAdd}
             />
           </div>
           <div>
@@ -253,17 +306,22 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
               placeholder="https://exemplo.com/produto"
               value={newItem.link}
               onChange={(e) => setNewItem({ ...newItem, link: e.target.value })}
+              disabled={editingId ? !permissions.canEdit : !permissions.canAdd}
             />
           </div>
           <div className="flex items-center gap-2">
             <Switch
               checked={newItem.is_public}
               onCheckedChange={(checked) => setNewItem({ ...newItem, is_public: checked })}
+              disabled={!permissions.canPublish}
             />
             <Label>Exibir publicamente</Label>
           </div>
           <div className="flex gap-2">
-            <Button onClick={handleSave} disabled={!newItem.gift_name}>
+            <Button 
+              onClick={handleSave} 
+              disabled={!newItem.gift_name || (editingId ? !permissions.canEdit : !permissions.canAdd)}
+            >
               {editingId ? (
                 <>
                   <Pencil className="w-4 h-4 mr-2" />
@@ -322,11 +380,13 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
                     <Switch
                       checked={item.is_public}
                       onCheckedChange={(checked) => handleTogglePublic(item.id, checked)}
+                      disabled={!permissions.canPublish}
                     />
                     <Button
                       variant="outline"
                       size="icon"
                       onClick={() => handleEdit(item)}
+                      disabled={!permissions.canEdit}
                     >
                       <Pencil className="w-4 h-4" />
                     </Button>
@@ -334,6 +394,7 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
                       variant="destructive"
                       size="icon"
                       onClick={() => handleDelete(item.id)}
+                      disabled={!permissions.canDelete}
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>

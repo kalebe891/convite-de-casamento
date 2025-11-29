@@ -90,6 +90,24 @@ const TimelineManager = ({ permissions }: TimelineManagerProps) => {
   const handleSave = async () => {
     if (!weddingId) return;
 
+    if (!permissions.canAdd && !editingId) {
+      toast({
+        title: "Sem permissão",
+        description: "Você não tem permissão para adicionar itens",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!permissions.canEdit && editingId) {
+      toast({
+        title: "Sem permissão",
+        description: "Você não tem permissão para editar itens",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // Validate input data
     const validationResult = timelineEventSchema.safeParse({
       time: newEvent.time,
@@ -158,6 +176,14 @@ const TimelineManager = ({ permissions }: TimelineManagerProps) => {
   };
 
   const handleEdit = (event: any) => {
+    if (!permissions.canEdit) {
+      toast({
+        title: "Sem permissão",
+        description: "Você não tem permissão para editar itens",
+        variant: "destructive",
+      });
+      return;
+    }
     setEditingId(event.id);
     setNewEvent({
       time: event.time,
@@ -173,6 +199,14 @@ const TimelineManager = ({ permissions }: TimelineManagerProps) => {
   };
 
   const handleDelete = async (id: string) => {
+    if (!permissions.canDelete) {
+      toast({
+        title: "Sem permissão",
+        description: "Você não tem permissão para excluir itens",
+        variant: "destructive",
+      });
+      return;
+    }
     const deletedEvent = events.find(e => e.id === id);
     const { error } = await supabase.from("timeline_events").delete().eq("id", id);
 
@@ -191,6 +225,14 @@ const TimelineManager = ({ permissions }: TimelineManagerProps) => {
   };
 
   const handleTogglePublic = async (id: string, currentValue: boolean) => {
+    if (!permissions.canPublish) {
+      toast({
+        title: "Sem permissão",
+        description: "Você não tem permissão para tornar itens públicos/privados",
+        variant: "destructive",
+      });
+      return;
+    }
     const { error } = await supabase
       .from("timeline_events")
       .update({ is_public: !currentValue })
@@ -239,6 +281,7 @@ const TimelineManager = ({ permissions }: TimelineManagerProps) => {
               placeholder="Ex: 14:00"
               value={newEvent.time}
               onChange={(e) => setNewEvent({ ...newEvent, time: e.target.value })}
+              disabled={editingId ? !permissions.canEdit : !permissions.canAdd}
             />
           </div>
           <div>
@@ -247,6 +290,7 @@ const TimelineManager = ({ permissions }: TimelineManagerProps) => {
               placeholder="Ex: Cerimônia"
               value={newEvent.activity}
               onChange={(e) => setNewEvent({ ...newEvent, activity: e.target.value })}
+              disabled={editingId ? !permissions.canEdit : !permissions.canAdd}
             />
           </div>
           <div>
@@ -255,17 +299,22 @@ const TimelineManager = ({ permissions }: TimelineManagerProps) => {
               placeholder="Ex: Traje formal"
               value={newEvent.observation}
               onChange={(e) => setNewEvent({ ...newEvent, observation: e.target.value })}
+              disabled={editingId ? !permissions.canEdit : !permissions.canAdd}
             />
           </div>
           <div className="flex items-center gap-2">
             <Switch
               checked={newEvent.is_public}
               onCheckedChange={(checked) => setNewEvent({ ...newEvent, is_public: checked })}
+              disabled={!permissions.canPublish}
             />
             <Label>Exibir publicamente</Label>
           </div>
           <div className="flex gap-2">
-            <Button onClick={handleSave} disabled={!newEvent.time || !newEvent.activity}>
+            <Button 
+              onClick={handleSave} 
+              disabled={!newEvent.time || !newEvent.activity || (editingId ? !permissions.canEdit : !permissions.canAdd)}
+            >
               {editingId ? (
                 <>
                   <Pencil className="w-4 h-4 mr-2" />
@@ -310,11 +359,13 @@ const TimelineManager = ({ permissions }: TimelineManagerProps) => {
                     <Switch
                       checked={event.is_public}
                       onCheckedChange={() => handleTogglePublic(event.id, event.is_public)}
+                      disabled={!permissions.canPublish}
                     />
                     <Button
                       variant="outline"
                       size="icon"
                       onClick={() => handleEdit(event)}
+                      disabled={!permissions.canEdit}
                     >
                       <Pencil className="w-4 h-4" />
                     </Button>
@@ -322,6 +373,7 @@ const TimelineManager = ({ permissions }: TimelineManagerProps) => {
                       variant="destructive"
                       size="icon"
                       onClick={() => handleDelete(event.id)}
+                      disabled={!permissions.canDelete}
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>

@@ -63,6 +63,16 @@ const WeddingPhotosManager = ({ permissions }: WeddingPhotosManagerProps) => {
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!permissions.canAdd) {
+      toast({
+        title: "Sem permissão",
+        description: "Você não tem permissão para adicionar fotos",
+        variant: "destructive",
+      });
+      e.target.value = '';
+      return;
+    }
+
     const file = e.target.files?.[0];
     if (!file || !weddingId) return;
 
@@ -118,6 +128,15 @@ const WeddingPhotosManager = ({ permissions }: WeddingPhotosManagerProps) => {
   };
 
   const handleDeletePhoto = async (id: string, photoUrl: string) => {
+    if (!permissions.canDelete) {
+      toast({
+        title: "Sem permissão",
+        description: "Você não tem permissão para excluir fotos",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const filePath = photoUrl.split("/").slice(-2).join("/");
 
@@ -151,6 +170,15 @@ const WeddingPhotosManager = ({ permissions }: WeddingPhotosManagerProps) => {
   };
 
   const handleSetMainPhoto = async (photoId: string) => {
+    if (!permissions.canEdit) {
+      toast({
+        title: "Sem permissão",
+        description: "Você não tem permissão para alterar a foto principal",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from("photos")
@@ -181,6 +209,15 @@ const WeddingPhotosManager = ({ permissions }: WeddingPhotosManagerProps) => {
   };
 
   const handleSetSecondaryPhoto = async (photoId: string) => {
+    if (!permissions.canEdit) {
+      toast({
+        title: "Sem permissão",
+        description: "Você não tem permissão para alterar a foto secundária",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from("photos")
@@ -228,7 +265,7 @@ const WeddingPhotosManager = ({ permissions }: WeddingPhotosManagerProps) => {
               type="file"
               accept="image/*"
               onChange={handleFileUpload}
-              disabled={uploading || !weddingId}
+              disabled={uploading || !weddingId || !permissions.canAdd}
             />
             {!weddingId && (
               <p className="text-sm text-muted-foreground">
@@ -307,6 +344,7 @@ const WeddingPhotosManager = ({ permissions }: WeddingPhotosManagerProps) => {
                       className="h-8 w-8"
                       onClick={() => handleSetMainPhoto(photo.id)}
                       title="Definir como foto principal"
+                      disabled={!permissions.canEdit}
                     >
                       <Star className={`w-4 h-4 ${photo.is_main ? 'fill-current' : ''}`} />
                     </Button>
@@ -316,6 +354,7 @@ const WeddingPhotosManager = ({ permissions }: WeddingPhotosManagerProps) => {
                       className="h-8 w-8 bg-green-600 hover:bg-green-700"
                       onClick={() => handleSetSecondaryPhoto(photo.id)}
                       title="Definir como foto secundária"
+                      disabled={!permissions.canEdit}
                     >
                       <Star className={`w-4 h-4 ${photo.is_secondary ? 'fill-current' : ''}`} />
                     </Button>
@@ -325,6 +364,7 @@ const WeddingPhotosManager = ({ permissions }: WeddingPhotosManagerProps) => {
                       className="h-8 w-8"
                       onClick={() => handleDeletePhoto(photo.id, photo.photo_url)}
                       title="Remover foto"
+                      disabled={!permissions.canDelete}
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>

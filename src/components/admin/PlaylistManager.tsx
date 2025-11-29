@@ -90,6 +90,24 @@ const PlaylistManager = ({ permissions }: PlaylistManagerProps) => {
   const handleSave = async () => {
     if (!weddingId) return;
 
+    if (!permissions.canAdd && !editingId) {
+      toast({
+        title: "Sem permissão",
+        description: "Você não tem permissão para adicionar itens",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!permissions.canEdit && editingId) {
+      toast({
+        title: "Sem permissão",
+        description: "Você não tem permissão para editar itens",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // Validate input data
     const validationResult = playlistSongSchema.safeParse({
       song_name: newSong.song_name,
@@ -159,6 +177,14 @@ const PlaylistManager = ({ permissions }: PlaylistManagerProps) => {
   };
 
   const handleEdit = (song: any) => {
+    if (!permissions.canEdit) {
+      toast({
+        title: "Sem permissão",
+        description: "Você não tem permissão para editar itens",
+        variant: "destructive",
+      });
+      return;
+    }
     setEditingId(song.id);
     setNewSong({
       moment: song.moment,
@@ -174,6 +200,14 @@ const PlaylistManager = ({ permissions }: PlaylistManagerProps) => {
   };
 
   const handleDelete = async (id: string) => {
+    if (!permissions.canDelete) {
+      toast({
+        title: "Sem permissão",
+        description: "Você não tem permissão para excluir itens",
+        variant: "destructive",
+      });
+      return;
+    }
     const deletedSong = songs.find(s => s.id === id);
     const { error } = await supabase.from("playlist_songs").delete().eq("id", id);
 
@@ -192,6 +226,14 @@ const PlaylistManager = ({ permissions }: PlaylistManagerProps) => {
   };
 
   const handleTogglePublic = async (id: string, currentValue: boolean) => {
+    if (!permissions.canPublish) {
+      toast({
+        title: "Sem permissão",
+        description: "Você não tem permissão para tornar itens públicos/privados",
+        variant: "destructive",
+      });
+      return;
+    }
     const { error } = await supabase
       .from("playlist_songs")
       .update({ is_public: !currentValue })
@@ -239,6 +281,7 @@ const PlaylistManager = ({ permissions }: PlaylistManagerProps) => {
               placeholder="Ex: Entrada dos noivos"
               value={newSong.moment}
               onChange={(e) => setNewSong({ ...newSong, moment: e.target.value })}
+              disabled={editingId ? !permissions.canEdit : !permissions.canAdd}
             />
           </div>
           <div>
@@ -247,6 +290,7 @@ const PlaylistManager = ({ permissions }: PlaylistManagerProps) => {
               placeholder="Ex: Here Comes The Sun"
               value={newSong.song_name}
               onChange={(e) => setNewSong({ ...newSong, song_name: e.target.value })}
+              disabled={editingId ? !permissions.canEdit : !permissions.canAdd}
             />
           </div>
           <div>
@@ -255,17 +299,22 @@ const PlaylistManager = ({ permissions }: PlaylistManagerProps) => {
               placeholder="Ex: The Beatles"
               value={newSong.artist}
               onChange={(e) => setNewSong({ ...newSong, artist: e.target.value })}
+              disabled={editingId ? !permissions.canEdit : !permissions.canAdd}
             />
           </div>
           <div className="flex items-center gap-2">
             <Switch
               checked={newSong.is_public}
               onCheckedChange={(checked) => setNewSong({ ...newSong, is_public: checked })}
+              disabled={!permissions.canPublish}
             />
             <Label>Exibir publicamente</Label>
           </div>
           <div className="flex gap-2">
-            <Button onClick={handleSave} disabled={!newSong.moment || !newSong.song_name}>
+            <Button 
+              onClick={handleSave} 
+              disabled={!newSong.moment || !newSong.song_name || (editingId ? !permissions.canEdit : !permissions.canAdd)}
+            >
               {editingId ? (
                 <>
                   <Pencil className="w-4 h-4 mr-2" />
@@ -310,11 +359,13 @@ const PlaylistManager = ({ permissions }: PlaylistManagerProps) => {
                     <Switch
                       checked={song.is_public}
                       onCheckedChange={() => handleTogglePublic(song.id, song.is_public)}
+                      disabled={!permissions.canPublish}
                     />
                     <Button
                       variant="outline"
                       size="icon"
                       onClick={() => handleEdit(song)}
+                      disabled={!permissions.canEdit}
                     >
                       <Pencil className="w-4 h-4" />
                     </Button>
@@ -322,6 +373,7 @@ const PlaylistManager = ({ permissions }: PlaylistManagerProps) => {
                       variant="destructive"
                       size="icon"
                       onClick={() => handleDelete(song.id)}
+                      disabled={!permissions.canDelete}
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
