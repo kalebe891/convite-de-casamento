@@ -28,30 +28,37 @@ export const useRequireRole = (requiredRole: string | string[]) => {
       pathname: location.pathname
     });
 
-    // Aguardar carregamento completo
-    if (authLoading || permissionsLoading || !initialized || hasRedirected) {
-      console.log('⏸️ [useRequireRole] Waiting:', {
+    // CRITICAL: Aguardar carregamento completo antes de qualquer verificação
+    if (authLoading || permissionsLoading || !initialized) {
+      console.log('⏸️ [useRequireRole] Waiting for full initialization:', {
         authLoading,
         permissionsLoading,
-        initialized,
-        hasRedirected
+        permInit: initialized,
+        role
       });
+      return;
+    }
+
+    // Prevent multiple redirections
+    if (hasRedirected) {
+      console.log('⏸️ [useRequireRole] Already redirected, skipping');
       return;
     }
 
     if (!user) {
       console.log('🚫 [useRequireRole] No user, redirecting to /auth');
       navigate("/auth", { replace: true });
+      setHasRedirected(true);
       return;
     }
 
+    // Now that everything is loaded, check role access
     if (role !== null) {
-      // Verificar se tem permissão de role
       const allowedRoles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
-      console.log('🔐 [useRequireRole] Checking role access:', { role, allowedRoles });
+      console.log('🔐 [useRequireRole] Checking role access AFTER full initialization:', { role, allowedRoles });
       
       if (!allowedRoles.includes(role)) {
-        console.log('❌ [useRequireRole] Role not allowed, redirecting to /acesso-negado');
+        console.log('❌ [useRequireRole] Role not allowed AFTER initialization:', role);
         navigate("/acesso-negado", { replace: true });
         setHasRedirected(true);
         return;

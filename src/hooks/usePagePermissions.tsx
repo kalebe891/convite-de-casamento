@@ -16,14 +16,16 @@ export const usePagePermissions = (menuKey: MenuKey) => {
   useEffect(() => {
     console.log(`🔍 [usePagePermissions] Checking access to page: ${menuKey}`, { loading, role });
     
-    // Wait for permissions to load
+    // CRITICAL: Wait for permissions to be fully initialized
     if (loading) {
       console.log(`⏳ [usePagePermissions] Still loading permissions for ${menuKey}`);
       return;
     }
 
-    // Check if user has view permission for this page
+    // Now check if user has view permission for this page
     const canAccess = hasPermission(menuKey, "view");
+    console.log(`🔍 [usePagePermissions] Permission check result for ${menuKey}:`, canAccess);
+    
     if (!canAccess) {
       console.log(`❌ [usePagePermissions] No view permission for ${menuKey}, redirecting to /acesso-negado`);
       navigate("/acesso-negado", { replace: true });

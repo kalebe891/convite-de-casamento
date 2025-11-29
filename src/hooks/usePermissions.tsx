@@ -18,9 +18,19 @@ export const usePermissions = (): PermissionsState => {
 
   useEffect(() => {
     console.log('🔍 [usePermissions] Effect triggered:', { role, authLoading, initialized });
-    if (!authLoading && role) {
+    
+    // Wait for auth to load
+    if (authLoading) {
+      console.log('⏳ [usePermissions] Waiting for auth to load');
+      return;
+    }
+    
+    // If we have a role, fetch permissions
+    if (role) {
+      console.log('🔍 [usePermissions] Role found, fetching permissions:', role);
       fetchPermissions();
-    } else if (!authLoading && !role) {
+    } else {
+      // No role after auth loaded
       console.log('⚠️ [usePermissions] No role after auth loaded');
       setLoading(false);
       setPermissions([]);
@@ -72,9 +82,9 @@ export const usePermissions = (): PermissionsState => {
       return true;
     }
 
-    // No permissions loaded yet
-    if (loading || !role) {
-      console.log(`⏳ [hasPermission] Still loading permissions for ${menuKey}.${type}`);
+    // CRITICAL: Return false if not initialized yet
+    if (!initialized || loading || !role) {
+      console.log(`⏳ [hasPermission] Not initialized yet for ${menuKey}.${type}:`, { initialized, loading, role });
       return false;
     }
 

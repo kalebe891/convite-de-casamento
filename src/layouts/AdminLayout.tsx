@@ -9,11 +9,13 @@ import { useToast } from "@/hooks/use-toast";
 import ThemeToggle from "@/components/ThemeToggle";
 import { useRequireRole } from "@/hooks/useRequireRole";
 import { OfflineIndicator } from "@/components/admin/OfflineIndicator";
+import { usePermissions } from "@/hooks/usePermissions";
 
 const AdminLayout = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user, role, loading } = useRequireRole(["admin", "couple", "planner", "cerimonial"]);
+  const { user, role, loading } = useRequireRole(["admin", "couple", "planner", "cerimonial", "tester"]);
+  const { loading: permissionsLoading, initialized } = usePermissions();
   const [userName, setUserName] = useState("");
 
   useEffect(() => {
@@ -43,10 +45,16 @@ const AdminLayout = () => {
     navigate("/");
   };
 
-  if (loading) {
+  // CRITICAL: Wait for both auth AND permissions to load
+  if (loading || permissionsLoading || !initialized) {
+    console.log('⏳ [AdminLayout] Waiting for full initialization:', {
+      authLoading: loading,
+      permissionsLoading,
+      permInit: initialized
+    });
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-muted-foreground">Carregando...</p>
+        <p className="text-muted-foreground">Carregando permissões...</p>
       </div>
     );
   }
