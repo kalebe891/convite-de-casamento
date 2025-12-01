@@ -26,8 +26,8 @@ const WeddingDetailsForm = ({ permissions }: WeddingDetailsFormProps) => {
     groomName: "Diogo Martins",
     weddingDate: "2026-04-18",
     venueName: "Espaço Verde Eventos",
-    venueAddress: "Alameda Santana, Qd.102 - Lt.01 - Cardoso Continuação, Aparecida de Goiânia - GO",
     story: "",
+    coupleMessage: "",
   });
 
   useEffect(() => {
@@ -44,8 +44,8 @@ const WeddingDetailsForm = ({ permissions }: WeddingDetailsFormProps) => {
           groomName: data.groom_name || "",
           weddingDate: data.wedding_date || "",
           venueName: data.venue_name || "",
-          venueAddress: data.venue_address || "",
           story: data.story || "",
+          coupleMessage: data.couple_message || "",
         });
       }
     };
@@ -63,8 +63,8 @@ const WeddingDetailsForm = ({ permissions }: WeddingDetailsFormProps) => {
         groom_name: formData.groomName,
         wedding_date: formData.weddingDate,
         venue_name: formData.venueName,
-        venue_address: formData.venueAddress,
         story: formData.story,
+        couple_message: formData.coupleMessage,
       };
 
       if (weddingId) {
@@ -158,23 +158,26 @@ const WeddingDetailsForm = ({ permissions }: WeddingDetailsFormProps) => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="venueAddress">Endereço do Local</Label>
-            <Input
-              id="venueAddress"
-              value={formData.venueAddress}
-              onChange={(e) => setFormData({ ...formData, venueAddress: e.target.value })}
-              disabled={!permissions.canEdit}
-              readOnly={!permissions.canEdit}
-            />
-          </div>
-
-          <div className="space-y-2">
             <Label htmlFor="story">Sua História</Label>
             <Textarea
               id="story"
               value={formData.story}
               onChange={(e) => setFormData({ ...formData, story: e.target.value })}
               rows={6}
+              placeholder="Conte a história do casal..."
+              disabled={!permissions.canEdit}
+              readOnly={!permissions.canEdit}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="coupleMessage">Destaque</Label>
+            <Textarea
+              id="coupleMessage"
+              value={formData.coupleMessage}
+              onChange={(e) => setFormData({ ...formData, coupleMessage: e.target.value })}
+              rows={2}
+              placeholder="Ex: Duas almas, um coração"
               disabled={!permissions.canEdit}
               readOnly={!permissions.canEdit}
             />

@@ -76,18 +76,17 @@ const StorySection = ({ weddingDetails }: StorySectionProps) => {
           )}
           
           <div className="space-y-6 animate-fade-in-up">
-            <p className="text-lg text-muted-foreground leading-relaxed">
+            <p className="text-lg text-muted-foreground leading-relaxed whitespace-pre-line">
               {weddingDetails?.story || 
-                "Desde o momento em que nos conhecemos, soubemos que algo especial havia começado. Entre risadas, aventuras e inúmeras memórias, nosso amor cresceu mais forte a cada dia."}
+                "Desde o momento em que nos conhecemos, soubemos que algo especial havia começado. Entre risadas, aventuras e inúmeras memórias, nosso amor cresceu mais forte a cada dia.\n\nAgora, cercados por nossos entes queridos, estamos prontos para começar a maior aventura de todas – passar para sempre juntos."}
             </p>
-            <p className="text-lg text-muted-foreground leading-relaxed">
-              Agora, cercados por nossos entes queridos, estamos prontos para começar a maior aventura de todas – passar para sempre juntos.
-            </p>
-            <div className="pt-6">
-              <p className="text-2xl font-serif text-foreground italic">
-                "Duas almas, um coração"
-              </p>
-            </div>
+            {weddingDetails?.couple_message && (
+              <div className="pt-6">
+                <p className="text-2xl font-serif text-foreground italic">
+                  "{weddingDetails.couple_message}"
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>
