@@ -65,8 +65,8 @@ const AdminLayout = () => {
       <div className="h-screen flex w-full bg-gradient-elegant overflow-hidden">
         <AppSidebar />
         
-        <div className="flex-1 flex flex-col h-full relative">
-          <header className="absolute top-0 left-0 right-0 h-16 border border-border/30 bg-background/70 backdrop-blur-xl shadow-lg flex items-center justify-between px-6 z-10 rounded-2xl mx-3 mt-3">
+        <div className="flex-1 flex flex-col h-full">
+          <header className="h-16 border-b border-border/40 bg-card/90 shadow-md flex items-center justify-between px-6 shrink-0">
             <div className="flex items-center gap-4">
               <SidebarTrigger />
               <div className="flex items-center gap-3">
@@ -86,17 +86,17 @@ const AdminLayout = () => {
                 </p>
               </div>
               <ThemeToggle />
-              <Button variant="outline" onClick={() => navigate("/")} size="sm" className="bg-background/50 hover:bg-background/80">
+              <Button variant="outline" onClick={() => navigate("/")} size="sm">
                 Ver Convite
               </Button>
-              <Button variant="outline" onClick={handleLogout} size="sm" className="gap-2 bg-background/50 hover:bg-background/80">
+              <Button variant="outline" onClick={handleLogout} size="sm" className="gap-2">
                 <LogOut className="w-4 h-4" />
                 Sair
               </Button>
             </div>
           </header>
 
-          <main className="flex-1 pt-24 px-6 pb-6 overflow-y-auto">
+          <main className="flex-1 p-6 overflow-y-auto">
             <div className="max-w-7xl mx-auto">
               <Outlet />
             </div>
