@@ -21,6 +21,7 @@ interface PlaylistSectionProps {
 
 const PlaylistSection = ({ weddingId }: PlaylistSectionProps) => {
   const [songs, setSongs] = useState<PlaylistSong[] | null>(null);
+  const [showSection, setShowSection] = useState<boolean>(true);
 
   useEffect(() => {
     if (!weddingId) {
@@ -28,7 +29,23 @@ const PlaylistSection = ({ weddingId }: PlaylistSectionProps) => {
       return;
     }
 
-    const fetchPlaylistSongs = async () => {
+    const fetchData = async () => {
+      // Fetch section visibility setting
+      const { data: weddingData } = await supabase
+        .from("wedding_details")
+        .select("show_playlist_section")
+        .eq("id", weddingId)
+        .single();
+
+      if (!weddingData?.show_playlist_section) {
+        setShowSection(false);
+        setSongs([]);
+        return;
+      }
+
+      setShowSection(true);
+
+      // Fetch playlist songs
       const { data } = await supabase
         .from("playlist_songs")
         .select("*")
@@ -39,7 +56,7 @@ const PlaylistSection = ({ weddingId }: PlaylistSectionProps) => {
       setSongs(data || []);
     };
 
-    fetchPlaylistSongs();
+    fetchData();
   }, [weddingId]);
 
   // Show skeleton while loading
@@ -62,7 +79,7 @@ const PlaylistSection = ({ weddingId }: PlaylistSectionProps) => {
     );
   }
 
-  if (!weddingId || songs.length === 0) return null;
+  if (!weddingId || !showSection || songs.length === 0) return null;
 
   // Group songs by moment
   const groupedSongs = songs.reduce((acc, song) => {

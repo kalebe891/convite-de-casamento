@@ -19,11 +19,28 @@ interface TimelineSectionProps {
 
 const TimelineSection = ({ weddingId }: TimelineSectionProps) => {
   const [events, setEvents] = useState<TimelineEvent[] | null>(null);
+  const [showSection, setShowSection] = useState<boolean>(true);
 
   useEffect(() => {
     if (!weddingId) return;
 
-    const fetchEvents = async () => {
+    const fetchData = async () => {
+      // Fetch section visibility setting
+      const { data: weddingData } = await supabase
+        .from("wedding_details")
+        .select("show_timeline_section")
+        .eq("id", weddingId)
+        .single();
+
+      if (!weddingData?.show_timeline_section) {
+        setShowSection(false);
+        setEvents([]);
+        return;
+      }
+
+      setShowSection(true);
+
+      // Fetch timeline events
       const { data } = await supabase
         .from("timeline_events")
         .select("*")
@@ -34,7 +51,7 @@ const TimelineSection = ({ weddingId }: TimelineSectionProps) => {
       setEvents(data || []);
     };
 
-    fetchEvents();
+    fetchData();
   }, [weddingId]);
 
   // Show skeleton while loading
@@ -55,7 +72,7 @@ const TimelineSection = ({ weddingId }: TimelineSectionProps) => {
     );
   }
 
-  if (events.length === 0) return null;
+  if (!showSection || events.length === 0) return null;
 
   return (
     <section className="py-20 bg-muted/30">

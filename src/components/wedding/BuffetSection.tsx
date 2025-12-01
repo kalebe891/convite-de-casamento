@@ -20,6 +20,7 @@ interface BuffetSectionProps {
 
 const BuffetSection = ({ weddingId }: BuffetSectionProps) => {
   const [items, setItems] = useState<BuffetItem[] | null>(null);
+  const [showSection, setShowSection] = useState<boolean>(true);
 
   useEffect(() => {
     if (!weddingId) {
@@ -27,7 +28,23 @@ const BuffetSection = ({ weddingId }: BuffetSectionProps) => {
       return;
     }
 
-    const fetchBuffetItems = async () => {
+    const fetchData = async () => {
+      // Fetch section visibility setting
+      const { data: weddingData } = await supabase
+        .from("wedding_details")
+        .select("show_buffet_section")
+        .eq("id", weddingId)
+        .single();
+
+      if (!weddingData?.show_buffet_section) {
+        setShowSection(false);
+        setItems([]);
+        return;
+      }
+
+      setShowSection(true);
+
+      // Fetch buffet items
       const { data } = await supabase
         .from("buffet_items")
         .select("*")
@@ -38,7 +55,7 @@ const BuffetSection = ({ weddingId }: BuffetSectionProps) => {
       setItems(data || []);
     };
 
-    fetchBuffetItems();
+    fetchData();
   }, [weddingId]);
 
   // Show skeleton while loading
@@ -61,7 +78,7 @@ const BuffetSection = ({ weddingId }: BuffetSectionProps) => {
     );
   }
 
-  if (!weddingId || items.length === 0) return null;
+  if (!weddingId || !showSection || items.length === 0) return null;
 
   // Group items by category
   const groupedItems = items.reduce((acc, item) => {
