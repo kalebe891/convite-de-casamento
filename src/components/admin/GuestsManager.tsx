@@ -349,8 +349,20 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
 
       if (error) throw error;
 
+      // Fetch invitation message from wedding_details
+      const { data: weddingData } = await supabase
+        .from("wedding_details")
+        .select("invitation_message")
+        .single();
+
+      const invitationMessage = (weddingData as any)?.invitation_message;
+
       const link = data.link;
-      const message = `Olá, ${guest.name}! 🎉\n\nEstamos te convidando para o nosso casamento!\nAcesse o link abaixo e confirme sua presença:\n\n${link}`;
+      let message = `Olá, ${guest.name}! 🎉\n\nEstamos te convidando para o nosso casamento!\nAcesse o link abaixo e confirme sua presença:\n\n${link}`;
+      
+      if (invitationMessage) {
+        message += `\n\n${invitationMessage}`;
+      }
 
       setWhatsAppMessage(message);
       setWhatsAppLink(link);
@@ -392,6 +404,14 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
 
       const link = data.link;
       
+      // Fetch invitation message from wedding_details
+      const { data: weddingData } = await supabase
+        .from("wedding_details")
+        .select("invitation_message")
+        .single();
+
+      const invitationMessage = (weddingData as any)?.invitation_message;
+      
       // Get invitation and selected gift for this guest
       const { data: invitation } = await supabase
         .from("invitations")
@@ -412,7 +432,11 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
         }
       }
 
-      const message = `Olá, ${guest.name}! 🎉\n\nSe desejar alterar sua confirmação de presença para o nosso casamento, acesse o link abaixo:\n\n${link}${giftInfo}\n\nO link é válido por 30 dias.`;
+      let message = `Olá, ${guest.name}! 🎉\n\nSe desejar alterar sua confirmação de presença para o nosso casamento, acesse o link abaixo:\n\n${link}${giftInfo}\n\nO link é válido por 30 dias.`;
+      
+      if (invitationMessage) {
+        message += `\n\n${invitationMessage}`;
+      }
 
       setWhatsAppMessage(message);
       setWhatsAppLink(link);
