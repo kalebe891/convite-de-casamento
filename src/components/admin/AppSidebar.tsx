@@ -51,7 +51,7 @@ export function AppSidebar() {
   const isCollapsed = state === "collapsed";
 
   return (
-    <Sidebar className={isCollapsed ? "w-14" : "w-60"}>
+    <Sidebar className={isCollapsed ? "w-14" : "w-auto min-w-[180px]"}>
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel className={isCollapsed ? "sr-only" : ""}>
@@ -65,10 +65,10 @@ export function AppSidebar() {
                     <NavLink 
                       to={item.url} 
                       end 
-                      className="hover:bg-muted/50" 
+                      className="hover:bg-muted/50 whitespace-nowrap" 
                       activeClassName="bg-muted text-primary font-medium"
                     >
-                      <item.icon className={isCollapsed ? "h-4 w-4" : "mr-2 h-4 w-4"} />
+                      <item.icon className={isCollapsed ? "h-4 w-4" : "mr-2 h-4 w-4 shrink-0"} />
                       {!isCollapsed && <span>{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>

@@ -225,6 +225,9 @@ const EventsManager = ({ permissions }: EventsManagerProps) => {
     }
   };
 
+  const canAddOrEdit = editingId ? permissions.canEdit : permissions.canAdd;
+  const isReadOnly = !canAddOrEdit;
+
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       <Card className="shadow-elegant">
@@ -248,6 +251,7 @@ const EventsManager = ({ permissions }: EventsManagerProps) => {
                   onChange={(e) => setNewEvent({ ...newEvent, event_type: e.target.value })}
                   placeholder="ex: Cerimônia, Recepção"
                   required
+                  disabled={isReadOnly}
                 />
               </div>
               <div className="space-y-2">
@@ -257,6 +261,7 @@ const EventsManager = ({ permissions }: EventsManagerProps) => {
                   value={newEvent.event_name}
                   onChange={(e) => setNewEvent({ ...newEvent, event_name: e.target.value })}
                   required
+                  disabled={isReadOnly}
                 />
               </div>
             </div>
@@ -270,6 +275,7 @@ const EventsManager = ({ permissions }: EventsManagerProps) => {
                   value={newEvent.event_date}
                   onChange={(e) => setNewEvent({ ...newEvent, event_date: e.target.value })}
                   required
+                  disabled={isReadOnly}
                 />
               </div>
               <div className="space-y-2">
@@ -279,6 +285,7 @@ const EventsManager = ({ permissions }: EventsManagerProps) => {
                   value={newEvent.location}
                   onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })}
                   placeholder="Nome do local"
+                  disabled={isReadOnly}
                 />
               </div>
             </div>
@@ -290,6 +297,7 @@ const EventsManager = ({ permissions }: EventsManagerProps) => {
                 value={newEvent.address}
                 onChange={(e) => setNewEvent({ ...newEvent, address: e.target.value })}
                 placeholder="Rua, número, bairro, cidade"
+                disabled={isReadOnly}
               />
             </div>
 
@@ -301,6 +309,7 @@ const EventsManager = ({ permissions }: EventsManagerProps) => {
                 value={newEvent.maps_url}
                 onChange={(e) => setNewEvent({ ...newEvent, maps_url: e.target.value })}
                 placeholder="https://maps.google.com/..."
+                disabled={isReadOnly}
               />
             </div>
 
@@ -311,11 +320,17 @@ const EventsManager = ({ permissions }: EventsManagerProps) => {
                 value={newEvent.description}
                 onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
                 rows={3}
+                disabled={isReadOnly}
               />
             </div>
 
             <div className="flex gap-2">
-              <Button type="submit" className="flex-1">
+              <Button 
+                type="submit" 
+                className="flex-1"
+                disabled={isReadOnly}
+                title={isReadOnly ? "Você não possui permissão para esta ação" : undefined}
+              >
                 {editingId ? "Salvar Alterações" : "Adicionar Evento"}
               </Button>
               {editingId && (
@@ -354,6 +369,8 @@ const EventsManager = ({ permissions }: EventsManagerProps) => {
                       variant="outline"
                       size="icon"
                       onClick={() => handleEditEvent(event)}
+                      disabled={!permissions.canEdit}
+                      title={!permissions.canEdit ? "Você não possui permissão para esta ação" : undefined}
                     >
                       <Edit className="w-4 h-4" />
                     </Button>
@@ -361,6 +378,8 @@ const EventsManager = ({ permissions }: EventsManagerProps) => {
                       variant="destructive"
                       size="icon"
                       onClick={() => handleDeleteEvent(event.id)}
+                      disabled={!permissions.canDelete}
+                      title={!permissions.canDelete ? "Você não possui permissão para esta ação" : undefined}
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
