@@ -62,10 +62,10 @@ const AdminLayout = () => {
   return (
     <SidebarProvider>
       <OfflineIndicator />
-      <div className="min-h-screen flex w-full bg-gradient-elegant">
+      <div className="h-screen flex w-full bg-gradient-elegant overflow-hidden">
         <AppSidebar />
         
-        <div className="flex-1 flex flex-col min-h-0">
+        <div className="flex-1 flex flex-col h-full">
           <header className="h-16 border-b border-border bg-card shadow-soft flex items-center justify-between px-6 shrink-0">
             <div className="flex items-center gap-4">
               <SidebarTrigger />
