@@ -87,17 +87,17 @@ const handler = async (req: Request): Promise<Response> => {
       console.error('[invite-admin] Error deleting existing invites:', deleteError);
     }
 
-    // Validate role exists in role_profiles
+    // Validate role exists in role_profiles and get role_label
     if (isDev) {
       console.log(`[invite-admin] Validating role '${role}' exists in role_profiles`);
     }
-    const { data: roleExists, error: roleValidationError } = await supabase
+    const { data: roleData, error: roleValidationError } = await supabase
       .from('role_profiles')
-      .select('role_key')
+      .select('role_key, role_label')
       .eq('role_key', role)
       .single();
     
-    if (roleValidationError || !roleExists) {
+    if (roleValidationError || !roleData) {
       console.error(`[invite-admin] Invalid role provided:`, role);
       throw new Error(`Papel inválido: ${role}. O papel não existe no sistema.`);
     }
@@ -149,7 +149,7 @@ const handler = async (req: Request): Promise<Response> => {
             <h2 style="color: #4F46E5;">Você foi convidado!</h2>
             <p>Olá, ${nome || 'usuário'}!</p>
             <p>Você foi convidado para acessar o painel administrativo do casamento.</p>
-            <p>Seu papel: <strong>${role === 'admin' ? 'Administrador' : role === 'couple' ? 'Casal' : 'Cerimonialista'}</strong></p>
+            <p>Seu papel: <strong>${roleData.role_label}</strong></p>
             <div style="text-align: center; margin: 30px 0;">
               <a href="${invitationLink}" 
                  style="background-color: #4F46E5; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
