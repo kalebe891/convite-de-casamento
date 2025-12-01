@@ -5,6 +5,59 @@ Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
 e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
+## [1.1.0] - 2025-12-01
+
+### Adicionado
+- Sistema completo de permissões baseadas em papéis (role-based permissions)
+- Tabela `admin_permissions` para controle granular de acesso por papel e menu
+- Função `has_table_permission()` para validação dinâmica de permissões em RLS
+- Gerenciador de papéis customizados no painel de Usuários
+- Interface "Gerenciar Papéis do Sistema" com criação, edição e exclusão de papéis
+- Permissões hierárquicas: can_view, can_add, can_edit, can_delete, can_publish
+- Toggles de visibilidade pública para seções (cronograma, buffet, playlist, presentes)
+- Skeleton loaders em todas as seções da página de convite
+- Componentes SkeletonImage, SkeletonText, SkeletonCard, SkeletonGallery
+- Ordenação alfabética em todos os gerenciadores admin (convidados, presentes, buffet, playlist)
+- Redirecionamento inteligente para primeiro menu acessível após login
+- Sistema de logging abrangente para debug de permissões
+- Sanitização de logs em Edge Functions (tokens, emails, dados sensíveis)
+- Restrições de segurança no bucket `wedding-photos` (tipos MIME, tamanho máximo 10MB)
+- Validação frontend de uploads (extensões, MIME type, tamanho)
+- Nomenclatura segura de arquivos com crypto.randomUUID()
+- Campo "Destaque" para editar couple_message separadamente da história
+- Role "tester" para testes do sistema
+- Menu "Eventos" no painel administrativo para gerenciamento de celebrações
+
+### Modificado
+- Políticas RLS agora usam `has_table_permission()` para validação dinâmica
+- Visibilidade de menus na sidebar filtrada por permissões do papel do usuário
+- Botões CRUD desabilitados conforme permissões (can_add, can_edit, can_delete)
+- Sistema de permissões sincronizado com autenticação (correção de race condition)
+- Vocabulário de permissões padronizado ("Pode acessar menu", remoção de "itens")
+- Campo "Sua História" agora edita todo o texto da seção StorySection
+- Papel 'admin' protegido contra edição/exclusão (único papel do sistema protegido)
+- Coluna `user_roles.role` alterada de ENUM para TEXT com FK para role_profiles
+- Complete-user-invite Edge Function trata usuários existentes (atualiza senha/metadata)
+- Título HTML corrigido (codificação dupla `&amp;amp;` → `&`)
+
+### Removido
+- Campo "Endereço do Local" do formulário de detalhes do casamento
+- Textos hardcoded da seção "Nossa História" (agora totalmente editável)
+
+### Corrigido
+- Race condition no carregamento de permissões que bloqueava novos usuários
+- Flash de conteúdo desatualizado em carregamento de página com skeleton loaders
+- Redirecionamento fixo para /admin (agora dinâmico baseado em permissões)
+- Loops infinitos em hooks de permissões
+- Acesso não autorizado a menus sem permissão can_view
+
+### Segurança
+- Revisão abrangente de segurança (RLS, Edge Functions, autenticação, storage)
+- Políticas RLS dinâmicas com validação de permissões em tempo real
+- Sanitização completa de logs em todas as Edge Functions
+- Restrições estritas de upload no bucket wedding-photos
+- Validação de tipos MIME e tamanho de arquivos no frontend e backend
+
 ## [1.0.1] - 2025-11-28
 
 ### Adicionado
