@@ -3,7 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { ScrollText, Plus, Pencil, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ScrollText, Plus, Pencil, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useAuth } from "@/hooks/useAuth";
@@ -19,23 +20,41 @@ interface AdminLog {
   created_at: string;
 }
 
+const LOGS_PER_PAGE = 100;
+
 const Logs = () => {
   const [logs, setLogs] = useState<AdminLog[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
   const { session } = useAuth();
+
+  const totalPages = Math.ceil(totalCount / LOGS_PER_PAGE);
 
   useEffect(() => {
     fetchLogs();
-  }, []);
+  }, [currentPage]);
 
   const fetchLogs = async () => {
     setLoading(true);
     try {
+      // Get total count
+      const { count, error: countError } = await supabase
+        .from("admin_logs")
+        .select("*", { count: "exact", head: true });
+
+      if (countError) throw countError;
+      setTotalCount(count || 0);
+
+      // Get paginated data
+      const from = (currentPage - 1) * LOGS_PER_PAGE;
+      const to = from + LOGS_PER_PAGE - 1;
+
       const { data, error } = await supabase
         .from("admin_logs")
         .select("*")
         .order("created_at", { ascending: false })
-        .limit(100);
+        .range(from, to);
 
       if (error) throw error;
       setLogs(data || []);
@@ -43,6 +62,12 @@ const Logs = () => {
       console.error("Error fetching logs:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const goToPage = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
     }
   };
 
@@ -153,6 +178,38 @@ const Logs = () => {
                   ))}
                 </TableBody>
               </Table>
+              
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between mt-4 pt-4 border-t">
+                  <p className="text-sm text-muted-foreground">
+                    Mostrando {((currentPage - 1) * LOGS_PER_PAGE) + 1} a {Math.min(currentPage * LOGS_PER_PAGE, totalCount)} de {totalCount} registros
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => goToPage(currentPage - 1)}
+                      disabled={currentPage === 1}
+                    >
+                      <ChevronLeft className="w-4 h-4 mr-1" />
+                      Anterior
+                    </Button>
+                    <span className="text-sm px-2">
+                      Página {currentPage} de {totalPages}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => goToPage(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                    >
+                      Próxima
+                      <ChevronRight className="w-4 h-4 ml-1" />
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </CardContent>
