@@ -234,14 +234,22 @@ const PlaylistManager = ({ permissions }: PlaylistManagerProps) => {
       });
       return;
     }
+    const newValue = !currentValue;
     const { error } = await supabase
       .from("playlist_songs")
-      .update({ is_public: !currentValue })
+      .update({ is_public: newValue })
       .eq("id", id);
 
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
     } else {
+      await logAdminAction({
+        action: "update",
+        tableName: "playlist_songs",
+        recordId: id,
+        oldData: { is_public: currentValue },
+        newData: { is_public: newValue },
+      });
       fetchData();
     }
   };

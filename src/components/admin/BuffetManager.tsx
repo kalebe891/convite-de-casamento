@@ -230,14 +230,22 @@ const BuffetManager = ({ permissions }: BuffetManagerProps) => {
       });
       return;
     }
+    const newValue = !currentValue;
     const { error } = await supabase
       .from("buffet_items")
-      .update({ is_public: !currentValue })
+      .update({ is_public: newValue })
       .eq("id", id);
 
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
     } else {
+      await logAdminAction({
+        action: "update",
+        tableName: "buffet_items",
+        recordId: id,
+        oldData: { is_public: currentValue },
+        newData: { is_public: newValue },
+      });
       fetchData();
     }
   };

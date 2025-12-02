@@ -233,14 +233,22 @@ const TimelineManager = ({ permissions }: TimelineManagerProps) => {
       });
       return;
     }
+    const newValue = !currentValue;
     const { error } = await supabase
       .from("timeline_events")
-      .update({ is_public: !currentValue })
+      .update({ is_public: newValue })
       .eq("id", id);
 
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
     } else {
+      await logAdminAction({
+        action: "update",
+        tableName: "timeline_events",
+        recordId: id,
+        oldData: { is_public: currentValue },
+        newData: { is_public: newValue },
+      });
       fetchData();
     }
   };

@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { logAdminAction } from "@/lib/adminLogger";
 
 interface WeddingSettingsFormProps {
   permissions: {
@@ -49,12 +50,30 @@ const WeddingSettingsForm = ({ permissions }: WeddingSettingsFormProps) => {
     setLoading(true);
 
     try {
+      // Get current values for logging
+      const { data: currentData } = await supabase
+        .from("wedding_details")
+        .select("show_guest_list_public, show_rsvp_status_public")
+        .eq("id", weddingId)
+        .single();
+
       const { error } = await supabase
         .from("wedding_details")
         .update(formData)
         .eq("id", weddingId);
 
       if (error) throw error;
+
+      // Log the toggle changes
+      if (weddingId) {
+        await logAdminAction({
+          action: "update",
+          tableName: "wedding_details",
+          recordId: weddingId,
+          oldData: currentData,
+          newData: formData,
+        });
+      }
 
       toast({
         title: "Sucesso!",
