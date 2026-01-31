@@ -133,8 +133,21 @@ const handler = async (req: Request): Promise<Response> => {
     );
   } catch (error: any) {
     console.error("Error in generate-rsvp-token:", error);
+    
+    // Map error messages to safe generic responses
+    let safeErrorMessage = 'Erro ao gerar convite';
+    if (error.message === 'Não autorizado') {
+      safeErrorMessage = 'Não autorizado';
+    } else if (error.message === 'Permissão negada') {
+      safeErrorMessage = 'Permissão negada';
+    } else if (error.message === 'Convidado não encontrado') {
+      safeErrorMessage = 'Convidado não encontrado';
+    } else if (error.message === 'Detalhes do casamento não encontrados') {
+      safeErrorMessage = 'Detalhes do casamento não encontrados';
+    }
+    
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: safeErrorMessage }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },

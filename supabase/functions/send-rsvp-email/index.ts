@@ -157,8 +157,25 @@ const handler = async (req: Request): Promise<Response> => {
     );
   } catch (error: any) {
     console.error("Error in send-rsvp-email function:", error);
+    
+    // Map error messages to safe generic responses
+    let safeErrorMessage = 'Erro ao enviar convite';
+    if (error.message === 'Não autorizado') {
+      safeErrorMessage = 'Não autorizado';
+    } else if (error.message === 'Permissão negada') {
+      safeErrorMessage = 'Permissão negada';
+    } else if (error.message === 'Convidado não encontrado') {
+      safeErrorMessage = 'Convidado não encontrado';
+    } else if (error.message === 'Convidado não possui e-mail cadastrado') {
+      safeErrorMessage = 'Convidado não possui e-mail cadastrado';
+    } else if (error.message === 'Detalhes do casamento não encontrados') {
+      safeErrorMessage = 'Detalhes do casamento não encontrados';
+    } else if (error.message === 'Erro ao gerar convite') {
+      safeErrorMessage = 'Erro ao gerar convite';
+    }
+    
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: safeErrorMessage }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },

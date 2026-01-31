@@ -351,8 +351,14 @@ Deno.serve(async (req) => {
     const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     const isUnauthorized = errorMessage === 'Unauthorized' || errorMessage === 'Insufficient permissions';
     
+    // Map error messages to safe generic responses
+    let safeErrorMessage = 'Erro ao processar check-ins';
+    if (isUnauthorized) {
+      safeErrorMessage = 'Não autorizado';
+    }
+    
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ error: safeErrorMessage }),
       {
         status: isUnauthorized ? 403 : 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

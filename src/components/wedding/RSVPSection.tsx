@@ -11,6 +11,7 @@ import { z } from "zod";
 
 interface RSVPSectionProps {
   weddingId: string | undefined;
+  invitationCode?: string; // Token do convite para usar a Edge Function
 }
 
 const rsvpSchema = z.object({
@@ -21,7 +22,7 @@ const rsvpSchema = z.object({
   message: z.string().trim().max(1000).optional().or(z.literal("")),
 });
 
-const RSVPSection = ({ weddingId }: RSVPSectionProps) => {
+const RSVPSection = ({ weddingId, invitationCode }: RSVPSectionProps) => {
   const { toast } = useToast();
   const [formData, setFormData] = useState({
     guestName: "",
@@ -41,18 +42,24 @@ const RSVPSection = ({ weddingId }: RSVPSectionProps) => {
       const validatedData = rsvpSchema.parse(formData);
       setSubmitting(true);
 
-      const { error } = await supabase.from("rsvps").insert({
-        wedding_id: weddingId,
-        guest_name: validatedData.guestName,
-        guest_email: validatedData.guestEmail || null,
-        guest_phone: validatedData.guestPhone || null,
-        attending: formData.attending,
-        plus_one: formData.plusOne,
-        dietary_restrictions: validatedData.dietaryRestrictions || null,
-        message: validatedData.message || null,
+      // Usar a Edge Function com rate limiting em vez de insert direto
+      const { data, error } = await supabase.functions.invoke('rsvp-respond', {
+        body: {
+          token: invitationCode || '',
+          attending: formData.attending,
+          plus_one: formData.plusOne,
+          dietary_restrictions: validatedData.dietaryRestrictions || undefined,
+          message: validatedData.message || undefined,
+        }
       });
 
-      if (error) throw error;
+      if (error) {
+        throw new Error(error.message || 'Erro ao enviar resposta');
+      }
+
+      if (data?.error) {
+        throw new Error(data.error);
+      }
 
       toast({
         title: "RSVP Submitted!",
@@ -76,9 +83,10 @@ const RSVPSection = ({ weddingId }: RSVPSectionProps) => {
           variant: "destructive",
         });
       } else {
+        const errorMessage = error instanceof Error ? error.message : "Failed to submit RSVP. Please try again.";
         toast({
           title: "Error",
-          description: "Failed to submit RSVP. Please try again.",
+          description: errorMessage,
           variant: "destructive",
         });
       }
@@ -86,6 +94,27 @@ const RSVPSection = ({ weddingId }: RSVPSectionProps) => {
       setSubmitting(false);
     }
   };
+
+  // Mostrar mensagem se não houver código de convite
+  if (!invitationCode) {
+    return (
+      <section className="py-20 bg-background">
+        <div className="container mx-auto px-4">
+          <h2 className="text-5xl font-serif font-bold text-center mb-16 text-foreground">
+            RSVP
+          </h2>
+          <Card className="max-w-2xl mx-auto shadow-elegant animate-fade-in">
+            <CardHeader>
+              <CardTitle className="text-3xl font-serif text-center">Acesso Restrito</CardTitle>
+              <CardDescription className="text-center text-lg">
+                Para confirmar sua presença, utilize o link do convite que você recebeu.
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="py-20 bg-background">
