@@ -13,6 +13,29 @@ interface RespondRequest {
   message?: string;
 }
 
+// Sanitize user input to prevent XSS and script injection
+function sanitizeInput(input: string): string {
+  if (!input) return input;
+  
+  // Remove potential script tags and event handlers
+  let sanitized = input
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/<[^>]*on\w+\s*=[^>]*>/gi, '')
+    .replace(/javascript:/gi, '')
+    .replace(/data:/gi, '')
+    .replace(/vbscript:/gi, '');
+  
+  // Encode HTML entities for display safety
+  sanitized = sanitized
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+  
+  return sanitized.trim();
+}
+
 // Rate limiting simples: armazena IPs e timestamps
 const rateLimitMap = new Map<string, number[]>();
 const RATE_LIMIT_WINDOW = 60000; // 1 minuto
@@ -144,8 +167,8 @@ Deno.serve(async (req) => {
     };
 
     if (plus_one !== undefined) updateData.plus_one = plus_one;
-    if (dietary_restrictions) updateData.dietary_restrictions = dietary_restrictions.trim();
-    if (message) updateData.message = message.trim();
+    if (dietary_restrictions) updateData.dietary_restrictions = sanitizeInput(dietary_restrictions);
+    if (message) updateData.message = sanitizeInput(message);
 
     const { error: updateError } = await supabase
       .from('invitations')
