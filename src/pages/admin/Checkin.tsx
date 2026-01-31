@@ -234,6 +234,72 @@ const Checkin = () => {
     }
   };
 
+  // Handle undo check-in
+  const handleUndoCheckin = async (guest: Guest) => {
+    if (!user) return;
+
+    if (!isOnline) {
+      toast({
+        title: "Sem conexão",
+        description: "É necessário estar online para desfazer o check-in",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Update guest to remove check-in
+      const { error: updateError } = await supabase
+        .from("guests")
+        .update({
+          checked_in_at: null,
+          status: "confirmed",
+        })
+        .eq("id", guest.id);
+
+      if (updateError) throw updateError;
+
+      // Also update invitation if exists
+      if (guest.email) {
+        await supabase
+          .from("invitations")
+          .update({ checked_in_at: null })
+          .eq("guest_email", guest.email);
+      }
+      if (guest.phone) {
+        await supabase
+          .from("invitations")
+          .update({ checked_in_at: null })
+          .eq("guest_phone", guest.phone);
+      }
+
+      // Log the undo action
+      await supabase.from("admin_logs").insert({
+        user_id: user.id,
+        user_email: user.email,
+        action: "undo_checkin",
+        table_name: "guests",
+        record_id: guest.id,
+        old_data: { checked_in_at: guest.checked_in_at, status: guest.status },
+        new_data: { checked_in_at: null, status: "confirmed" },
+      });
+
+      toast({
+        title: "Check-in desfeito",
+        description: `Check-in de ${guest.name} foi removido`,
+      });
+
+      await fetchGuests();
+    } catch (error) {
+      console.error("Undo check-in error:", error);
+      toast({
+        title: "Erro",
+        description: "Falha ao desfazer check-in",
+        variant: "destructive",
+      });
+    }
+  };
+
   // Search filter
   useEffect(() => {
     if (searchTerm.trim() === "") {
@@ -397,11 +463,11 @@ const Checkin = () => {
                   <div className="flex items-center gap-3">
                     {getStatusBadge(guest)}
                     <Button
-                      onClick={() => handleCheckin(guest)}
-                      disabled={!!guest.checked_in_at}
+                      onClick={() => guest.checked_in_at ? handleUndoCheckin(guest) : handleCheckin(guest)}
+                      variant={guest.checked_in_at ? "outline" : "default"}
                       size="sm"
                     >
-                      {guest.checked_in_at ? "Já fez check-in" : "Check-in"}
+                      {guest.checked_in_at ? "Desfazer check-in" : "Check-in"}
                     </Button>
                   </div>
                 </div>
