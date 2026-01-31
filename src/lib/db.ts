@@ -6,7 +6,8 @@ interface CheckinDB extends DBSchema {
     value: {
       id: string;
       name: string;
-      email: string;
+      email: string | null;
+      phone: string | null;
       status: string;
       checked_in_at: string | null;
     };
