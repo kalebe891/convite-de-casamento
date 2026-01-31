@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,12 +7,15 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Mail, MessageSquare, Trash2, Copy, ExternalLink, RefreshCw, Pencil } from "lucide-react";
+import { Mail, MessageSquare, Trash2, Copy, ExternalLink, RefreshCw, Pencil, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { guestSchema } from "@/lib/validationSchemas";
 import { getSafeErrorMessage } from "@/lib/errorHandling";
 import GuestMessagesDialog from "./GuestMessagesDialog";
+
+type SortField = "name" | "phone" | "email" | "status";
+type SortDirection = "asc" | "desc";
 
 interface Guest {
   id: string;
@@ -41,6 +44,8 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
   const [selectedGuest, setSelectedGuest] = useState<Guest | null>(null);
   const [whatsAppMessage, setWhatsAppMessage] = useState("");
   const [whatsAppLink, setWhatsAppLink] = useState("");
+  const [sortField, setSortField] = useState<SortField>("name");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [newGuest, setNewGuest] = useState({
     name: "",
     phone: "",
@@ -52,6 +57,59 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
     phone: "",
     email: "",
   });
+
+  // Sort guests based on current sort field and direction
+  const sortedGuests = useMemo(() => {
+    return [...guests].sort((a, b) => {
+      let aValue: string = "";
+      let bValue: string = "";
+
+      switch (sortField) {
+        case "name":
+          aValue = a.name.toLowerCase();
+          bValue = b.name.toLowerCase();
+          break;
+        case "phone":
+          aValue = (a.phone || "").toLowerCase();
+          bValue = (b.phone || "").toLowerCase();
+          break;
+        case "email":
+          aValue = (a.email || "").toLowerCase();
+          bValue = (b.email || "").toLowerCase();
+          break;
+        case "status":
+          // Custom order: confirmed > pending > declined
+          const statusOrder: Record<string, number> = { confirmed: 0, pending: 1, declined: 2 };
+          const aOrder = statusOrder[a.status] ?? 3;
+          const bOrder = statusOrder[b.status] ?? 3;
+          return sortDirection === "asc" ? aOrder - bOrder : bOrder - aOrder;
+      }
+
+      if (sortDirection === "asc") {
+        return aValue.localeCompare(bValue);
+      } else {
+        return bValue.localeCompare(aValue);
+      }
+    });
+  }, [guests, sortField, sortDirection]);
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortDirection("asc");
+    }
+  };
+
+  const getSortIcon = (field: SortField) => {
+    if (sortField !== field) {
+      return <ArrowUpDown className="ml-1 h-4 w-4 inline opacity-50" />;
+    }
+    return sortDirection === "asc" 
+      ? <ArrowUp className="ml-1 h-4 w-4 inline" />
+      : <ArrowDown className="ml-1 h-4 w-4 inline" />;
+  };
 
   const fetchGuests = async () => {
     const { data, error } = await supabase
@@ -579,15 +637,35 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>Telefone</TableHead>
-                <TableHead>E-mail</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead 
+                  className="cursor-pointer hover:bg-muted/50 transition-colors select-none"
+                  onClick={() => handleSort("name")}
+                >
+                  Nome {getSortIcon("name")}
+                </TableHead>
+                <TableHead 
+                  className="cursor-pointer hover:bg-muted/50 transition-colors select-none"
+                  onClick={() => handleSort("phone")}
+                >
+                  Telefone {getSortIcon("phone")}
+                </TableHead>
+                <TableHead 
+                  className="cursor-pointer hover:bg-muted/50 transition-colors select-none"
+                  onClick={() => handleSort("email")}
+                >
+                  E-mail {getSortIcon("email")}
+                </TableHead>
+                <TableHead 
+                  className="cursor-pointer hover:bg-muted/50 transition-colors select-none"
+                  onClick={() => handleSort("status")}
+                >
+                  Status {getSortIcon("status")}
+                </TableHead>
                 <TableHead>Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {guests.map((guest) => (
+              {sortedGuests.map((guest) => (
                 <TableRow key={guest.id}>
                   <TableCell className="font-medium">{guest.name}</TableCell>
                   <TableCell>{guest.phone || "-"}</TableCell>

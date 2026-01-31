@@ -21,7 +21,8 @@ import { ConflictDetailsDialog } from "@/components/admin/ConflictDetailsDialog"
 interface Guest {
   id: string;
   name: string;
-  email: string;
+  email: string | null;
+  phone: string | null;
   status: string;
   checked_in_at: string | null;
 }
@@ -49,7 +50,7 @@ const Checkin = () => {
         // Fetch from server
         const { data, error } = await supabase
           .from("guests")
-          .select("*")
+          .select("id, name, email, phone, status, checked_in_at")
           .order("name");
 
         if (error) throw error;
@@ -62,7 +63,7 @@ const Checkin = () => {
         await saveGuests(guestData);
       } else {
         // Load from IndexedDB
-        const cachedGuests = await getGuests();
+        const cachedGuests = await getGuests() as Guest[];
         setGuests(cachedGuests);
         setFilteredGuests(cachedGuests);
       }
@@ -161,6 +162,17 @@ const Checkin = () => {
   const handleCheckin = async (guest: Guest) => {
     if (!user) return;
 
+    // Use email or phone as identifier
+    const guestIdentifier = guest.email || guest.phone;
+    if (!guestIdentifier) {
+      toast({
+        title: "Erro",
+        description: "Convidado não possui e-mail ou telefone cadastrado",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const checked_in_at = new Date().toISOString();
 
     try {
@@ -171,7 +183,7 @@ const Checkin = () => {
             checks: [
               {
                 guest_id: guest.id,
-                guest_email: guest.email,
+                guest_email: guestIdentifier,
                 checked_in_at,
                 source: "online",
                 metadata: {},
@@ -195,7 +207,7 @@ const Checkin = () => {
         // Offline: save to outbox
         await addToOutbox({
           guest_id: guest.id,
-          guest_email: guest.email,
+          guest_email: guestIdentifier,
           checked_in_at,
           performed_by: user.id,
           source: "offline",
@@ -213,6 +225,7 @@ const Checkin = () => {
         await fetchGuests();
       }
     } catch (error) {
+      console.error("Check-in error:", error);
       toast({
         title: "Erro",
         description: "Falha ao realizar check-in",
@@ -231,7 +244,7 @@ const Checkin = () => {
         guests.filter(
           (g) =>
             g.name.toLowerCase().includes(term) ||
-            g.email.toLowerCase().includes(term)
+            (g.email && g.email.toLowerCase().includes(term))
         )
       );
     }
