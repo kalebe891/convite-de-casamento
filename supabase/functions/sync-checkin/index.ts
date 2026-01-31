@@ -142,7 +142,7 @@ Deno.serve(async (req) => {
         if (check.guest_id) {
           const result = await supabaseAdmin
             .from('guests')
-            .select('id, email, phone, checked_in_at')
+            .select('id, email, phone, status, checked_in_at')
             .eq('id', check.guest_id)
             .maybeSingle();
           guest = result.data;
@@ -154,7 +154,7 @@ Deno.serve(async (req) => {
           // First try as email
           const emailResult = await supabaseAdmin
             .from('guests')
-            .select('id, email, phone, checked_in_at')
+            .select('id, email, phone, status, checked_in_at')
             .eq('email', check.guest_email)
             .maybeSingle();
           
@@ -164,7 +164,7 @@ Deno.serve(async (req) => {
             // Try as phone
             const phoneResult = await supabaseAdmin
               .from('guests')
-              .select('id, email, phone, checked_in_at')
+              .select('id, email, phone, status, checked_in_at')
               .eq('phone', check.guest_email)
               .maybeSingle();
             guest = phoneResult.data;
@@ -303,7 +303,7 @@ Deno.serve(async (req) => {
           }
         }
 
-        // Log check-in to audit table
+        // Log check-in to checkin_logs audit table
         const { error: logError } = await supabaseAdmin.from('checkin_logs').insert({
           guest_email: guestIdentifierForLog,
           guest_id: guest.id,
@@ -314,8 +314,22 @@ Deno.serve(async (req) => {
         });
 
         if (logError) {
-          console.error('Failed to log check-in:', logError);
-          // Continue anyway, check-in was successful
+          console.error('Failed to log check-in to checkin_logs:', logError);
+        }
+
+        // Also log to admin_logs for unified audit trail
+        const { error: adminLogError } = await supabaseAdmin.from('admin_logs').insert({
+          user_id: user.id,
+          user_email: user.email,
+          action: 'checkin',
+          table_name: 'guests',
+          record_id: guest.id,
+          old_data: { checked_in_at: existingCheckin || null, status: guest.status || 'pending' },
+          new_data: { checked_in_at: check.checked_in_at, status: 'confirmed' },
+        });
+
+        if (adminLogError) {
+          console.error('Failed to log check-in to admin_logs:', adminLogError);
         }
 
         results.successCount++;
