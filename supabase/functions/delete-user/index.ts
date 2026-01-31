@@ -109,8 +109,23 @@ const handler = async (req: Request): Promise<Response> => {
     );
   } catch (error: any) {
     console.error('Error in delete-user function:', error);
+    
+    // Map error messages to safe generic responses
+    let safeErrorMessage = 'Erro ao excluir usuário';
+    if (error.message === 'Missing authorization header') {
+      safeErrorMessage = 'Não autorizado';
+    } else if (error.message === 'Unauthorized') {
+      safeErrorMessage = 'Não autorizado';
+    } else if (error.message === 'Only admins can delete users') {
+      safeErrorMessage = 'Apenas administradores podem excluir usuários';
+    } else if (error.message === 'User ID is required') {
+      safeErrorMessage = 'ID do usuário é obrigatório';
+    } else if (error.message === 'You cannot delete your own account') {
+      safeErrorMessage = 'Você não pode excluir sua própria conta';
+    }
+    
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: safeErrorMessage }),
       {
         status: 400,
         headers: { 'Content-Type': 'application/json', ...corsHeaders },
