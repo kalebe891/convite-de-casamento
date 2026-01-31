@@ -6,14 +6,17 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Schema for check-in validation
+// Schema for check-in validation - accepts email, phone, or generic identifier
 const checkinItemSchema = z.object({
   guest_id: z.string().uuid().optional(),
-  guest_email: z.string().email(),
+  guest_email: z.string().optional(), // Can be email or phone
   checked_in_at: z.string(),
   source: z.enum(['offline', 'online']),
   metadata: z.record(z.unknown()).optional(),
-});
+}).refine(
+  (data) => data.guest_id || data.guest_email,
+  { message: 'Either guest_id or guest_email is required' }
+);
 
 const syncCheckinSchema = z.object({
   checks: z.array(checkinItemSchema),
@@ -37,6 +40,11 @@ function checkRateLimit(userId: string): boolean {
 
   limit.count++;
   return true;
+}
+
+// Helper to get identifier for logging
+function getIdentifier(check: { guest_id?: string; guest_email?: string }): string {
+  return check.guest_email || check.guest_id || 'unknown';
 }
 
 Deno.serve(async (req) => {
@@ -117,24 +125,56 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const results: { successCount: number; failed: Array<{ guest_email: string; reason: string }> } = {
+    const results: { successCount: number; failed: Array<{ identifier: string; reason: string }> } = {
       successCount: 0,
       failed: [],
     };
 
     // Process each check-in
     for (const check of checks) {
+      const identifier = getIdentifier(check);
+      
       try {
-        // Find guest by email
-        const { data: guest, error: guestError } = await supabaseAdmin
-          .from('guests')
-          .select('id, email, checked_in_at')
-          .eq('email', check.guest_email)
-          .maybeSingle();
+        let guest = null;
+        let guestError = null;
+
+        // Try to find guest by ID first if provided
+        if (check.guest_id) {
+          const result = await supabaseAdmin
+            .from('guests')
+            .select('id, email, phone, checked_in_at')
+            .eq('id', check.guest_id)
+            .maybeSingle();
+          guest = result.data;
+          guestError = result.error;
+        }
+        
+        // If not found by ID and we have an identifier, try email or phone
+        if (!guest && check.guest_email) {
+          // First try as email
+          const emailResult = await supabaseAdmin
+            .from('guests')
+            .select('id, email, phone, checked_in_at')
+            .eq('email', check.guest_email)
+            .maybeSingle();
+          
+          if (emailResult.data) {
+            guest = emailResult.data;
+          } else {
+            // Try as phone
+            const phoneResult = await supabaseAdmin
+              .from('guests')
+              .select('id, email, phone, checked_in_at')
+              .eq('phone', check.guest_email)
+              .maybeSingle();
+            guest = phoneResult.data;
+            guestError = phoneResult.error;
+          }
+        }
 
         if (guestError || !guest) {
           results.failed.push({
-            guest_email: check.guest_email,
+            identifier,
             reason: 'Guest not found',
           });
           continue;
@@ -145,6 +185,7 @@ Deno.serve(async (req) => {
         const incomingTimestamp = new Date(check.checked_in_at);
         let conflictMetadata = check.metadata || {};
         let shouldUpdate = true;
+        const guestIdentifierForLog = guest.email || guest.phone || identifier;
 
         if (existingCheckin) {
           const existingTimestamp = new Date(existingCheckin);
@@ -163,7 +204,7 @@ Deno.serve(async (req) => {
 
             // Log conflict without updating
             await supabaseAdmin.from('checkin_logs').insert({
-              guest_email: check.guest_email,
+              guest_email: guestIdentifierForLog,
               guest_id: guest.id,
               checked_in_at: check.checked_in_at,
               performed_by: user.id,
@@ -172,7 +213,7 @@ Deno.serve(async (req) => {
             });
 
             results.failed.push({
-              guest_email: check.guest_email,
+              identifier,
               reason: 'Duplicate check-in - existing kept (older)',
             });
             continue;
@@ -206,7 +247,7 @@ Deno.serve(async (req) => {
 
               // Log conflict without updating
               await supabaseAdmin.from('checkin_logs').insert({
-                guest_email: check.guest_email,
+                guest_email: guestIdentifierForLog,
                 guest_id: guest.id,
                 checked_in_at: check.checked_in_at,
                 performed_by: user.id,
@@ -215,7 +256,7 @@ Deno.serve(async (req) => {
               });
 
               results.failed.push({
-                guest_email: check.guest_email,
+                identifier,
                 reason: 'Same timestamp - online version kept',
               });
               continue;
@@ -235,25 +276,36 @@ Deno.serve(async (req) => {
 
           if (updateError) {
             results.failed.push({
-              guest_email: check.guest_email,
+              identifier,
               reason: updateError.message,
             });
             continue;
           }
 
-          // Also update invitation if exists
-          await supabaseAdmin
-            .from('invitations')
-            .update({
-              checked_in_at: check.checked_in_at,
-              attending: true,
-            })
-            .eq('guest_email', check.guest_email);
+          // Also update invitation if exists (try both email and phone)
+          if (guest.email) {
+            await supabaseAdmin
+              .from('invitations')
+              .update({
+                checked_in_at: check.checked_in_at,
+                attending: true,
+              })
+              .eq('guest_email', guest.email);
+          }
+          if (guest.phone) {
+            await supabaseAdmin
+              .from('invitations')
+              .update({
+                checked_in_at: check.checked_in_at,
+                attending: true,
+              })
+              .eq('guest_phone', guest.phone);
+          }
         }
 
         // Log check-in to audit table
         const { error: logError } = await supabaseAdmin.from('checkin_logs').insert({
-          guest_email: check.guest_email,
+          guest_email: guestIdentifierForLog,
           guest_id: guest.id,
           checked_in_at: check.checked_in_at,
           performed_by: user.id,
@@ -270,7 +322,7 @@ Deno.serve(async (req) => {
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         results.failed.push({
-          guest_email: check.guest_email,
+          identifier,
           reason: errorMessage,
         });
       }
