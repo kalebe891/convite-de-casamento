@@ -26,7 +26,7 @@ export function AppSidebar() {
 
   const allItems = [
     { title: "Detalhes", url: "/admin/detalhes", icon: Heart, adminOnly: false, menuKey: "detalhes" as MenuKey },
-    { title: "Usuários", url: "/admin/usuarios", icon: Users, adminOnly: true, menuKey: "usuarios" as MenuKey },
+    { title: "Usuários", url: "/admin/usuarios", icon: Users, adminOnly: false, menuKey: "usuarios" as MenuKey },
     { title: "Eventos", url: "/admin/eventos", icon: CalendarDays, adminOnly: false, menuKey: "eventos" as MenuKey },
     { title: "Convidados", url: "/admin/convidados", icon: UserCheck, adminOnly: false, menuKey: "convidados" as MenuKey },
     { title: "Check-in", url: "/admin/checkin", icon: UserCheck, adminOnly: false, menuKey: "checkin" as MenuKey },
