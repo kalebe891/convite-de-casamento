@@ -417,19 +417,38 @@ const UsersList = ({ refreshKey, roleProfiles, onRoleProfilesChange, permissions
                         <TableCell>
                           <Select
                             value={currentRole || ""}
-                            onValueChange={(value) =>
-                              handleRoleChange(user.id, value)
-                            }
+                            onValueChange={(value) => {
+                              if (value === "admin" && !permissions.isAdmin) {
+                                toast({
+                                  title: "Permissão negada",
+                                  description: "Somente administradores podem atribuir o papel de administrador.",
+                                  variant: "destructive",
+                                });
+                                return;
+                              }
+                              if (currentRole === "admin" && !permissions.isAdmin) {
+                                toast({
+                                  title: "Permissão negada",
+                                  description: "Somente administradores podem alterar o papel de um administrador.",
+                                  variant: "destructive",
+                                });
+                                return;
+                              }
+                              handleRoleChange(user.id, value);
+                            }}
+                            disabled={currentRole === "admin" && !permissions.isAdmin}
                           >
                             <SelectTrigger className="w-[180px]">
                               <SelectValue placeholder="Selecione um papel" />
                             </SelectTrigger>
                             <SelectContent>
-                              {roleProfiles.map((profile) => (
-                                <SelectItem key={profile.role_key} value={profile.role_key}>
-                                  {profile.role_label}
-                                </SelectItem>
-                              ))}
+                              {roleProfiles
+                                .filter((profile) => permissions.isAdmin || profile.role_key !== "admin")
+                                .map((profile) => (
+                                  <SelectItem key={profile.role_key} value={profile.role_key}>
+                                    {profile.role_label}
+                                  </SelectItem>
+                                ))}
                             </SelectContent>
                           </Select>
                         </TableCell>
