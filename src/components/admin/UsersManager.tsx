@@ -10,12 +10,22 @@ import { Loader2, Copy, Mail, MessageCircle } from "lucide-react";
 import UsersList from "./UsersList";
 import PendingInvitesList from "./PendingInvitesList";
 
+interface PagePermissions {
+  canView: boolean;
+  canAdd: boolean;
+  canEdit: boolean;
+  canDelete: boolean;
+  isAdmin: boolean;
+  loading: boolean;
+}
+
 interface UsersManagerProps {
   roleProfiles: Array<{ role_key: string; role_label: string }>;
   onRoleProfilesChange: () => void;
+  permissions: PagePermissions;
 }
 
-const UsersManager = ({ roleProfiles, onRoleProfilesChange }: UsersManagerProps) => {
+const UsersManager = ({ roleProfiles, onRoleProfilesChange, permissions }: UsersManagerProps) => {
   const { toast } = useToast();
   const [email, setEmail] = useState("");
   const [nome, setNome] = useState("");
@@ -106,153 +116,156 @@ const UsersManager = ({ roleProfiles, onRoleProfilesChange }: UsersManagerProps)
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Convidar Novo Usuário</CardTitle>
-          <CardDescription>
-            Convide administradores, membros do casal ou cerimonialistas para acessar o sistema
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleInvite} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="nome">Nome do Usuário (Opcional)</Label>
-              <Input
-                id="nome"
-                type="text"
-                value={nome}
-                onChange={(e) => setNome(e.target.value)}
-                placeholder="Nome completo"
-                disabled={loading}
-              />
-            </div>
+      {permissions.canAdd && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Convidar Novo Usuário</CardTitle>
+            <CardDescription>
+              Convide administradores, membros do casal ou cerimonialistas para acessar o sistema
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleInvite} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="nome">Nome do Usuário (Opcional)</Label>
+                <Input
+                  id="nome"
+                  type="text"
+                  value={nome}
+                  onChange={(e) => setNome(e.target.value)}
+                  placeholder="Nome completo"
+                  disabled={loading}
+                />
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="email">Email do Usuário</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="usuario@exemplo.com"
-                required
-                disabled={loading}
-              />
-            </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">Email do Usuário</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="usuario@exemplo.com"
+                  required
+                  disabled={loading}
+                />
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="role">Papel no Sistema</Label>
-              <Select value={role} onValueChange={setRole} disabled={loading}>
-                <SelectTrigger id="role">
-                  <SelectValue placeholder="Selecione um papel" />
-                </SelectTrigger>
-                <SelectContent>
-                  {roleProfiles.map((profile) => (
-                    <SelectItem key={profile.role_key} value={profile.role_key}>
-                      {profile.role_label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+              <div className="space-y-2">
+                <Label htmlFor="role">Papel no Sistema</Label>
+                <Select value={role} onValueChange={setRole} disabled={loading}>
+                  <SelectTrigger id="role">
+                    <SelectValue placeholder="Selecione um papel" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {roleProfiles.map((profile) => (
+                      <SelectItem key={profile.role_key} value={profile.role_key}>
+                        {profile.role_label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Enviando convite...
-                </>
-              ) : (
-                <>
-                  <Mail className="mr-2 h-4 w-4" />
-                  Enviar Convite por Email
-                </>
-              )}
-            </Button>
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Enviando convite...
+                  </>
+                ) : (
+                  <>
+                    <Mail className="mr-2 h-4 w-4" />
+                    Enviar Convite por Email
+                  </>
+                )}
+              </Button>
 
-            {magicLink && (
-              <div className="p-4 bg-muted rounded-lg space-y-3">
-                <Label className="text-sm font-medium">Link de Convite Gerado</Label>
-                
-                <div className="space-y-2">
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={copyMagicLink}
-                      className="flex-1"
-                    >
-                      <Copy className="w-4 h-4 mr-2" />
-                      Copiar Link
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        const message = getWhatsAppMessage();
-                        navigator.clipboard.writeText(message);
-                        toast({
-                          title: "Mensagem copiada!",
-                          description: "A mensagem para WhatsApp foi copiada.",
-                        });
-                      }}
-                      className="flex-1"
-                    >
-                      <MessageCircle className="w-4 h-4 mr-2" />
-                      Copiar Mensagem
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="default"
-                      size="sm"
-                      onClick={openWhatsApp}
-                      className="flex-1"
-                    >
-                      <MessageCircle className="w-4 h-4 mr-2 fill-current" />
-                      Abrir WhatsApp
-                    </Button>
+              {magicLink && (
+                <div className="p-4 bg-muted rounded-lg space-y-3">
+                  <Label className="text-sm font-medium">Link de Convite Gerado</Label>
+                  
+                  <div className="space-y-2">
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={copyMagicLink}
+                        className="flex-1"
+                      >
+                        <Copy className="w-4 h-4 mr-2" />
+                        Copiar Link
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          const message = getWhatsAppMessage();
+                          navigator.clipboard.writeText(message);
+                          toast({
+                            title: "Mensagem copiada!",
+                            description: "A mensagem para WhatsApp foi copiada.",
+                          });
+                        }}
+                        className="flex-1"
+                      >
+                        <MessageCircle className="w-4 h-4 mr-2" />
+                        Copiar Mensagem
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="default"
+                        size="sm"
+                        onClick={openWhatsApp}
+                        className="flex-1"
+                      >
+                        <MessageCircle className="w-4 h-4 mr-2 fill-current" />
+                        Abrir WhatsApp
+                      </Button>
+                    </div>
                   </div>
-                </div>
 
-                <div className="p-3 bg-background rounded border text-xs font-mono break-all">
-                  {magicLink}
-                </div>
+                  <div className="p-3 bg-background rounded border text-xs font-mono break-all">
+                    {magicLink}
+                  </div>
 
-                <div className="p-3 bg-background rounded border">
-                  <p className="text-xs text-muted-foreground whitespace-pre-wrap">
-                    {getWhatsAppMessage()}
+                  <div className="p-3 bg-background rounded border">
+                    <p className="text-xs text-muted-foreground whitespace-pre-wrap">
+                      {getWhatsAppMessage()}
+                    </p>
+                  </div>
+
+                  <p className="text-xs text-muted-foreground">
+                    O link expira em 48 horas e só pode ser usado uma vez.
                   </p>
                 </div>
+              )}
 
-                <p className="text-xs text-muted-foreground">
-                  O link expira em 48 horas e só pode ser usado uma vez.
+              <div className="pt-2 border-t">
+                <p className="text-sm text-muted-foreground">
+                  <strong>Como funciona:</strong>
                 </p>
+                <ol className="text-sm text-muted-foreground list-decimal list-inside space-y-1 mt-2">
+                  <li>Um email será enviado automaticamente com o link de convite</li>
+                  <li>Se o email falhar, você pode copiar o link ou a mensagem para enviar manualmente</li>
+                  <li>O usuário receberá um link para criar sua própria senha</li>
+                  <li>Após criar a senha, ele poderá fazer login no sistema</li>
+                </ol>
               </div>
-            )}
+            </form>
+          </CardContent>
+        </Card>
+      )}
 
-            <div className="pt-2 border-t">
-              <p className="text-sm text-muted-foreground">
-                <strong>Como funciona:</strong>
-              </p>
-              <ol className="text-sm text-muted-foreground list-decimal list-inside space-y-1 mt-2">
-                <li>Um email será enviado automaticamente com o link de convite</li>
-                <li>Se o email falhar, você pode copiar o link ou a mensagem para enviar manualmente</li>
-                <li>O usuário receberá um link para criar sua própria senha</li>
-                <li>Após criar a senha, ele poderá fazer login no sistema</li>
-              </ol>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-
-      <PendingInvitesList refreshTrigger={refreshKey} />
+      {permissions.canAdd && <PendingInvitesList refreshTrigger={refreshKey} />}
       
       <UsersList 
         refreshKey={refreshKey}
         roleProfiles={roleProfiles}
         onRoleProfilesChange={onRoleProfilesChange}
+        permissions={permissions}
       />
     </div>
   );
