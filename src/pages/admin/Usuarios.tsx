@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import UsersManager from "@/components/admin/UsersManager";
+import { usePagePermissions } from "@/hooks/usePagePermissions";
 
 const Usuarios = () => {
+  const permissions = usePagePermissions("usuarios");
   const [roleProfiles, setRoleProfiles] = useState<Array<{ role_key: string; role_label: string }>>([]);
 
   useEffect(() => {
@@ -24,6 +26,8 @@ const Usuarios = () => {
     }
   };
 
+  if (permissions.loading) return null;
+
   return (
     <div className="space-y-6">
       <div>
@@ -36,6 +40,7 @@ const Usuarios = () => {
       <UsersManager 
         roleProfiles={roleProfiles}
         onRoleProfilesChange={fetchRoleProfiles}
+        permissions={permissions}
       />
     </div>
   );

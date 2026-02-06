@@ -50,13 +50,23 @@ interface UserWithRole extends UserProfile {
   editNameValue?: string;
 }
 
+interface PagePermissions {
+  canView: boolean;
+  canAdd: boolean;
+  canEdit: boolean;
+  canDelete: boolean;
+  isAdmin: boolean;
+  loading: boolean;
+}
+
 interface UsersListProps {
   refreshKey?: number;
   roleProfiles: Array<{ role_key: string; role_label: string }>;
   onRoleProfilesChange: () => void;
+  permissions: PagePermissions;
 }
 
-const UsersList = ({ refreshKey, roleProfiles, onRoleProfilesChange }: UsersListProps) => {
+const UsersList = ({ refreshKey, roleProfiles, onRoleProfilesChange, permissions }: UsersListProps) => {
   const { toast } = useToast();
   const [users, setUsers] = useState<UserWithRole[]>([]);
   const [loading, setLoading] = useState(true);
@@ -294,14 +304,16 @@ const UsersList = ({ refreshKey, roleProfiles, onRoleProfilesChange }: UsersList
               <CardTitle>Lista de Usuários</CardTitle>
               <CardDescription>Gerencie os usuários e suas permissões</CardDescription>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setRoleDialogOpen(true)}
-            >
-              <Settings className="w-4 h-4 mr-2" />
-              Gerenciar Papéis
-            </Button>
+            {permissions.isAdmin && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setRoleDialogOpen(true)}
+              >
+                <Settings className="w-4 h-4 mr-2" />
+                Gerenciar Papéis
+              </Button>
+            )}
           </div>
         </CardHeader>
         <CardContent>
@@ -330,9 +342,9 @@ const UsersList = ({ refreshKey, roleProfiles, onRoleProfilesChange }: UsersList
                   <TableRow>
                     <TableHead>Nome</TableHead>
                     <TableHead>E-mail</TableHead>
-                    <TableHead>Papel Atual</TableHead>
-                    <TableHead>Alterar Papel</TableHead>
-                    <TableHead className="text-right">Ações</TableHead>
+                     <TableHead>Papel Atual</TableHead>
+                     {permissions.canEdit && <TableHead>Alterar Papel</TableHead>}
+                     {(permissions.canEdit || permissions.canDelete) && <TableHead className="text-right">Ações</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -375,7 +387,7 @@ const UsersList = ({ refreshKey, roleProfiles, onRoleProfilesChange }: UsersList
                                 Cancelar
                               </Button>
                             </div>
-                          ) : (
+                          ) : permissions.canEdit ? (
                             <div 
                               className="cursor-pointer hover:text-primary"
                               onClick={() => {
@@ -386,6 +398,8 @@ const UsersList = ({ refreshKey, roleProfiles, onRoleProfilesChange }: UsersList
                             >
                               {user.full_name || "Sem nome"}
                             </div>
+                          ) : (
+                            <span>{user.full_name || "Sem nome"}</span>
                           )}
                         </TableCell>
                         <TableCell>{user.email}</TableCell>
@@ -399,6 +413,7 @@ const UsersList = ({ refreshKey, roleProfiles, onRoleProfilesChange }: UsersList
                             <Badge variant="outline">Sem papel</Badge>
                           )}
                         </TableCell>
+                        {permissions.canEdit && (
                         <TableCell>
                           <Select
                             value={currentRole || ""}
@@ -418,29 +433,36 @@ const UsersList = ({ refreshKey, roleProfiles, onRoleProfilesChange }: UsersList
                             </SelectContent>
                           </Select>
                         </TableCell>
+                        )}
+                        {(permissions.canEdit || permissions.canDelete) && (
                         <TableCell className="text-right">
                           <div className="flex gap-2 justify-end">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleRegenerateToken(user.email || "", user.full_name || "")}
-                              disabled={!user.email}
-                              className="text-primary hover:text-primary"
-                              title="Gerar novo token de acesso"
-                            >
-                              <RefreshCw className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setDeleteUserId(user.id)}
-                              className="text-destructive hover:text-destructive"
-                              title="Remover usuário"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+                            {permissions.canEdit && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleRegenerateToken(user.email || "", user.full_name || "")}
+                                disabled={!user.email}
+                                className="text-primary hover:text-primary"
+                                title="Gerar novo token de acesso"
+                              >
+                                <RefreshCw className="h-4 w-4" />
+                              </Button>
+                            )}
+                            {permissions.canDelete && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setDeleteUserId(user.id)}
+                                className="text-destructive hover:text-destructive"
+                                title="Remover usuário"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            )}
                           </div>
                         </TableCell>
+                        )}
                       </TableRow>
                     );
                   })}
