@@ -158,11 +158,13 @@ const UsersManager = ({ roleProfiles, onRoleProfilesChange, permissions }: Users
                     <SelectValue placeholder="Selecione um papel" />
                   </SelectTrigger>
                   <SelectContent>
-                    {roleProfiles.map((profile) => (
-                      <SelectItem key={profile.role_key} value={profile.role_key}>
-                        {profile.role_label}
-                      </SelectItem>
-                    ))}
+                    {roleProfiles
+                      .filter((profile) => permissions.isAdmin || profile.role_key !== "admin")
+                      .map((profile) => (
+                        <SelectItem key={profile.role_key} value={profile.role_key}>
+                          {profile.role_label}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
               </div>
