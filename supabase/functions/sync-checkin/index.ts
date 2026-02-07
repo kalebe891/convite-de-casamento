@@ -80,16 +80,33 @@ Deno.serve(async (req) => {
       throw new Error('Unauthorized');
     }
 
-    // Check if user has required role
+    // Check if user has a role and checkin permission dynamically
     const { data: roleData } = await supabaseClient
       .from('user_roles')
       .select('role')
       .eq('user_id', user.id)
       .maybeSingle();
 
-    const allowedRoles = ['admin', 'couple', 'planner', 'cerimonial'];
-    if (!roleData || !allowedRoles.includes(roleData.role)) {
+    if (!roleData?.role) {
       throw new Error('Insufficient permissions');
+    }
+
+    // Admin always has access; others need checkin permission
+    if (roleData.role !== 'admin') {
+      const supabaseAdmin = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      );
+      const { data: permData } = await supabaseAdmin
+        .from('admin_permissions')
+        .select('can_view, can_edit')
+        .eq('role_key', roleData.role)
+        .eq('menu_key', 'checkin')
+        .maybeSingle();
+
+      if (!permData?.can_view) {
+        throw new Error('Insufficient permissions');
+      }
     }
 
     // Rate limiting
