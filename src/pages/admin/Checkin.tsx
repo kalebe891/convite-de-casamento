@@ -248,41 +248,21 @@ const Checkin = () => {
     }
 
     try {
-      // Update guest to remove check-in
-      const { error: updateError } = await supabase
-        .from("guests")
-        .update({
-          checked_in_at: null,
-          status: "confirmed",
-        })
-        .eq("id", guest.id);
-
-      if (updateError) throw updateError;
-
-      // Also update invitation if exists
-      if (guest.email) {
-        await supabase
-          .from("invitations")
-          .update({ checked_in_at: null })
-          .eq("guest_email", guest.email);
-      }
-      if (guest.phone) {
-        await supabase
-          .from("invitations")
-          .update({ checked_in_at: null })
-          .eq("guest_phone", guest.phone);
-      }
-
-      // Log the undo action
-      await supabase.from("admin_logs").insert({
-        user_id: user.id,
-        user_email: user.email,
-        action: "undo_checkin",
-        table_name: "guests",
-        record_id: guest.id,
-        old_data: { checked_in_at: guest.checked_in_at, status: guest.status },
-        new_data: { checked_in_at: null, status: "confirmed" },
+      // Use edge function to undo check-in (bypasses RLS issues for custom roles)
+      const guestIdentifier = guest.email || guest.phone;
+      const { data, error } = await supabase.functions.invoke("sync-checkin", {
+        body: {
+          checks: [{
+            guest_id: guest.id,
+            guest_email: guestIdentifier,
+            checked_in_at: null,
+            source: "online",
+            metadata: { action: "undo_checkin" },
+          }],
+        },
       });
+
+      if (error) throw error;
 
       toast({
         title: "Check-in desfeito",

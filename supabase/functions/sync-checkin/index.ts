@@ -10,7 +10,7 @@ const corsHeaders = {
 const checkinItemSchema = z.object({
   guest_id: z.string().uuid().optional(),
   guest_email: z.string().optional(), // Can be email or phone
-  checked_in_at: z.string(),
+  checked_in_at: z.string().nullable(),
   source: z.enum(['offline', 'online']),
   metadata: z.record(z.unknown()).optional(),
 }).refine(
@@ -197,12 +197,54 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        // Conflict resolution logic
+        // Check if this is an undo operation
+        const isUndo = check.checked_in_at === null;
+        const guestIdentifierForLog = guest.email || guest.phone || identifier;
+
+        if (isUndo) {
+          // Undo check-in: set checked_in_at to null, status to confirmed
+          const { error: updateError } = await supabaseAdmin
+            .from('guests')
+            .update({ checked_in_at: null, status: 'confirmed' })
+            .eq('id', guest.id);
+
+          if (updateError) {
+            results.failed.push({ identifier, reason: updateError.message });
+            continue;
+          }
+
+          // Also update invitations
+          if (guest.email) {
+            await supabaseAdmin.from('invitations')
+              .update({ checked_in_at: null })
+              .eq('guest_email', guest.email);
+          }
+          if (guest.phone) {
+            await supabaseAdmin.from('invitations')
+              .update({ checked_in_at: null })
+              .eq('guest_phone', guest.phone);
+          }
+
+          // Log undo to admin_logs
+          await supabaseAdmin.from('admin_logs').insert({
+            user_id: user.id,
+            user_email: user.email,
+            action: 'undo_checkin',
+            table_name: 'guests',
+            record_id: guest.id,
+            old_data: { checked_in_at: guest.checked_in_at, status: guest.status },
+            new_data: { checked_in_at: null, status: 'confirmed' },
+          });
+
+          results.successCount++;
+          continue;
+        }
+
+        // Regular check-in: conflict resolution logic
         const existingCheckin = guest.checked_in_at;
         const incomingTimestamp = new Date(check.checked_in_at);
         let conflictMetadata = check.metadata || {};
         let shouldUpdate = true;
-        const guestIdentifierForLog = guest.email || guest.phone || identifier;
 
         if (existingCheckin) {
           const existingTimestamp = new Date(existingCheckin);
@@ -219,7 +261,6 @@ Deno.serve(async (req) => {
             };
             shouldUpdate = false;
 
-            // Log conflict without updating
             await supabaseAdmin.from('checkin_logs').insert({
               guest_email: guestIdentifierForLog,
               guest_id: guest.id,
@@ -229,10 +270,7 @@ Deno.serve(async (req) => {
               metadata: conflictMetadata,
             });
 
-            results.failed.push({
-              identifier,
-              reason: 'Duplicate check-in - existing kept (older)',
-            });
+            results.failed.push({ identifier, reason: 'Duplicate check-in - existing kept (older)' });
             continue;
           }
 
@@ -262,7 +300,6 @@ Deno.serve(async (req) => {
               };
               shouldUpdate = false;
 
-              // Log conflict without updating
               await supabaseAdmin.from('checkin_logs').insert({
                 guest_email: guestIdentifierForLog,
                 guest_id: guest.id,
@@ -272,10 +309,7 @@ Deno.serve(async (req) => {
                 metadata: conflictMetadata,
               });
 
-              results.failed.push({
-                identifier,
-                reason: 'Same timestamp - online version kept',
-              });
+              results.failed.push({ identifier, reason: 'Same timestamp - online version kept' });
               continue;
             }
           }
@@ -292,30 +326,19 @@ Deno.serve(async (req) => {
             .eq('id', guest.id);
 
           if (updateError) {
-            results.failed.push({
-              identifier,
-              reason: updateError.message,
-            });
+            results.failed.push({ identifier, reason: updateError.message });
             continue;
           }
 
-          // Also update invitation if exists (try both email and phone)
+          // Also update invitation if exists
           if (guest.email) {
-            await supabaseAdmin
-              .from('invitations')
-              .update({
-                checked_in_at: check.checked_in_at,
-                attending: true,
-              })
+            await supabaseAdmin.from('invitations')
+              .update({ checked_in_at: check.checked_in_at, attending: true })
               .eq('guest_email', guest.email);
           }
           if (guest.phone) {
-            await supabaseAdmin
-              .from('invitations')
-              .update({
-                checked_in_at: check.checked_in_at,
-                attending: true,
-              })
+            await supabaseAdmin.from('invitations')
+              .update({ checked_in_at: check.checked_in_at, attending: true })
               .eq('guest_phone', guest.phone);
           }
         }
