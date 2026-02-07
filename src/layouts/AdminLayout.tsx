@@ -10,11 +10,13 @@ import ThemeToggle from "@/components/ThemeToggle";
 import { useRequireRole } from "@/hooks/useRequireRole";
 import { OfflineIndicator } from "@/components/admin/OfflineIndicator";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useAllRoles } from "@/hooks/useAllRoles";
 
 const AdminLayout = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user, role, loading } = useRequireRole(["admin", "couple", "planner", "cerimonial", "tester"]);
+  const { roles: allRoleKeys, loading: rolesLoading } = useAllRoles();
+  const { user, role, loading } = useRequireRole(allRoleKeys.length > 0 ? allRoleKeys : ["admin"]);
   const { loading: permissionsLoading, initialized } = usePermissions();
   const [userName, setUserName] = useState("");
 
@@ -46,7 +48,7 @@ const AdminLayout = () => {
   };
 
   // CRITICAL: Wait for both auth AND permissions to load
-  if (loading || permissionsLoading || !initialized) {
+  if (loading || permissionsLoading || !initialized || rolesLoading) {
     console.log('⏳ [AdminLayout] Waiting for full initialization:', {
       authLoading: loading,
       permissionsLoading,
