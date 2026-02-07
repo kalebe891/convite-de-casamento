@@ -32,6 +32,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import RoleProfilesDialog from "./RoleProfilesDialog";
+import RolePermissionsPopover from "./RolePermissionsPopover";
 
 interface UserProfile {
   id: string;
@@ -405,10 +406,17 @@ const UsersList = ({ refreshKey, roleProfiles, onRoleProfilesChange, permissions
                         <TableCell>{user.email}</TableCell>
                         <TableCell>
                           {currentRole ? (
-                            <Badge variant={getRoleColor(currentRole)} className="gap-1">
-                              {getRoleIcon(currentRole)}
-                              {getRoleLabel(currentRole)}
-                            </Badge>
+                            <RolePermissionsPopover
+                              roleKey={currentRole}
+                              roleLabel={getRoleLabel(currentRole)}
+                              isAdmin={permissions.isAdmin}
+                              badgeVariant={getRoleColor(currentRole)}
+                            >
+                              <Badge variant={getRoleColor(currentRole)} className="gap-1">
+                                {getRoleIcon(currentRole)}
+                                {getRoleLabel(currentRole)}
+                              </Badge>
+                            </RolePermissionsPopover>
                           ) : (
                             <Badge variant="outline">Sem papel</Badge>
                           )}
