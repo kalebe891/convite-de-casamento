@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Trash2, Plus, Pencil, X } from "lucide-react";
 import { buffetItemSchema } from "@/lib/validationSchemas";
@@ -27,7 +28,9 @@ const BuffetManager = ({ permissions }: BuffetManagerProps) => {
   const [weddingId, setWeddingId] = useState<string | null>(null);
   const [showBuffetSection, setShowBuffetSection] = useState<boolean>(true);
   const [newItem, setNewItem] = useState({ item_name: "", category: "", is_public: true });
+  const [isEditOpen, setIsEditOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [editItem, setEditItem] = useState({ item_name: "", category: "", is_public: true });
 
   useEffect(() => {
     fetchData();
@@ -53,155 +56,103 @@ const BuffetManager = ({ permissions }: BuffetManagerProps) => {
 
   const handleToggleBuffetSection = async (newValue: boolean) => {
     if (!permissions.canPublish) {
-      toast({
-        title: "Sem permissão",
-        description: "Você não tem permissão para publicar/ocultar seções",
-        variant: "destructive",
-      });
+      toast({ title: "Sem permissão", description: "Você não tem permissão para publicar/ocultar seções", variant: "destructive" });
       return;
     }
-
     if (!weddingId) return;
 
-    const { error } = await supabase
-      .from("wedding_details")
-      .update({ show_buffet_section: newValue })
-      .eq("id", weddingId);
+    const { error } = await supabase.from("wedding_details").update({ show_buffet_section: newValue }).eq("id", weddingId);
 
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
     } else {
-      toast({
-        title: "Atualizado",
-        description: `Seção de buffet ${newValue ? 'exibida' : 'oculta'} na página pública`,
-      });
-
-      await logAdminAction({
-        action: "update",
-        tableName: "wedding_details",
-        recordId: weddingId,
-        newData: { show_buffet_section: newValue },
-      });
-
+      toast({ title: "Atualizado", description: `Seção de buffet ${newValue ? 'exibida' : 'oculta'} na página pública` });
+      await logAdminAction({ action: "update", tableName: "wedding_details", recordId: weddingId, newData: { show_buffet_section: newValue } });
       setShowBuffetSection(newValue);
     }
   };
 
-  const handleSave = async () => {
+  const handleAdd = async () => {
     if (!weddingId) return;
-
-    if (!permissions.canAdd && !editingId) {
-      toast({
-        title: "Sem permissão",
-        description: "Você não tem permissão para adicionar itens",
-        variant: "destructive",
-      });
+    if (!permissions.canAdd) {
+      toast({ title: "Sem permissão", description: "Você não tem permissão para adicionar itens", variant: "destructive" });
       return;
     }
 
-    if (!permissions.canEdit && editingId) {
-      toast({
-        title: "Sem permissão",
-        description: "Você não tem permissão para editar itens",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Validate input data
-    const validationResult = buffetItemSchema.safeParse({
-      item_name: newItem.item_name,
-      category: newItem.category
-    });
-    
+    const validationResult = buffetItemSchema.safeParse({ item_name: newItem.item_name, category: newItem.category });
     if (!validationResult.success) {
-      const firstError = validationResult.error.errors[0];
-      toast({ title: "Erro de validação", description: firstError.message, variant: "destructive" });
+      toast({ title: "Erro de validação", description: validationResult.error.errors[0].message, variant: "destructive" });
       return;
     }
 
-    if (editingId) {
-      // Update existing item
-      const oldItem = items.find(item => item.id === editingId);
-      const { error } = await supabase
-        .from("buffet_items")
-        .update({
-          item_name: validationResult.data.item_name.trim(),
-          category: validationResult.data.category?.trim() || null,
-          is_public: newItem.is_public,
-        })
-        .eq("id", editingId);
+    const { data, error } = await supabase.from("buffet_items").insert({
+      wedding_id: weddingId,
+      item_name: validationResult.data.item_name.trim(),
+      category: validationResult.data.category?.trim() || null,
+      is_public: newItem.is_public,
+      display_order: items.length,
+    }).select().single();
 
-      if (error) {
-        toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
-      } else {
-        await logAdminAction({
-          action: "update",
-          tableName: "buffet_items",
-          recordId: editingId,
-          oldData: oldItem,
-          newData: newItem,
-        });
-        toast({ title: "Sucesso", description: "Item atualizado!" });
-        setNewItem({ item_name: "", category: "", is_public: true });
-        setEditingId(null);
-        fetchData();
-      }
+    if (error) {
+      toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
     } else {
-      // Insert new item
-      const { data, error } = await supabase.from("buffet_items").insert({
-        wedding_id: weddingId,
-        item_name: validationResult.data.item_name.trim(),
-        category: validationResult.data.category?.trim() || null,
-        is_public: newItem.is_public,
-        display_order: items.length,
-      }).select().single();
-
-      if (error) {
-        toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
-      } else {
-        await logAdminAction({
-          action: "insert",
-          tableName: "buffet_items",
-          recordId: data?.id,
-          newData: newItem,
-        });
-        toast({ title: "Sucesso", description: "Item adicionado!" });
-        setNewItem({ item_name: "", category: "", is_public: true });
-        fetchData();
-      }
+      await logAdminAction({ action: "insert", tableName: "buffet_items", recordId: data?.id, newData: newItem });
+      toast({ title: "Sucesso", description: "Item adicionado!" });
+      setNewItem({ item_name: "", category: "", is_public: true });
+      fetchData();
     }
   };
 
-  const handleEdit = (item: any) => {
+  const handleOpenEdit = (item: any) => {
     if (!permissions.canEdit) {
-      toast({
-        title: "Sem permissão",
-        description: "Você não tem permissão para editar itens",
-        variant: "destructive",
-      });
+      toast({ title: "Sem permissão", description: "Você não tem permissão para editar itens", variant: "destructive" });
       return;
     }
     setEditingId(item.id);
-    setNewItem({
+    setEditItem({
       item_name: item.item_name,
       category: item.category || "",
       is_public: item.is_public,
     });
+    setIsEditOpen(true);
   };
 
-  const handleCancelEdit = () => {
-    setEditingId(null);
-    setNewItem({ item_name: "", category: "", is_public: true });
+  const handleUpdate = async () => {
+    if (!permissions.canEdit) {
+      toast({ title: "Sem permissão", description: "Você não tem permissão para editar itens", variant: "destructive" });
+      return;
+    }
+
+    const validationResult = buffetItemSchema.safeParse({ item_name: editItem.item_name, category: editItem.category });
+    if (!validationResult.success) {
+      toast({ title: "Erro de validação", description: validationResult.error.errors[0].message, variant: "destructive" });
+      return;
+    }
+
+    const oldItem = items.find(item => item.id === editingId);
+    const { error } = await supabase
+      .from("buffet_items")
+      .update({
+        item_name: validationResult.data.item_name.trim(),
+        category: validationResult.data.category?.trim() || null,
+        is_public: editItem.is_public,
+      })
+      .eq("id", editingId);
+
+    if (error) {
+      toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
+    } else {
+      await logAdminAction({ action: "update", tableName: "buffet_items", recordId: editingId!, oldData: oldItem, newData: editItem });
+      toast({ title: "Sucesso", description: "Item atualizado!" });
+      setIsEditOpen(false);
+      setEditingId(null);
+      fetchData();
+    }
   };
 
   const handleDelete = async (id: string) => {
     if (!permissions.canDelete) {
-      toast({
-        title: "Sem permissão",
-        description: "Você não tem permissão para excluir itens",
-        variant: "destructive",
-      });
+      toast({ title: "Sem permissão", description: "Você não tem permissão para excluir itens", variant: "destructive" });
       return;
     }
     const deletedItem = items.find(item => item.id === id);
@@ -210,12 +161,7 @@ const BuffetManager = ({ permissions }: BuffetManagerProps) => {
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
     } else {
-      await logAdminAction({
-        action: "delete",
-        tableName: "buffet_items",
-        recordId: id,
-        oldData: deletedItem,
-      });
+      await logAdminAction({ action: "delete", tableName: "buffet_items", recordId: id, oldData: deletedItem });
       toast({ title: "Sucesso", description: "Item removido!" });
       fetchData();
     }
@@ -223,29 +169,16 @@ const BuffetManager = ({ permissions }: BuffetManagerProps) => {
 
   const handleTogglePublic = async (id: string, currentValue: boolean) => {
     if (!permissions.canPublish) {
-      toast({
-        title: "Sem permissão",
-        description: "Você não tem permissão para tornar itens públicos/privados",
-        variant: "destructive",
-      });
+      toast({ title: "Sem permissão", description: "Você não tem permissão para tornar itens públicos/privados", variant: "destructive" });
       return;
     }
     const newValue = !currentValue;
-    const { error } = await supabase
-      .from("buffet_items")
-      .update({ is_public: newValue })
-      .eq("id", id);
+    const { error } = await supabase.from("buffet_items").update({ is_public: newValue }).eq("id", id);
 
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
     } else {
-      await logAdminAction({
-        action: "update",
-        tableName: "buffet_items",
-        recordId: id,
-        oldData: { is_public: currentValue },
-        newData: { is_public: newValue },
-      });
+      await logAdminAction({ action: "update", tableName: "buffet_items", recordId: id, oldData: { is_public: currentValue }, newData: { is_public: newValue } });
       fetchData();
     }
   };
@@ -260,77 +193,69 @@ const BuffetManager = ({ permissions }: BuffetManagerProps) => {
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <Label htmlFor="show_buffet_section">Exibir Seção na Página Pública</Label>
-              <p className="text-sm text-muted-foreground">
-                Controla se a seção de buffet aparece na página pública do convite
-              </p>
+              <p className="text-sm text-muted-foreground">Controla se a seção de buffet aparece na página pública do convite</p>
             </div>
-            <Switch
-              id="show_buffet_section"
-              checked={showBuffetSection}
-              onCheckedChange={handleToggleBuffetSection}
-              disabled={!permissions.canPublish}
-            />
+            <Switch id="show_buffet_section" checked={showBuffetSection} onCheckedChange={handleToggleBuffetSection} disabled={!permissions.canPublish} />
           </div>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>{editingId ? "Editar Item" : "Adicionar Item ao Buffet"}</CardTitle>
+          <CardTitle>Adicionar Item ao Buffet</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
             <Label>Nome do Item</Label>
-            <Input
-              placeholder="Ex: Arroz à grega"
-              value={newItem.item_name}
-              onChange={(e) => setNewItem({ ...newItem, item_name: e.target.value })}
-              disabled={editingId ? !permissions.canEdit : !permissions.canAdd}
-            />
+            <Input placeholder="Ex: Arroz à grega" value={newItem.item_name} onChange={(e) => setNewItem({ ...newItem, item_name: e.target.value })} disabled={!permissions.canAdd} />
           </div>
           <div>
             <Label>Categoria (opcional)</Label>
-            <Input
-              placeholder="Ex: Entrada, Prato principal, Sobremesa"
-              value={newItem.category}
-              onChange={(e) => setNewItem({ ...newItem, category: e.target.value })}
-              disabled={editingId ? !permissions.canEdit : !permissions.canAdd}
-            />
+            <Input placeholder="Ex: Entrada, Prato principal, Sobremesa" value={newItem.category} onChange={(e) => setNewItem({ ...newItem, category: e.target.value })} disabled={!permissions.canAdd} />
           </div>
           <div className="flex items-center gap-2">
-            <Switch
-              checked={newItem.is_public}
-              onCheckedChange={(checked) => setNewItem({ ...newItem, is_public: checked })}
-              disabled={!permissions.canPublish}
-            />
+            <Switch checked={newItem.is_public} onCheckedChange={(checked) => setNewItem({ ...newItem, is_public: checked })} disabled={!permissions.canPublish} />
             <Label>Exibir publicamente</Label>
           </div>
-          <div className="flex gap-2">
-            <Button 
-              onClick={handleSave} 
-              disabled={!newItem.item_name || (editingId ? !permissions.canEdit : !permissions.canAdd)}
-            >
-              {editingId ? (
-                <>
-                  <Pencil className="w-4 h-4 mr-2" />
-                  Atualizar
-                </>
-              ) : (
-                <>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Adicionar
-                </>
-              )}
-            </Button>
-            {editingId && (
-              <Button onClick={handleCancelEdit} variant="outline">
+          <Button onClick={handleAdd} disabled={!newItem.item_name || !permissions.canAdd}>
+            <Plus className="w-4 h-4 mr-2" />
+            Adicionar
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Edit Dialog */}
+      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Item</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Nome do Item</Label>
+              <Input value={editItem.item_name} onChange={(e) => setEditItem({ ...editItem, item_name: e.target.value })} disabled={!permissions.canEdit} />
+            </div>
+            <div>
+              <Label>Categoria (opcional)</Label>
+              <Input value={editItem.category} onChange={(e) => setEditItem({ ...editItem, category: e.target.value })} disabled={!permissions.canEdit} />
+            </div>
+            <div className="flex items-center gap-2">
+              <Switch checked={editItem.is_public} onCheckedChange={(checked) => setEditItem({ ...editItem, is_public: checked })} disabled={!permissions.canPublish} />
+              <Label>Exibir publicamente</Label>
+            </div>
+            <div className="flex gap-2">
+              <Button onClick={handleUpdate} disabled={!editItem.item_name || !permissions.canEdit}>
+                <Pencil className="w-4 h-4 mr-2" />
+                Atualizar
+              </Button>
+              <Button onClick={() => setIsEditOpen(false)} variant="outline">
                 <X className="w-4 h-4 mr-2" />
                 Cancelar
               </Button>
-            )}
+            </div>
           </div>
-        </CardContent>
-      </Card>
+        </DialogContent>
+      </Dialog>
 
       <Card>
         <CardHeader>
@@ -345,30 +270,14 @@ const BuffetManager = ({ permissions }: BuffetManagerProps) => {
                 <div key={item.id} className="flex items-center justify-between p-4 border rounded-lg">
                   <div className="flex-1">
                     <p className="font-semibold">{item.item_name}</p>
-                    {item.category && (
-                      <p className="text-sm text-muted-foreground">{item.category}</p>
-                    )}
+                    {item.category && <p className="text-sm text-muted-foreground">{item.category}</p>}
                   </div>
                   <div className="flex items-center gap-2">
-                    <Switch
-                      checked={item.is_public}
-                      onCheckedChange={() => handleTogglePublic(item.id, item.is_public)}
-                      disabled={!permissions.canPublish}
-                    />
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => handleEdit(item)}
-                      disabled={!permissions.canEdit}
-                    >
+                    <Switch checked={item.is_public} onCheckedChange={() => handleTogglePublic(item.id, item.is_public)} disabled={!permissions.canPublish} />
+                    <Button variant="outline" size="icon" onClick={() => handleOpenEdit(item)} disabled={!permissions.canEdit}>
                       <Pencil className="w-4 h-4" />
                     </Button>
-                    <Button
-                      variant="destructive"
-                      size="icon"
-                      onClick={() => handleDelete(item.id)}
-                      disabled={!permissions.canDelete}
-                    >
+                    <Button variant="destructive" size="icon" onClick={() => handleDelete(item.id)} disabled={!permissions.canDelete}>
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
