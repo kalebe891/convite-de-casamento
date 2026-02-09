@@ -298,7 +298,7 @@ export type Database = {
           created_at: string | null
           dietary_restrictions: string | null
           guest_email: string | null
-          guest_id: string | null
+          guest_id: string
           guest_name: string
           guest_phone: string | null
           id: string
@@ -315,7 +315,7 @@ export type Database = {
           created_at?: string | null
           dietary_restrictions?: string | null
           guest_email?: string | null
-          guest_id?: string | null
+          guest_id: string
           guest_name: string
           guest_phone?: string | null
           id?: string
@@ -332,7 +332,7 @@ export type Database = {
           created_at?: string | null
           dietary_restrictions?: string | null
           guest_email?: string | null
-          guest_id?: string | null
+          guest_id?: string
           guest_name?: string
           guest_phone?: string | null
           id?: string
