@@ -51,6 +51,7 @@ const Checkin = () => {
         const { data, error } = await supabase
           .from("guests")
           .select("id, name, email, phone, status, checked_in_at")
+          .is("archived_at", null)
           .order("name");
 
         if (error) throw error;
