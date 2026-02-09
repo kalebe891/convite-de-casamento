@@ -777,14 +777,27 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      claim_gift: {
-        Args: { p_gift_id: string; p_guest_id: string }
-        Returns: {
-          error_code: string
-          gift_name: string
-          success: boolean
-        }[]
-      }
+      claim_gift:
+        | {
+            Args: { p_gift_id: string; p_guest_id: string }
+            Returns: {
+              error_code: string
+              gift_name: string
+              success: boolean
+            }[]
+          }
+        | {
+            Args: {
+              p_allow_multiple?: boolean
+              p_gift_id: string
+              p_guest_id: string
+            }
+            Returns: {
+              error_code: string
+              gift_name: string
+              success: boolean
+            }[]
+          }
       cleanup_archived_guests: { Args: never; Returns: number }
       has_role: { Args: { _role: string; _user_id: string }; Returns: boolean }
       has_table_permission: {
