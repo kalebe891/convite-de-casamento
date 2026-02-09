@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Trash2, Plus, Pencil, X } from "lucide-react";
 import { getSafeErrorMessage } from "@/lib/errorHandling";
@@ -24,6 +25,7 @@ interface GiftManagerProps {
 const GiftManager = ({ permissions }: GiftManagerProps) => {
   const { toast } = useToast();
   const [items, setItems] = useState<any[]>([]);
+  const [invitations, setInvitations] = useState<any[]>([]);
   const [weddingId, setWeddingId] = useState<string | null>(null);
   const [showGiftsSection, setShowGiftsSection] = useState<boolean>(true);
   const [newItem, setNewItem] = useState({ 
@@ -39,6 +41,7 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
     description: "",
     link: "",
     is_public: true,
+    selected_by_invitation_id: "" as string | null,
   });
 
   useEffect(() => {
@@ -63,6 +66,13 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
         .eq("wedding_id", wedding.id)
         .order("gift_name", { ascending: true });
       setItems(itemsData || []);
+
+      const { data: invData } = await supabase
+        .from("invitations")
+        .select("id, guest_name")
+        .eq("wedding_id", wedding.id)
+        .order("guest_name");
+      setInvitations(invData || []);
     }
   };
 
@@ -107,6 +117,7 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
       description: item.description || "",
       link: item.link || "",
       is_public: item.is_public,
+      selected_by_invitation_id: item.selected_by_invitation_id || "",
     });
     setIsEditOpen(true);
   };
@@ -130,6 +141,7 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
         description: editItem.description.trim() || null,
         link: editItem.link.trim() || null,
         is_public: editItem.is_public,
+        selected_by_invitation_id: editItem.selected_by_invitation_id || null,
       })
       .eq("id", editingId);
 
@@ -262,6 +274,23 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
             <div className="flex items-center gap-2">
               <Switch checked={editItem.is_public} onCheckedChange={(checked) => setEditItem({ ...editItem, is_public: checked })} disabled={!permissions.canPublish} />
               <Label>Exibir publicamente</Label>
+            </div>
+            <div>
+              <Label>Vincular a convidado (opcional)</Label>
+              <Select
+                value={editItem.selected_by_invitation_id || "none"}
+                onValueChange={(val) => setEditItem({ ...editItem, selected_by_invitation_id: val === "none" ? "" : val })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Nenhum convidado vinculado" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Nenhum</SelectItem>
+                  {invitations.map((inv) => (
+                    <SelectItem key={inv.id} value={inv.id}>{inv.guest_name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="flex gap-2">
               <Button onClick={handleUpdate} disabled={!editItem.gift_name || !permissions.canEdit}>
