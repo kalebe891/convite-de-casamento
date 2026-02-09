@@ -71,7 +71,8 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
         .from("invitations")
         .select("id, guest_name, responded_at")
         .eq("wedding_id", wedding.id)
-        .order("guest_name");
+        .order("guest_name")
+        .limit(1000);
       // Deduplicate by guest_name, keeping the one with responded_at (or latest)
       const uniqueMap = new Map<string, any>();
       (invData || []).forEach((inv) => {
