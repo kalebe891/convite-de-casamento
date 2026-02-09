@@ -68,12 +68,47 @@ const InvitationsManager = () => {
         return;
       }
 
+      // Find the guest by phone (primary identifier)
+      const phone = validationResult.data.guestPhone?.trim();
+      const email = validationResult.data.guestEmail?.trim();
+      
+      let guestId: string | null = null;
+      
+      if (phone) {
+        const { data: guestByPhone } = await supabase
+          .from("guests")
+          .select("id")
+          .eq("phone", phone)
+          .single();
+        guestId = guestByPhone?.id || null;
+      }
+      
+      if (!guestId && email) {
+        const { data: guestByEmail } = await supabase
+          .from("guests")
+          .select("id")
+          .eq("email", email)
+          .single();
+        guestId = guestByEmail?.id || null;
+      }
+
+      if (!guestId) {
+        toast({
+          title: "Erro",
+          description: "Convidado não encontrado na lista de convidados. Cadastre-o primeiro.",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
       const uniqueCode = generateUniqueCode();
       const { error } = await supabase.from("invitations").insert({
         wedding_id: weddingId,
+        guest_id: guestId,
         guest_name: validationResult.data.guestName.trim(),
-        guest_email: validationResult.data.guestEmail?.trim() || null,
-        guest_phone: validationResult.data.guestPhone?.trim() || null,
+        guest_email: email || null,
+        guest_phone: phone || null,
         unique_code: uniqueCode,
       });
 
