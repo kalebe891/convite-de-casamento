@@ -67,21 +67,51 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
         .order("gift_name", { ascending: true });
       setItems(itemsData || []);
 
+      // Fetch invitations for mapping
       const { data: invData } = await supabase
         .from("invitations")
         .select("id, guest_name, responded_at")
         .eq("wedding_id", wedding.id)
         .order("guest_name")
         .limit(1000);
-      // Deduplicate by guest_name, keeping the one with responded_at (or latest)
-      const uniqueMap = new Map<string, any>();
+
+      // Fetch all guests from guests table
+      const { data: guestsData } = await supabase
+        .from("guests")
+        .select("id, name")
+        .order("name")
+        .limit(1000);
+
+      // Build invitation lookup by guest_name (prefer responded ones)
+      const invByName = new Map<string, any>();
       (invData || []).forEach((inv) => {
-        const existing = uniqueMap.get(inv.guest_name);
+        const existing = invByName.get(inv.guest_name);
         if (!existing || (inv.responded_at && !existing.responded_at)) {
-          uniqueMap.set(inv.guest_name, inv);
+          invByName.set(inv.guest_name, inv);
         }
       });
-      setInvitations(Array.from(uniqueMap.values()));
+
+      // Merge: use all guests, attach invitation_id if available
+      const mergedMap = new Map<string, any>();
+      (guestsData || []).forEach((guest) => {
+        const inv = invByName.get(guest.name);
+        mergedMap.set(guest.name, {
+          id: inv?.id || guest.id,
+          guest_name: guest.name,
+          has_invitation: !!inv,
+        });
+      });
+      // Also add any invitations not matched to a guest
+      (invData || []).forEach((inv) => {
+        if (!mergedMap.has(inv.guest_name)) {
+          mergedMap.set(inv.guest_name, {
+            id: inv.id,
+            guest_name: inv.guest_name,
+            has_invitation: true,
+          });
+        }
+      });
+      setInvitations(Array.from(mergedMap.values()).sort((a, b) => a.guest_name.localeCompare(b.guest_name)));
     }
   };
 
@@ -296,7 +326,9 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
                 <SelectContent>
                   <SelectItem value="none">Nenhum</SelectItem>
                   {invitations.map((inv) => (
-                    <SelectItem key={inv.id} value={inv.id}>{inv.guest_name}</SelectItem>
+                    <SelectItem key={inv.id} value={inv.id}>
+                      {inv.guest_name}{!inv.has_invitation ? " (sem convite)" : ""}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
