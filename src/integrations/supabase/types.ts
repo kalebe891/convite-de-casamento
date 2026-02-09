@@ -777,12 +777,21 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      claim_gift: {
+        Args: { p_gift_id: string; p_guest_id: string }
+        Returns: {
+          error_code: string
+          gift_name: string
+          success: boolean
+        }[]
+      }
       cleanup_archived_guests: { Args: never; Returns: number }
       has_role: { Args: { _role: string; _user_id: string }; Returns: boolean }
       has_table_permission: {
         Args: { _menu_key: string; _permission_type: string; _user_id: string }
         Returns: boolean
       }
+      unclaim_gift: { Args: { p_guest_id: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "couple" | "planner" | "cerimonial"

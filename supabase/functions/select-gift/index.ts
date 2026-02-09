@@ -8,7 +8,6 @@ const corsHeaders = {
 interface SelectGiftRequest {
   guest_id: string;
   gift_id: string | null;
-  // Legacy support
   invitation_id?: string;
 }
 
@@ -28,36 +27,26 @@ Deno.serve(async (req) => {
     const body = await req.json();
     let { guest_id, gift_id, invitation_id } = body as SelectGiftRequest;
 
-    // Legacy: if invitation_id provided but not guest_id, resolve it
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Legacy: resolve invitation_id → guest_id
     if (!guest_id && invitation_id) {
-      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-      const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-      const supabase = createClient(supabaseUrl, supabaseServiceKey);
-      
       const { data: inv } = await supabase
         .from('invitations')
         .select('guest_id')
         .eq('id', invitation_id)
         .single();
-      
-      if (inv?.guest_id) {
-        guest_id = inv.guest_id;
-      }
+      if (inv?.guest_id) guest_id = inv.guest_id;
     }
 
     if (!guest_id || typeof guest_id !== 'string') {
-      console.error('[select-gift] guest_id obrigatório');
       return new Response(
         JSON.stringify({ error: 'Guest ID obrigatório' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-    console.log('[select-gift] Processando seleção para guest:', guest_id);
 
     // Verificar se guest existe e não está arquivado
     const { data: guest, error: guestError } = await supabase
@@ -68,24 +57,19 @@ Deno.serve(async (req) => {
       .single();
 
     if (guestError || !guest) {
-      console.error('[select-gift] Guest não encontrado:', guestError);
       return new Response(
         JSON.stringify({ error: 'Convidado não encontrado' }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Se gift_id = null → desmarcar presente atual
+    // DESMARCAR presente
     if (!gift_id) {
       console.log('[select-gift] Desmarcando presente para:', guest.name);
-      
-      const { error: clearError } = await supabase
-        .from('gift_items')
-        .update({ selected_by_guest_id: null, selected_by_invitation_id: null })
-        .eq('selected_by_guest_id', guest_id);
+      const { error: clearError } = await supabase.rpc('unclaim_gift', { p_guest_id: guest_id });
 
       if (clearError) {
-        console.error('[select-gift] Erro ao desmarcar presente:', clearError);
+        console.error('[select-gift] Erro ao desmarcar:', clearError);
         return new Response(
           JSON.stringify({ error: 'Erro ao desmarcar presente' }),
           { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -98,62 +82,49 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Verificar se este guest já tem um presente selecionado
-    const { data: existingGift, error: checkError } = await supabase
-      .from('gift_items')
-      .select('id, gift_name')
-      .eq('selected_by_guest_id', guest_id)
-      .single();
+    // SELECIONAR presente via RPC atômica
+    console.log('[select-gift] Tentando reservar presente:', gift_id, 'para', guest.name);
 
-    if (checkError && checkError.code !== 'PGRST116') {
-      console.error('[select-gift] Erro ao verificar presente existente:', checkError);
-    }
-
-    if (existingGift) {
-      console.warn('[select-gift] Guest já possui presente selecionado:', existingGift.gift_name);
-      return new Response(
-        JSON.stringify({ 
-          error: 'Você já selecionou um presente. Para alterar, solicite um novo link.',
-          current_gift: existingGift.gift_name
-        }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    console.log('[select-gift] Tentando reservar presente:', gift_id);
-
-    // Tentar reservar presente que esteja disponível
-    const { data, error } = await supabase
-      .from('gift_items')
-      .update({ selected_by_guest_id: guest_id, selected_by_invitation_id: null })
-      .eq('id', gift_id)
-      .is('selected_by_guest_id', null)
-      .select('gift_name');
+    const { data, error } = await supabase.rpc('claim_gift', {
+      p_gift_id: gift_id,
+      p_guest_id: guest_id,
+    });
 
     if (error) {
-      console.error('[select-gift] Erro ao reservar presente:', error);
+      console.error('[select-gift] Erro na RPC claim_gift:', error);
       return new Response(
         JSON.stringify({ error: 'Erro ao processar seleção' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    if (!data || data.length === 0) {
-      console.warn('[select-gift] Presente indisponível:', gift_id);
-      return new Response(
-        JSON.stringify({ error: 'Presente indisponível. Alguém acabou de escolher este presente.' }),
-        { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    const result = data?.[0];
+
+    if (!result?.success) {
+      if (result?.error_code === 'ALREADY_HAS_GIFT') {
+        console.warn('[select-gift] Guest já possui presente:', result.gift_name);
+        return new Response(
+          JSON.stringify({
+            error: 'Você já selecionou um presente. Para alterar, solicite um novo link.',
+            current_gift: result.gift_name,
+          }),
+          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      if (result?.error_code === 'GIFT_UNAVAILABLE') {
+        console.warn('[select-gift] Presente indisponível:', gift_id);
+        return new Response(
+          JSON.stringify({ error: 'Este presente acabou de ser selecionado por outro convidado.' }),
+          { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
     }
 
-    console.log('[select-gift] Presente reservado com sucesso:', data[0].gift_name, 'para', guest.name);
+    console.log('[select-gift] Presente reservado:', result.gift_name, 'para', guest.name);
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        gift_id,
-        gift_name: data[0].gift_name
-      }),
+      JSON.stringify({ success: true, gift_id, gift_name: result.gift_name }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
