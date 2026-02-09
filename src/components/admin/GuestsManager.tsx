@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { guestSchema } from "@/lib/validationSchemas";
 import { getSafeErrorMessage } from "@/lib/errorHandling";
+import { logAdminAction } from "@/lib/adminLogger";
 import GuestMessagesDialog from "./GuestMessagesDialog";
 
 type SortField = "name" | "phone" | "email" | "status";
@@ -115,6 +116,7 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
     const { data, error } = await supabase
       .from("guests")
       .select("*")
+      .is("archived_at", null)
       .order("name", { ascending: true });
 
     if (error) {
@@ -279,82 +281,24 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
       return;
     }
 
-    // Get guest email first
     const guest = guests.find(g => g.id === id);
     if (!guest) {
       toast.error("Convidado não encontrado");
       return;
     }
 
-    // Get related invitations using guest_id FK
-    const { data: invitations } = await supabase
-      .from("invitations")
-      .select("id")
-      .eq("guest_id", id);
-
-    // Unassociate gifts from invitations
-    if (invitations && invitations.length > 0) {
-      const invitationIds = invitations.map(inv => inv.id);
-      const { error: giftError } = await supabase
-        .from("gift_items")
-        .update({ selected_by_invitation_id: null })
-        .in("selected_by_invitation_id", invitationIds);
-
-      if (giftError) {
-        console.error("Error unassociating gifts:", giftError);
-      }
-    }
-
-    // Delete related rsvp_tokens
-    const { error: tokenError } = await supabase
-      .from("rsvp_tokens")
-      .delete()
-      .eq("guest_id", id);
-
-    if (tokenError) {
-      console.error("Error deleting tokens:", tokenError);
-    }
-
-    // Delete related invitations using guest_id
-    const { error: invitationError } = await supabase
-      .from("invitations")
-      .delete()
-      .eq("guest_id", id);
-
-    if (invitationError) {
-      console.error("Error deleting invitation:", invitationError);
-    }
-
-    // Delete the guest
-    const { error } = await supabase.from("guests").delete().eq("id", id);
+    // Soft delete: archive the guest
+    const { error } = await supabase
+      .from("guests")
+      .update({ archived_at: new Date().toISOString() })
+      .eq("id", id);
 
     if (error) {
-      console.error("Error deleting guest:", error);
+      console.error("Error archiving guest:", error);
       toast.error(getSafeErrorMessage(error));
     } else {
-      // Clean orphaned invitations (invitations without a valid guest_id)
-      const { data: orphanedInvitations } = await supabase
-        .from("invitations")
-        .select("id")
-        .is("guest_id", null);
-
-      if (orphanedInvitations && orphanedInvitations.length > 0) {
-        const orphanedIds = orphanedInvitations.map(inv => inv.id);
-
-        // Unassociate gifts from orphaned invitations
-        await supabase
-          .from("gift_items")
-          .update({ selected_by_invitation_id: null })
-          .in("selected_by_invitation_id", orphanedIds);
-
-        // Delete orphaned invitations
-        await supabase
-          .from("invitations")
-          .delete()
-          .in("id", orphanedIds);
-      }
-
-      toast.success("Convidado excluído com sucesso!");
+      await logAdminAction({ action: "update", tableName: "guests", recordId: id, oldData: guest, newData: { archived_at: new Date().toISOString() } });
+      toast.success("Convidado arquivado com sucesso!");
       fetchGuests();
     }
   };

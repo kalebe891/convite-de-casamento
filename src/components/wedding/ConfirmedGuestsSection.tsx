@@ -45,12 +45,14 @@ const ConfirmedGuestsSection = ({ weddingId }: ConfirmedGuestsSectionProps) => {
         .from("guests")
         .select("id, name, email, phone")
         .eq("status", "confirmed")
+        .is("archived_at", null)
         .order("name");
 
       // Buscar total de convidados
       const { data: allGuestsData } = await supabase
         .from("guests")
-        .select("id");
+        .select("id")
+        .is("archived_at", null);
 
       // Transformar dados para o formato esperado
       const formattedGuests = (confirmedGuestsData || []).map(guest => ({

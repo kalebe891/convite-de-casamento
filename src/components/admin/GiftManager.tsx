@@ -71,6 +71,7 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
       const { data: guestsData } = await supabase
         .from("guests")
         .select("id, name")
+        .is("archived_at", null)
         .order("name")
         .limit(1000);
 

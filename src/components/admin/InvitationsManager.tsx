@@ -79,6 +79,7 @@ const InvitationsManager = () => {
           .from("guests")
           .select("id")
           .eq("phone", phone)
+          .is("archived_at", null)
           .single();
         guestId = guestByPhone?.id || null;
       }
@@ -88,6 +89,7 @@ const InvitationsManager = () => {
           .from("guests")
           .select("id")
           .eq("email", email)
+          .is("archived_at", null)
           .single();
         guestId = guestByEmail?.id || null;
       }

@@ -263,6 +263,7 @@ export type Database = {
       }
       guests: {
         Row: {
+          archived_at: string | null
           checked_in_at: string | null
           created_at: string
           email: string | null
@@ -272,6 +273,7 @@ export type Database = {
           status: string
         }
         Insert: {
+          archived_at?: string | null
           checked_in_at?: string | null
           created_at?: string
           email?: string | null
@@ -281,6 +283,7 @@ export type Database = {
           status?: string
         }
         Update: {
+          archived_at?: string | null
           checked_in_at?: string | null
           created_at?: string
           email?: string | null
