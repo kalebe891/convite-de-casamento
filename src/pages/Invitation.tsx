@@ -236,7 +236,7 @@ const Invitation = () => {
 
       // Redirecionar após 7 segundos
       setTimeout(() => {
-        window.location.href = "https://convite-casamento-beatriz-diogo.lovable.app/";
+        window.location.href = "https://convite-de-casamento.lovable.app/";
       }, 7000);
     } catch (error) {
       console.error('[Invitation] Erro ao responder RSVP:', error);
