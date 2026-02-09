@@ -69,10 +69,18 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
 
       const { data: invData } = await supabase
         .from("invitations")
-        .select("id, guest_name")
+        .select("id, guest_name, responded_at")
         .eq("wedding_id", wedding.id)
         .order("guest_name");
-      setInvitations(invData || []);
+      // Deduplicate by guest_name, keeping the one with responded_at (or latest)
+      const uniqueMap = new Map<string, any>();
+      (invData || []).forEach((inv) => {
+        const existing = uniqueMap.get(inv.guest_name);
+        if (!existing || (inv.responded_at && !existing.responded_at)) {
+          uniqueMap.set(inv.guest_name, inv);
+        }
+      });
+      setInvitations(Array.from(uniqueMap.values()));
     }
   };
 
