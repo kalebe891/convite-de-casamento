@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Mail, MessageSquare, Trash2, Copy, ExternalLink, RefreshCw, Pencil, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { Mail, MessageSquare, Trash2, Copy, ExternalLink, RefreshCw, Pencil, ArrowUpDown, ArrowUp, ArrowDown, ArchiveRestore, ChevronDown, ChevronUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { guestSchema } from "@/lib/validationSchemas";
@@ -25,6 +25,7 @@ interface Guest {
   email: string | null;
   status: string;
   created_at: string;
+  archived_at: string | null;
 }
 
 interface GuestsManagerProps {
@@ -34,6 +35,7 @@ interface GuestsManagerProps {
     canEdit: boolean;
     canDelete: boolean;
     canPublish: boolean;
+    isAdmin?: boolean;
   };
 }
 
@@ -58,6 +60,8 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
     phone: "",
     email: "",
   });
+  const [archivedGuests, setArchivedGuests] = useState<Guest[]>([]);
+  const [showArchived, setShowArchived] = useState(false);
 
   // Sort guests based on current sort field and direction
   const sortedGuests = useMemo(() => {
@@ -127,10 +131,21 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
     }
   };
 
+  const fetchArchivedGuests = async () => {
+    const { data, error } = await supabase
+      .from("guests")
+      .select("*")
+      .not("archived_at", "is", null)
+      .order("archived_at", { ascending: false });
+
+    if (!error) {
+      setArchivedGuests(data || []);
+    }
+  };
   useEffect(() => {
     fetchGuests();
+    fetchArchivedGuests();
 
-    // Subscribe to realtime changes
     const channel = supabase
       .channel("guests-changes")
       .on(
@@ -142,6 +157,7 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
         },
         () => {
           fetchGuests();
+          fetchArchivedGuests();
         }
       )
       .subscribe();
@@ -300,6 +316,30 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
       await logAdminAction({ action: "update", tableName: "guests", recordId: id, oldData: guest, newData: { archived_at: new Date().toISOString() } });
       toast.success("Convidado arquivado com sucesso!");
       fetchGuests();
+    }
+  };
+
+  const handleRestoreGuest = async (id: string) => {
+    const guest = archivedGuests.find(g => g.id === id);
+    if (!guest) return;
+
+    const { error } = await supabase
+      .from("guests")
+      .update({ archived_at: null })
+      .eq("id", id);
+
+    if (error) {
+      console.error("Error restoring guest:", error);
+      if (error.message?.includes("idx_guests_unique_active_phone")) {
+        toast.error("Já existe um convidado ativo com este telefone. Remova o duplicado antes de restaurar.");
+      } else {
+        toast.error(getSafeErrorMessage(error));
+      }
+    } else {
+      await logAdminAction({ action: "update", tableName: "guests", recordId: id, oldData: { archived_at: guest.archived_at }, newData: { archived_at: null } });
+      toast.success("Convidado restaurado com sucesso!");
+      fetchGuests();
+      fetchArchivedGuests();
     }
   };
 
@@ -655,6 +695,61 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Archived Guests Section */}
+      {archivedGuests.length > 0 && (permissions.isAdmin || permissions.canDelete) && (
+        <Card>
+          <CardHeader>
+            <div
+              className="flex justify-between items-center cursor-pointer"
+              onClick={() => setShowArchived(!showArchived)}
+            >
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Convidados Arquivados ({archivedGuests.length})
+              </CardTitle>
+              {showArchived ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            </div>
+          </CardHeader>
+          {showArchived && (
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nome</TableHead>
+                    <TableHead>Telefone</TableHead>
+                    <TableHead>Arquivado em</TableHead>
+                    <TableHead>Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {archivedGuests.map((guest) => (
+                    <TableRow key={guest.id} className="opacity-60">
+                      <TableCell>{guest.name}</TableCell>
+                      <TableCell>{guest.phone || "-"}</TableCell>
+                      <TableCell>
+                        {guest.archived_at
+                          ? new Date(guest.archived_at).toLocaleDateString("pt-BR")
+                          : "-"}
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleRestoreGuest(guest.id)}
+                          title="Restaurar convidado"
+                        >
+                          <ArchiveRestore className="h-4 w-4 mr-1" />
+                          Restaurar
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          )}
+        </Card>
+      )}
 
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
         <DialogContent>
