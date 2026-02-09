@@ -298,6 +298,7 @@ export type Database = {
           created_at: string | null
           dietary_restrictions: string | null
           guest_email: string | null
+          guest_id: string | null
           guest_name: string
           guest_phone: string | null
           id: string
@@ -314,6 +315,7 @@ export type Database = {
           created_at?: string | null
           dietary_restrictions?: string | null
           guest_email?: string | null
+          guest_id?: string | null
           guest_name: string
           guest_phone?: string | null
           id?: string
@@ -330,6 +332,7 @@ export type Database = {
           created_at?: string | null
           dietary_restrictions?: string | null
           guest_email?: string | null
+          guest_id?: string | null
           guest_name?: string
           guest_phone?: string | null
           id?: string
@@ -341,6 +344,13 @@ export type Database = {
           wedding_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "invitations_guest_id_fkey"
+            columns: ["guest_id"]
+            isOneToOne: false
+            referencedRelation: "guests"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "invitations_wedding_id_fkey"
             columns: ["wedding_id"]
