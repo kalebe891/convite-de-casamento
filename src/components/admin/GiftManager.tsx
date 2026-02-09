@@ -61,57 +61,38 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
         .from("gift_items")
         .select(`
           *,
-          invitation:invitations(guest_name)
+          invitation:invitations(guest_id, guest:guests(id, name))
         `)
         .eq("wedding_id", wedding.id)
         .order("gift_name", { ascending: true });
       setItems(itemsData || []);
 
-      // Fetch invitations for mapping
-      const { data: invData } = await supabase
-        .from("invitations")
-        .select("id, guest_name, responded_at")
-        .eq("wedding_id", wedding.id)
-        .order("guest_name")
-        .limit(1000);
-
-      // Fetch all guests from guests table
+      // Fetch all guests as source of truth for linking
       const { data: guestsData } = await supabase
         .from("guests")
         .select("id, name")
         .order("name")
         .limit(1000);
 
-      // Build invitation lookup by guest_name (prefer responded ones)
-      const invByName = new Map<string, any>();
-      (invData || []).forEach((inv) => {
-        const existing = invByName.get(inv.guest_name);
-        if (!existing || (inv.responded_at && !existing.responded_at)) {
-          invByName.set(inv.guest_name, inv);
-        }
-      });
+      // Fetch invitations to know which guests have invitations
+      const { data: invData } = await supabase
+        .from("invitations")
+        .select("id, guest_id")
+        .eq("wedding_id", wedding.id)
+        .limit(1000);
 
-      // Merge: use all guests, attach invitation_id if available
-      const mergedMap = new Map<string, any>();
-      (guestsData || []).forEach((guest) => {
-        const inv = invByName.get(guest.name);
-        mergedMap.set(guest.name, {
-          id: inv?.id || guest.id,
-          guest_name: guest.name,
-          has_invitation: !!inv,
-        });
-      });
-      // Also add any invitations not matched to a guest
-      (invData || []).forEach((inv) => {
-        if (!mergedMap.has(inv.guest_name)) {
-          mergedMap.set(inv.guest_name, {
-            id: inv.id,
-            guest_name: inv.guest_name,
-            has_invitation: true,
-          });
-        }
-      });
-      setInvitations(Array.from(mergedMap.values()).sort((a, b) => a.guest_name.localeCompare(b.guest_name)));
+      // Build a set of guest_ids that have invitations
+      const guestsWithInvitation = new Set(
+        (invData || []).filter(inv => inv.guest_id).map(inv => inv.guest_id)
+      );
+
+      // Use guests directly — no name-based merge
+      const guestsList = (guestsData || []).map((guest) => ({
+        id: guest.id,
+        guest_name: guest.name,
+        has_invitation: guestsWithInvitation.has(guest.id),
+      }));
+      setInvitations(guestsList.sort((a, b) => a.guest_name.localeCompare(b.guest_name)));
     }
   };
 
@@ -364,8 +345,8 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
                     {item.link && (
                       <a href={item.link} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline">Ver link</a>
                     )}
-                    {item.invitation?.guest_name && (
-                      <p className="text-sm text-green-600 dark:text-green-400 font-medium mt-1">🎁 Selecionado por: {item.invitation.guest_name}</p>
+                    {item.invitation?.guest?.name && (
+                      <p className="text-sm text-green-600 dark:text-green-400 font-medium mt-1">🎁 Selecionado por: {item.invitation.guest.name}</p>
                     )}
                   </div>
                   <div className="flex items-center gap-2">

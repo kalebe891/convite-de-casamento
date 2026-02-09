@@ -286,11 +286,11 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
       return;
     }
 
-    // Get related invitations first
+    // Get related invitations using guest_id FK
     const { data: invitations } = await supabase
       .from("invitations")
       .select("id")
-      .or(`guest_email.eq.${guest.email},guest_phone.eq.${guest.phone}`);
+      .eq("guest_id", id);
 
     // Unassociate gifts from invitations
     if (invitations && invitations.length > 0) {
@@ -315,16 +315,14 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
       console.error("Error deleting tokens:", tokenError);
     }
 
-    // Delete related invitations
-    if (guest.email || guest.phone) {
-      const { error: invitationError } = await supabase
-        .from("invitations")
-        .delete()
-        .or(`guest_email.eq.${guest.email},guest_phone.eq.${guest.phone}`);
+    // Delete related invitations using guest_id
+    const { error: invitationError } = await supabase
+      .from("invitations")
+      .delete()
+      .eq("guest_id", id);
 
-      if (invitationError) {
-        console.error("Error deleting invitation:", invitationError);
-      }
+    if (invitationError) {
+      console.error("Error deleting invitation:", invitationError);
     }
 
     // Delete the guest
@@ -334,42 +332,26 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
       console.error("Error deleting guest:", error);
       toast.error(getSafeErrorMessage(error));
     } else {
-      // Clean orphaned invitations after deleting guest
-      const { data: allInvitations } = await supabase
+      // Clean orphaned invitations (invitations without a valid guest_id)
+      const { data: orphanedInvitations } = await supabase
         .from("invitations")
-        .select("id, guest_email, guest_phone");
+        .select("id")
+        .is("guest_id", null);
 
-      if (allInvitations) {
-        const { data: allGuests } = await supabase
-          .from("guests")
-          .select("email, phone");
+      if (orphanedInvitations && orphanedInvitations.length > 0) {
+        const orphanedIds = orphanedInvitations.map(inv => inv.id);
 
-        if (allGuests) {
-          const guestEmails = new Set(allGuests.map(g => g.email).filter(Boolean));
-          const guestPhones = new Set(allGuests.map(g => g.phone).filter(Boolean));
+        // Unassociate gifts from orphaned invitations
+        await supabase
+          .from("gift_items")
+          .update({ selected_by_invitation_id: null })
+          .in("selected_by_invitation_id", orphanedIds);
 
-          const orphanedIds = allInvitations
-            .filter(inv => {
-              const hasEmailMatch = inv.guest_email && guestEmails.has(inv.guest_email);
-              const hasPhoneMatch = inv.guest_phone && guestPhones.has(inv.guest_phone);
-              return !hasEmailMatch && !hasPhoneMatch;
-            })
-            .map(inv => inv.id);
-
-          if (orphanedIds.length > 0) {
-            // Unassociate gifts from orphaned invitations
-            await supabase
-              .from("gift_items")
-              .update({ selected_by_invitation_id: null })
-              .in("selected_by_invitation_id", orphanedIds);
-
-            // Delete orphaned invitations
-            await supabase
-              .from("invitations")
-              .delete()
-              .in("id", orphanedIds);
-          }
-        }
+        // Delete orphaned invitations
+        await supabase
+          .from("invitations")
+          .delete()
+          .in("id", orphanedIds);
       }
 
       toast.success("Convidado excluído com sucesso!");
@@ -470,11 +452,11 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
 
       const invitationMessage = (weddingData as any)?.invitation_message;
       
-      // Get invitation and selected gift for this guest
+      // Get invitation for this guest using guest_id
       const { data: invitation } = await supabase
         .from("invitations")
         .select("id")
-        .or(`guest_email.eq.${guest.email},guest_phone.eq.${guest.phone}`)
+        .eq("guest_id", guest.id)
         .single();
 
       let giftInfo = "";
