@@ -6,18 +6,18 @@ const corsHeaders = {
 };
 
 interface SelectGiftRequest {
-  invitation_id: string;
+  guest_id: string;
   gift_id: string | null;
+  // Legacy support
+  invitation_id?: string;
 }
 
 Deno.serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Validar método
     if (req.method !== 'POST') {
       return new Response(
         JSON.stringify({ error: 'Método não permitido' }),
@@ -25,49 +25,64 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Parse body
     const body = await req.json();
-    const { invitation_id, gift_id } = body as SelectGiftRequest;
+    let { guest_id, gift_id, invitation_id } = body as SelectGiftRequest;
 
-    // Validação
-    if (!invitation_id || typeof invitation_id !== 'string') {
-      console.error('[select-gift] invitation_id obrigatório');
+    // Legacy: if invitation_id provided but not guest_id, resolve it
+    if (!guest_id && invitation_id) {
+      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+      const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+      const supabase = createClient(supabaseUrl, supabaseServiceKey);
+      
+      const { data: inv } = await supabase
+        .from('invitations')
+        .select('guest_id')
+        .eq('id', invitation_id)
+        .single();
+      
+      if (inv?.guest_id) {
+        guest_id = inv.guest_id;
+      }
+    }
+
+    if (!guest_id || typeof guest_id !== 'string') {
+      console.error('[select-gift] guest_id obrigatório');
       return new Response(
-        JSON.stringify({ error: 'Invitation ID obrigatório' }),
+        JSON.stringify({ error: 'Guest ID obrigatório' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Criar cliente Supabase
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    console.log('[select-gift] Processando seleção para invitation:', invitation_id);
+    console.log('[select-gift] Processando seleção para guest:', guest_id);
 
-    // Verificar se convite existe
-    const { data: invitation, error: inviteError } = await supabase
-      .from('invitations')
-      .select('id, guest_name')
-      .eq('id', invitation_id)
+    // Verificar se guest existe e não está arquivado
+    const { data: guest, error: guestError } = await supabase
+      .from('guests')
+      .select('id, name')
+      .eq('id', guest_id)
+      .is('archived_at', null)
       .single();
 
-    if (inviteError || !invitation) {
-      console.error('[select-gift] Convite não encontrado:', inviteError);
+    if (guestError || !guest) {
+      console.error('[select-gift] Guest não encontrado:', guestError);
       return new Response(
-        JSON.stringify({ error: 'Convite não encontrado' }),
+        JSON.stringify({ error: 'Convidado não encontrado' }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     // Se gift_id = null → desmarcar presente atual
     if (!gift_id) {
-      console.log('[select-gift] Desmarcando presente para:', invitation.guest_name);
+      console.log('[select-gift] Desmarcando presente para:', guest.name);
       
       const { error: clearError } = await supabase
         .from('gift_items')
-        .update({ selected_by_invitation_id: null })
-        .eq('selected_by_invitation_id', invitation_id);
+        .update({ selected_by_guest_id: null, selected_by_invitation_id: null })
+        .eq('selected_by_guest_id', guest_id);
 
       if (clearError) {
         console.error('[select-gift] Erro ao desmarcar presente:', clearError);
@@ -83,11 +98,11 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Verificar se este convite já tem um presente selecionado
+    // Verificar se este guest já tem um presente selecionado
     const { data: existingGift, error: checkError } = await supabase
       .from('gift_items')
       .select('id, gift_name')
-      .eq('selected_by_invitation_id', invitation_id)
+      .eq('selected_by_guest_id', guest_id)
       .single();
 
     if (checkError && checkError.code !== 'PGRST116') {
@@ -95,7 +110,7 @@ Deno.serve(async (req) => {
     }
 
     if (existingGift) {
-      console.warn('[select-gift] Convite já possui presente selecionado:', existingGift.gift_name);
+      console.warn('[select-gift] Guest já possui presente selecionado:', existingGift.gift_name);
       return new Response(
         JSON.stringify({ 
           error: 'Você já selecionou um presente. Para alterar, solicite um novo link.',
@@ -110,9 +125,9 @@ Deno.serve(async (req) => {
     // Tentar reservar presente que esteja disponível
     const { data, error } = await supabase
       .from('gift_items')
-      .update({ selected_by_invitation_id: invitation_id })
+      .update({ selected_by_guest_id: guest_id, selected_by_invitation_id: null })
       .eq('id', gift_id)
-      .is('selected_by_invitation_id', null)
+      .is('selected_by_guest_id', null)
       .select('gift_name');
 
     if (error) {
@@ -131,7 +146,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log('[select-gift] Presente reservado com sucesso:', data[0].gift_name, 'para', invitation.guest_name);
+    console.log('[select-gift] Presente reservado com sucesso:', data[0].gift_name, 'para', guest.name);
 
     return new Response(
       JSON.stringify({ 

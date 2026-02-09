@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 
 interface InvitationGiftsProps {
   weddingId: string | null;
-  invitationId: string | null;
+  guestId: string | null;
 }
 
 interface GiftItem {
@@ -18,10 +18,10 @@ interface GiftItem {
   gift_name: string;
   description: string | null;
   link: string | null;
-  selected_by_invitation_id: string | null;
+  selected_by_guest_id: string | null;
 }
 
-const InvitationGifts = ({ weddingId, invitationId }: InvitationGiftsProps) => {
+const InvitationGifts = ({ weddingId, guestId }: InvitationGiftsProps) => {
   const [gifts, setGifts] = useState<GiftItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedGift, setSelectedGift] = useState<string>("");
@@ -29,18 +29,17 @@ const InvitationGifts = ({ weddingId, invitationId }: InvitationGiftsProps) => {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (!weddingId || !invitationId) {
+    if (!weddingId || !guestId) {
       setLoading(false);
       return;
     }
 
     const fetchData = async () => {
-      // Fetch all gifts without is_public filter
       const { data, error } = await supabase
         .from("gift_items")
-        .select("*")
+        .select("id, gift_name, description, link, selected_by_guest_id")
         .eq("wedding_id", weddingId)
-        .or(`selected_by_invitation_id.is.null,selected_by_invitation_id.eq.${invitationId}`)
+        .or(`selected_by_guest_id.is.null,selected_by_guest_id.eq.${guestId}`)
         .order("display_order");
 
       if (error) {
@@ -48,8 +47,7 @@ const InvitationGifts = ({ weddingId, invitationId }: InvitationGiftsProps) => {
       } else {
         setGifts(data || []);
         
-        // Set the already selected gift if any
-        const alreadySelected = data?.find(g => g.selected_by_invitation_id === invitationId);
+        const alreadySelected = data?.find(g => g.selected_by_guest_id === guestId);
         if (alreadySelected) {
           setSelectedGift(alreadySelected.id);
         }
@@ -59,7 +57,6 @@ const InvitationGifts = ({ weddingId, invitationId }: InvitationGiftsProps) => {
 
     fetchData();
 
-    // Subscribe to realtime changes
     const channel = supabase
       .channel("invitation-gifts")
       .on(
@@ -79,12 +76,11 @@ const InvitationGifts = ({ weddingId, invitationId }: InvitationGiftsProps) => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [weddingId, invitationId]);
+  }, [weddingId, guestId]);
 
   const handleGiftSelection = async (giftId: string) => {
-    if (!invitationId || selecting) return;
+    if (!guestId || selecting) return;
 
-    // If clicking the same gift, unselect it
     const newGiftId = giftId === selectedGift ? null : giftId;
     
     setSelecting(true);
@@ -99,7 +95,7 @@ const InvitationGifts = ({ weddingId, invitationId }: InvitationGiftsProps) => {
             'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
           },
           body: JSON.stringify({
-            invitation_id: invitationId,
+            guest_id: guestId,
             gift_id: newGiftId,
           }),
         }
@@ -137,7 +133,7 @@ const InvitationGifts = ({ weddingId, invitationId }: InvitationGiftsProps) => {
     }
   };
 
-  if (!weddingId || !invitationId) {
+  if (!weddingId || !guestId) {
     return null;
   }
 
@@ -165,8 +161,8 @@ const InvitationGifts = ({ weddingId, invitationId }: InvitationGiftsProps) => {
               <RadioGroup value={selectedGift} onValueChange={handleGiftSelection}>
                 <div className="space-y-3">
                   {gifts.map((gift) => {
-                    const isSelectedByOther = gift.selected_by_invitation_id && gift.selected_by_invitation_id !== invitationId;
-                    const isSelectedByMe = gift.selected_by_invitation_id === invitationId;
+                    const isSelectedByOther = gift.selected_by_guest_id && gift.selected_by_guest_id !== guestId;
+                    const isSelectedByMe = gift.selected_by_guest_id === guestId;
 
                     return (
                       <div

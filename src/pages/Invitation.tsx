@@ -30,6 +30,7 @@ const rsvpResponseSchema = z.object({
 
 interface InvitationData {
   id: string;
+  guest_id: string;
   guest_name: string;
   attending: boolean | null;
   responded_at: string | null;
@@ -45,7 +46,7 @@ interface GiftItem {
   gift_name: string;
   description: string | null;
   link: string | null;
-  selected_by_invitation_id: string | null;
+  selected_by_guest_id: string | null;
 }
 
 const Invitation = () => {
@@ -147,9 +148,9 @@ const Invitation = () => {
       setLoadingGifts(true);
       const { data, error } = await supabase
         .from("gift_items")
-        .select("*")
+        .select("id, gift_name, description, link, selected_by_guest_id")
         .eq("wedding_id", weddingDetails.id)
-        .or(`selected_by_invitation_id.is.null,selected_by_invitation_id.eq.${invitationData.id}`)
+        .or(`selected_by_guest_id.is.null,selected_by_guest_id.eq.${invitationData.guest_id}`)
         .order("display_order");
 
       if (error) {
@@ -158,7 +159,7 @@ const Invitation = () => {
         setGifts(data || []);
         
         // Set already selected gift
-        const alreadySelected = data?.find(g => g.selected_by_invitation_id === invitationData.id);
+        const alreadySelected = data?.find(g => g.selected_by_guest_id === invitationData.guest_id);
         if (alreadySelected) {
           setSelectedGiftId(alreadySelected.id);
           setHasExistingGift(true);
@@ -212,7 +213,7 @@ const Invitation = () => {
               'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
             },
             body: JSON.stringify({
-              invitation_id: invitationData.id,
+              guest_id: invitationData.guest_id,
               gift_id: selectedGiftId,
             }),
           }
@@ -272,10 +273,10 @@ const Invitation = () => {
             'Content-Type': 'application/json',
             'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
           },
-          body: JSON.stringify({
-            invitation_id: invitationData.id,
-            gift_id: selectedGiftId || null,
-          }),
+           body: JSON.stringify({
+              guest_id: invitationData.guest_id,
+              gift_id: selectedGiftId || null,
+            }),
         }
       );
 
@@ -530,8 +531,8 @@ const Invitation = () => {
                   <RadioGroup value={selectedGiftId} onValueChange={setSelectedGiftId}>
                     <div className="space-y-3 pb-4">
                       {gifts.map((gift) => {
-                        const isSelectedByOther = gift.selected_by_invitation_id && gift.selected_by_invitation_id !== invitationData?.id;
-                        const isSelectedByMe = gift.selected_by_invitation_id === invitationData?.id;
+                        const isSelectedByOther = gift.selected_by_guest_id && gift.selected_by_guest_id !== invitationData?.guest_id;
+                        const isSelectedByMe = gift.selected_by_guest_id === invitationData?.guest_id;
 
                       return (
                         <div

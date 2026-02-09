@@ -41,7 +41,7 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
     description: "",
     link: "",
     is_public: true,
-    selected_by_invitation_id: "" as string | null,
+    selected_by_guest_id: "" as string | null,
   });
 
   useEffect(() => {
@@ -61,7 +61,7 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
         .from("gift_items")
         .select(`
           *,
-          invitation:invitations(guest_id, guest:guests(id, name))
+          guest:guests(id, name)
         `)
         .eq("wedding_id", wedding.id)
         .order("gift_name", { ascending: true });
@@ -138,7 +138,7 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
       description: item.description || "",
       link: item.link || "",
       is_public: item.is_public,
-      selected_by_invitation_id: item.selected_by_invitation_id || "",
+      selected_by_guest_id: item.selected_by_guest_id || "",
     });
     setIsEditOpen(true);
   };
@@ -162,7 +162,7 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
         description: editItem.description.trim() || null,
         link: editItem.link.trim() || null,
         is_public: editItem.is_public,
-        selected_by_invitation_id: editItem.selected_by_invitation_id || null,
+        selected_by_guest_id: editItem.selected_by_guest_id || null,
       })
       .eq("id", editingId);
 
@@ -299,8 +299,8 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
             <div>
               <Label>Vincular a convidado (opcional)</Label>
               <Select
-                value={editItem.selected_by_invitation_id || "none"}
-                onValueChange={(val) => setEditItem({ ...editItem, selected_by_invitation_id: val === "none" ? "" : val })}
+                value={editItem.selected_by_guest_id || "none"}
+                onValueChange={(val) => setEditItem({ ...editItem, selected_by_guest_id: val === "none" ? "" : val })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Nenhum convidado vinculado" />
@@ -346,8 +346,8 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
                     {item.link && (
                       <a href={item.link} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline">Ver link</a>
                     )}
-                    {item.invitation?.guest?.name && (
-                      <p className="text-sm text-green-600 dark:text-green-400 font-medium mt-1">🎁 Selecionado por: {item.invitation.guest.name}</p>
+                    {item.guest?.name && (
+                      <p className="text-sm text-green-600 dark:text-green-400 font-medium mt-1">🎁 Selecionado por: {item.guest.name}</p>
                     )}
                   </div>
                   <div className="flex items-center gap-2">
