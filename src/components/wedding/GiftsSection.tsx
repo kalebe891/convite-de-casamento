@@ -16,7 +16,7 @@ interface GiftItem {
   link: string | null;
   is_purchased: boolean | null;
   is_public: boolean | null;
-  selected_by_invitation_id: string | null;
+  selected_by_guest_id: string | null;
 }
 
 const GiftsSection = ({ weddingId }: GiftsSectionProps) => {
@@ -48,7 +48,7 @@ const GiftsSection = ({ weddingId }: GiftsSectionProps) => {
         .from("gift_items")
         .select(`
           *,
-          invitation:invitations(guest_name)
+          guest:guests(id, name)
         `)
         .eq("wedding_id", weddingId)
         .eq("is_public", true)

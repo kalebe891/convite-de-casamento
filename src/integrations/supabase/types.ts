@@ -217,6 +217,7 @@ export type Database = {
           is_public: boolean | null
           is_purchased: boolean | null
           link: string | null
+          selected_by_guest_id: string | null
           selected_by_invitation_id: string | null
           wedding_id: string | null
         }
@@ -229,6 +230,7 @@ export type Database = {
           is_public?: boolean | null
           is_purchased?: boolean | null
           link?: string | null
+          selected_by_guest_id?: string | null
           selected_by_invitation_id?: string | null
           wedding_id?: string | null
         }
@@ -241,10 +243,18 @@ export type Database = {
           is_public?: boolean | null
           is_purchased?: boolean | null
           link?: string | null
+          selected_by_guest_id?: string | null
           selected_by_invitation_id?: string | null
           wedding_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "gift_items_selected_by_guest_id_fkey"
+            columns: ["selected_by_guest_id"]
+            isOneToOne: false
+            referencedRelation: "guests"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "gift_items_selected_by_invitation_id_fkey"
             columns: ["selected_by_invitation_id"]

@@ -437,23 +437,15 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
       const invitationMessage = (weddingData as any)?.invitation_message;
       
       // Get invitation for this guest using guest_id
-      const { data: invitation } = await supabase
-        .from("invitations")
-        .select("id")
-        .eq("guest_id", guest.id)
+      let giftInfo = "";
+      const { data: selectedGift } = await supabase
+        .from("gift_items")
+        .select("gift_name")
+        .eq("selected_by_guest_id", guest.id)
         .single();
 
-      let giftInfo = "";
-      if (invitation) {
-        const { data: selectedGift } = await supabase
-          .from("gift_items")
-          .select("gift_name")
-          .eq("selected_by_invitation_id", invitation.id)
-          .single();
-
-        if (selectedGift) {
-          giftInfo = `\n\n🎁 Presente selecionado anteriormente: ${selectedGift.gift_name}\nVocê pode alterar sua escolha através do link.`;
-        }
+      if (selectedGift) {
+        giftInfo = `\n\n🎁 Presente selecionado anteriormente: ${selectedGift.gift_name}\nVocê pode alterar sua escolha através do link.`;
       }
 
       let message = `Olá, ${guest.name}! 🎉\n\nSe desejar alterar sua confirmação de presença para o nosso casamento, acesse o link abaixo:\n\n${link}${giftInfo}\n\nO link é válido por 30 dias.`;

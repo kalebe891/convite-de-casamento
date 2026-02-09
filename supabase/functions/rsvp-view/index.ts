@@ -7,6 +7,7 @@ const corsHeaders = {
 
 interface InvitationData {
   id: string;
+  guest_id: string;
   guest_name: string;
   attending: boolean | null;
   responded_at: string | null;
@@ -54,7 +55,7 @@ Deno.serve(async (req) => {
     // Buscar convite usando service role (bypass RLS)
     const { data, error } = await supabase
       .from('invitations')
-      .select('id, guest_name, attending, responded_at, plus_one, dietary_restrictions, message, wedding_id')
+      .select('id, guest_id, guest_name, attending, responded_at, plus_one, dietary_restrictions, message, wedding_id')
       .eq('unique_code', token)
       .single();
 
@@ -71,6 +72,7 @@ Deno.serve(async (req) => {
     // Retornar apenas dados necessários
     const response: InvitationData = {
       id: data.id,
+      guest_id: data.guest_id,
       guest_name: data.guest_name,
       attending: data.attending,
       responded_at: data.responded_at,
