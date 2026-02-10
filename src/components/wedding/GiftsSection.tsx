@@ -154,7 +154,7 @@ const GiftsSection = ({ weddingId }: GiftsSectionProps) => {
                   <Card
                     key={gift.id}
                     className={`shadow-soft hover:shadow-elegant transition-all duration-300 animate-fade-in ${
-                      gift.is_purchased ? "opacity-60" : ""
+                      gift.selected_by_guest_id || gift.is_purchased ? "opacity-60" : ""
                     }`}
                     style={{ animationDelay: `${index * 100}ms` }}
                   >
@@ -164,11 +164,15 @@ const GiftsSection = ({ weddingId }: GiftsSectionProps) => {
                           <Gift className="w-5 h-5 text-primary flex-shrink-0" />
                           <CardTitle className="text-lg">{gift.gift_name}</CardTitle>
                         </div>
-                        {gift.is_purchased && (
+                        {gift.selected_by_guest_id ? (
+                          <Badge variant="secondary" className="ml-2">
+                            Reservado
+                          </Badge>
+                        ) : gift.is_purchased ? (
                           <Badge variant="secondary" className="ml-2">
                             ✓ Adquirido
                           </Badge>
-                        )}
+                        ) : null}
                       </div>
                       {gift.description && (
                         <CardDescription className="mt-2">

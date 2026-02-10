@@ -14,8 +14,9 @@ import {
   updateGuestCheckin,
   removeFromOutbox,
 } from "@/lib/db";
-import { Search, Wifi, WifiOff, RefreshCw, CheckCircle, XCircle, Clock, AlertCircle } from "lucide-react";
+import { Search, Wifi, WifiOff, RefreshCw, CheckCircle, XCircle, Clock, AlertCircle, Gift } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ConflictDetailsDialog } from "@/components/admin/ConflictDetailsDialog";
 
 interface Guest {
@@ -32,6 +33,7 @@ const Checkin = () => {
   const { user } = useAuth();
   const isOnline = useOnlineStatus();
   const [guests, setGuests] = useState<Guest[]>([]);
+  const [guestGifts, setGuestGifts] = useState<Record<string, string>>({});
   const [filteredGuests, setFilteredGuests] = useState<Guest[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [pendingCount, setPendingCount] = useState(0);
@@ -62,6 +64,24 @@ const Checkin = () => {
 
         // Save to IndexedDB
         await saveGuests(guestData);
+
+        // Fetch gift associations
+        const { data: giftsData } = await supabase
+          .from("gift_items")
+          .select("gift_name, selected_by_guest_id")
+          .not("selected_by_guest_id", "is", null);
+
+        if (giftsData) {
+          const map: Record<string, string> = {};
+          for (const g of giftsData) {
+            if (g.selected_by_guest_id) {
+              map[g.selected_by_guest_id] = map[g.selected_by_guest_id]
+                ? `${map[g.selected_by_guest_id]}, ${g.gift_name}`
+                : g.gift_name;
+            }
+          }
+          setGuestGifts(map);
+        }
       } else {
         // Load from IndexedDB
         const cachedGuests = await getGuests() as Guest[];
@@ -438,7 +458,21 @@ const Checkin = () => {
                   className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
                 >
                   <div className="flex-1">
-                    <p className="font-semibold">{guest.name}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-semibold">{guest.name}</p>
+                      {guestGifts[guest.id] && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Gift className="h-4 w-4 text-primary shrink-0" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>🎁 {guestGifts[guest.id]}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
+                    </div>
                     <p className="text-sm text-muted-foreground">{guest.email}</p>
                   </div>
                   <div className="flex items-center gap-3">
