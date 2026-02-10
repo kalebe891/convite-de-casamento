@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Gift, ExternalLink } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+
 
 interface GiftsSectionProps {
   weddingId: string | null;
@@ -164,15 +164,9 @@ const GiftsSection = ({ weddingId }: GiftsSectionProps) => {
                           <Gift className="w-5 h-5 text-primary flex-shrink-0" />
                           <CardTitle className="text-lg">{gift.gift_name}</CardTitle>
                         </div>
-                        {gift.selected_by_guest_id ? (
-                          <Badge variant="secondary" className="ml-2">
-                            Reservado
-                          </Badge>
-                        ) : gift.is_purchased ? (
-                          <Badge variant="secondary" className="ml-2">
-                            ✓ Adquirido
-                          </Badge>
-                        ) : null}
+                        {(gift.selected_by_guest_id || gift.is_purchased) && (
+                          <span className="ml-2 text-green-600 dark:text-green-400 text-lg" title={gift.selected_by_guest_id ? "Reservado" : "Adquirido"}>✅</span>
+                        )}
                       </div>
                       {gift.description && (
                         <CardDescription className="mt-2">
@@ -186,6 +180,7 @@ const GiftsSection = ({ weddingId }: GiftsSectionProps) => {
                           variant="outline"
                           className="w-full"
                           onClick={() => window.open(gift.link!, "_blank")}
+                          disabled={!!gift.selected_by_guest_id || !!gift.is_purchased}
                         >
                           <ExternalLink className="w-4 h-4 mr-2" />
                           Ver Presente

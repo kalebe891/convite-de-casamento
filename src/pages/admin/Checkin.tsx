@@ -16,7 +16,6 @@ import {
 } from "@/lib/db";
 import { Search, Wifi, WifiOff, RefreshCw, CheckCircle, XCircle, Clock, AlertCircle, Gift } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ConflictDetailsDialog } from "@/components/admin/ConflictDetailsDialog";
 
 interface Guest {
@@ -458,32 +457,32 @@ const Checkin = () => {
                   className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
                 >
                   <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <p className="font-semibold">{guest.name}</p>
-                      {guestGifts[guest.id] && (
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Gift className="h-4 w-4 text-primary shrink-0" />
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>🎁 {guestGifts[guest.id]}</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      )}
-                    </div>
+                    <p className="font-semibold">{guest.name}</p>
                     <p className="text-sm text-muted-foreground">{guest.email}</p>
                   </div>
                   <div className="flex items-center gap-3">
                     {getStatusBadge(guest)}
-                    <Button
-                      onClick={() => guest.checked_in_at ? handleUndoCheckin(guest) : handleCheckin(guest)}
-                      variant={guest.checked_in_at ? "outline" : "default"}
-                      size="sm"
-                    >
-                      {guest.checked_in_at ? "Desfazer check-in" : "Check-in"}
-                    </Button>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        onClick={() => guest.checked_in_at ? handleUndoCheckin(guest) : handleCheckin(guest)}
+                        variant={guest.checked_in_at ? "outline" : "default"}
+                        size="sm"
+                      >
+                        {guest.checked_in_at ? "Desfazer" : "Check-in"}
+                      </Button>
+                      {guestGifts[guest.id] && (
+                        <Button
+                          variant={guest.checked_in_at ? "default" : "outline"}
+                          size="sm"
+                          disabled={!guest.checked_in_at}
+                          title={guest.checked_in_at ? `🎁 ${guestGifts[guest.id]}` : "Faça o check-in primeiro"}
+                          className="gap-1"
+                        >
+                          <Gift className="h-4 w-4" />
+                          <span className="hidden sm:inline text-xs">Presente</span>
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
