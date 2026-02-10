@@ -14,7 +14,7 @@ import { guestSchema } from "@/lib/validationSchemas";
 import { getSafeErrorMessage } from "@/lib/errorHandling";
 import { logAdminAction } from "@/lib/adminLogger";
 import GuestMessagesDialog from "./GuestMessagesDialog";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 type SortField = "name" | "phone" | "email" | "status";
 type SortDirection = "asc" | "desc";
@@ -649,16 +649,16 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
                     <div className="flex items-center gap-2">
                       {guest.name}
                       {guestGifts[guest.id] && (
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Gift className="h-4 w-4 text-green-600 dark:text-green-400 shrink-0" />
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>🎁 {guestGifts[guest.id]}</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <button type="button" className="p-1 rounded-md hover:bg-muted transition-colors">
+                              <Gift className="h-4 w-4 text-primary shrink-0" />
+                            </button>
+                          </PopoverTrigger>
+                          <PopoverContent side="top" className="w-auto max-w-[250px] p-3 text-sm">
+                            🎁 {guestGifts[guest.id]}
+                          </PopoverContent>
+                        </Popover>
                       )}
                     </div>
                   </TableCell>
