@@ -142,6 +142,7 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
     }
 
     const oldItem = items.find(item => item.id === editingId);
+    const guestId = editItem.selected_by_guest_id || null;
     const { error } = await supabase
       .from("gift_items")
       .update({
@@ -149,7 +150,9 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
         description: editItem.description.trim() || null,
         link: editItem.link.trim() || null,
         is_public: editItem.is_public,
-        selected_by_guest_id: editItem.selected_by_guest_id || null,
+        selected_by_guest_id: guestId,
+        claimed_at: guestId ? new Date().toISOString() : null,
+        claimed_via_admin: guestId ? true : false,
       })
       .eq("id", editingId);
 
