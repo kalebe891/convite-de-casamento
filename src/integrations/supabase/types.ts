@@ -209,6 +209,8 @@ export type Database = {
       }
       gift_items: {
         Row: {
+          claimed_at: string | null
+          claimed_via_admin: boolean
           created_at: string | null
           description: string | null
           display_order: number | null
@@ -222,6 +224,8 @@ export type Database = {
           wedding_id: string | null
         }
         Insert: {
+          claimed_at?: string | null
+          claimed_via_admin?: boolean
           created_at?: string | null
           description?: string | null
           display_order?: number | null
@@ -235,6 +239,8 @@ export type Database = {
           wedding_id?: string | null
         }
         Update: {
+          claimed_at?: string | null
+          claimed_via_admin?: boolean
           created_at?: string | null
           description?: string | null
           display_order?: number | null
