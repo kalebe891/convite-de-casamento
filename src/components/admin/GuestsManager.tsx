@@ -7,13 +7,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Mail, MessageSquare, Trash2, Copy, ExternalLink, RefreshCw, Pencil, ArrowUpDown, ArrowUp, ArrowDown, ArchiveRestore, ChevronDown, ChevronUp } from "lucide-react";
+import { Mail, MessageSquare, Trash2, Copy, ExternalLink, RefreshCw, Pencil, ArrowUpDown, ArrowUp, ArrowDown, ArchiveRestore, ChevronDown, ChevronUp, Gift } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { guestSchema } from "@/lib/validationSchemas";
 import { getSafeErrorMessage } from "@/lib/errorHandling";
 import { logAdminAction } from "@/lib/adminLogger";
 import GuestMessagesDialog from "./GuestMessagesDialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 type SortField = "name" | "phone" | "email" | "status";
 type SortDirection = "asc" | "desc";
@@ -41,6 +42,7 @@ interface GuestsManagerProps {
 
 const GuestsManager = ({ permissions }: GuestsManagerProps) => {
   const [guests, setGuests] = useState<Guest[]>([]);
+  const [guestGifts, setGuestGifts] = useState<Record<string, string>>({});
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isWhatsAppOpen, setIsWhatsAppOpen] = useState(false);
@@ -128,6 +130,24 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
       toast.error("Erro ao carregar convidados");
     } else {
       setGuests(data || []);
+    }
+
+    // Fetch gift associations
+    const { data: giftsData } = await supabase
+      .from("gift_items")
+      .select("gift_name, selected_by_guest_id")
+      .not("selected_by_guest_id", "is", null);
+
+    if (giftsData) {
+      const map: Record<string, string> = {};
+      for (const g of giftsData) {
+        if (g.selected_by_guest_id) {
+          map[g.selected_by_guest_id] = map[g.selected_by_guest_id]
+            ? `${map[g.selected_by_guest_id]}, ${g.gift_name}`
+            : g.gift_name;
+        }
+      }
+      setGuestGifts(map);
     }
   };
 
@@ -625,7 +645,23 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
             <TableBody>
               {sortedGuests.map((guest) => (
                 <TableRow key={guest.id}>
-                  <TableCell className="font-medium">{guest.name}</TableCell>
+                  <TableCell className="font-medium">
+                    <div className="flex items-center gap-2">
+                      {guest.name}
+                      {guestGifts[guest.id] && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Gift className="h-4 w-4 text-green-600 dark:text-green-400 shrink-0" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>🎁 {guestGifts[guest.id]}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
+                    </div>
+                  </TableCell>
                   <TableCell>{guest.phone || "-"}</TableCell>
                   <TableCell>{guest.email || "-"}</TableCell>
                   <TableCell>{getStatusBadge(guest.status)}</TableCell>

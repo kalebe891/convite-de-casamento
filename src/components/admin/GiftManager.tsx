@@ -70,28 +70,15 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
       // Fetch all guests as source of truth for linking
       const { data: guestsData } = await supabase
         .from("guests")
-        .select("id, name")
+        .select("id, name, status")
         .is("archived_at", null)
         .order("name")
         .limit(1000);
 
-      // Fetch invitations to know which guests have invitations
-      const { data: invData } = await supabase
-        .from("invitations")
-        .select("id, guest_id")
-        .eq("wedding_id", wedding.id)
-        .limit(1000);
-
-      // Build a set of guest_ids that have invitations
-      const guestsWithInvitation = new Set(
-        (invData || []).filter(inv => inv.guest_id).map(inv => inv.guest_id)
-      );
-
-      // Use guests directly — no name-based merge
       const guestsList = (guestsData || []).map((guest) => ({
         id: guest.id,
         guest_name: guest.name,
-        has_invitation: guestsWithInvitation.has(guest.id),
+        status: guest.status,
       }));
       setInvitations(guestsList.sort((a, b) => a.guest_name.localeCompare(b.guest_name)));
     }
@@ -307,11 +294,14 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">Nenhum</SelectItem>
-                  {invitations.map((inv) => (
-                    <SelectItem key={inv.id} value={inv.id}>
-                      {inv.guest_name}{!inv.has_invitation ? " (sem convite)" : ""}
-                    </SelectItem>
-                  ))}
+                  {invitations.map((inv) => {
+                    const statusLabel = inv.status === "confirmed" ? "Confirmado" : inv.status === "declined" ? "Recusado" : "Pendente";
+                    return (
+                      <SelectItem key={inv.id} value={inv.id}>
+                        {inv.guest_name} ({statusLabel})
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
             </div>
