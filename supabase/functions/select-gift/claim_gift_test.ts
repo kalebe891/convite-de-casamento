@@ -1,21 +1,15 @@
 /**
- * Testes de integração para a RPC claim_gift
+ * Testes de integração para a RPC claim_gift (bulletproof edition)
  *
- * Executados via Edge Function select-gift (POST).
- * Estes testes foram validados manualmente em 2026-02-10.
- *
- * Para re-executar, use dados mock temporários e chame POST /select-gift.
- *
- * RESULTADOS (todos ✅):
- * 1. Convidado seleciona presente disponível → 200 { success: true }
- * 2. Convidado NÃO pode pegar 2 presentes   → 403 ALREADY_HAS_GIFT
- * 3. Presente já ocupado por outro           → 409 GIFT_UNAVAILABLE
- * 4. Concorrência: 2 guests simultâneos      → exatamente 1 vence, outro recebe 409
- * 5. Unclaim (gift_id=null)                  → 200 { cleared: true }
- * 6. Admin override (allow_multiple=true)    → disponível via RPC direta
- *
- * CORREÇÃO APLICADA: Removida sobrecarga duplicada de claim_gift(uuid,uuid)
- * que causava erro PGRST203. Agora existe apenas claim_gift(uuid,uuid,boolean DEFAULT false).
+ * Cobre:
+ * 1. Sucesso padrão + claimed_at preenchido
+ * 2. Limite de 1 presente por guest (ALREADY_HAS_GIFT)
+ * 3. Admin override (allow_multiple + claimed_via_admin)
+ * 4. Presente ocupado (GIFT_UNAVAILABLE)
+ * 5. Concorrência simultânea
+ * 6. Admin NÃO burla concorrência de presente já ocupado
+ * 7. Idempotência (mesma chamada 2x = sucesso sem duplicata)
+ * 8. Unclaim limpa claimed_at e claimed_via_admin
  */
 
 import { assertEquals } from "https://deno.land/std@0.208.0/assert/mod.ts";
@@ -56,7 +50,7 @@ async function cleanup(guestIds: string[], giftIds: string[]) {
   if (guestIds.length) await supabase.from("guests").delete().in("id", guestIds);
 }
 
-Deno.test("claim_gift: convidado seleciona presente disponível com sucesso", async () => {
+Deno.test("claim_gift: sucesso + claimed_at preenchido", async () => {
   const guestId = await createGuest("Guest Sucesso");
   const giftId = await createGift("Presente Livre");
   try {
@@ -66,6 +60,11 @@ Deno.test("claim_gift: convidado seleciona presente disponível com sucesso", as
     assertEquals(error, null);
     assertEquals(data[0].success, true);
     assertEquals(data[0].gift_name, "Presente Livre");
+
+    // Verificar colunas de auditoria
+    const { data: gift } = await supabase.from("gift_items").select("claimed_at, claimed_via_admin").eq("id", giftId).single();
+    assertEquals(gift!.claimed_at !== null, true, "claimed_at deve estar preenchido");
+    assertEquals(gift!.claimed_via_admin, false);
   } finally {
     await cleanup([guestId], [giftId]);
   }
@@ -85,7 +84,7 @@ Deno.test("claim_gift: convidado NÃO pode pegar dois presentes", async () => {
   }
 });
 
-Deno.test("claim_gift: admin pode atribuir múltiplos presentes", async () => {
+Deno.test("claim_gift: admin pode atribuir múltiplos + claimed_via_admin=true", async () => {
   const guestId = await createGuest("Guest Admin");
   const g1 = await createGift("Admin Gift 1");
   const g2 = await createGift("Admin Gift 2");
@@ -94,6 +93,10 @@ Deno.test("claim_gift: admin pode atribuir múltiplos presentes", async () => {
     assertEquals(r1[0].success, true);
     const { data: r2 } = await supabase.rpc("claim_gift", { p_gift_id: g2, p_guest_id: guestId, p_allow_multiple: true });
     assertEquals(r2[0].success, true);
+
+    // Ambos devem ter claimed_via_admin = true
+    const { data: gifts } = await supabase.from("gift_items").select("claimed_via_admin").in("id", [g1, g2]);
+    assertEquals(gifts!.every((g: any) => g.claimed_via_admin === true), true);
   } finally {
     await cleanup([guestId], [g1, g2]);
   }
@@ -140,5 +143,34 @@ Deno.test("claim_gift: admin override NÃO burla concorrência de presente ocupa
     assertEquals(data[0].error_code, "GIFT_UNAVAILABLE");
   } finally {
     await cleanup([g1, g2], [gift]);
+  }
+});
+
+Deno.test("claim_gift: idempotência - mesma chamada 2x retorna sucesso sem duplicata", async () => {
+  const guestId = await createGuest("Guest Idempotente");
+  const giftId = await createGift("Presente Idempotente");
+  try {
+    const { data: r1 } = await supabase.rpc("claim_gift", { p_gift_id: giftId, p_guest_id: guestId, p_allow_multiple: false });
+    assertEquals(r1[0].success, true);
+    const { data: r2 } = await supabase.rpc("claim_gift", { p_gift_id: giftId, p_guest_id: guestId, p_allow_multiple: false });
+    assertEquals(r2[0].success, true);
+    assertEquals(r2[0].gift_name, "Presente Idempotente");
+  } finally {
+    await cleanup([guestId], [giftId]);
+  }
+});
+
+Deno.test("unclaim_gift: limpa claimed_at e claimed_via_admin", async () => {
+  const guestId = await createGuest("Guest Unclaim");
+  const giftId = await createGift("Presente Unclaim");
+  try {
+    await supabase.rpc("claim_gift", { p_gift_id: giftId, p_guest_id: guestId, p_allow_multiple: false });
+    await supabase.rpc("unclaim_gift", { p_guest_id: guestId });
+    const { data: gift } = await supabase.from("gift_items").select("selected_by_guest_id, claimed_at, claimed_via_admin").eq("id", giftId).single();
+    assertEquals(gift!.selected_by_guest_id, null);
+    assertEquals(gift!.claimed_at, null);
+    assertEquals(gift!.claimed_via_admin, false);
+  } finally {
+    await cleanup([guestId], [giftId]);
   }
 });
