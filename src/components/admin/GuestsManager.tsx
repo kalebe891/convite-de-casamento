@@ -676,12 +676,13 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
                       >
                         <Pencil className="h-4 w-4" />
                       </Button>
-                      {guest.email && permissions.isAdmin && (
+                      {guest.email && (
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => handleSendEmail(guest)}
                           title="Enviar e-mail"
+                          disabled={!permissions.canAdd}
                         >
                           <Mail className="h-4 w-4" />
                         </Button>
