@@ -542,45 +542,53 @@ const Checkin = () => {
                     <p className="text-sm text-muted-foreground">{guest.email}</p>
                   </div>
                   <div className="flex items-center gap-3">
-                    {getStatusBadge(guest)}
-                    <div className="flex items-center gap-1">
-                      <Button
-                        onClick={() => guest.checked_in_at ? handleUndoCheckin(guest) : handleCheckin(guest)}
-                        variant={guest.checked_in_at ? "outline" : "default"}
-                        size="sm"
-                      >
-                        {guest.checked_in_at ? "Desfazer" : "Check-in"}
-                      </Button>
-                      {guestGifts[guest.id] && (
-                        <>
-                          <Button
-                            variant={giftDelivered[guest.id] ? "outline" : "default"}
-                            size="sm"
-                            disabled={!guest.checked_in_at || giftDelivered[guest.id]}
-                            onClick={() => handleGiftDelivery(guest)}
-                            title={giftDelivered[guest.id] ? "Presente já entregue" : guest.checked_in_at ? `🎁 ${guestGifts[guest.id]}` : "Faça o check-in primeiro"}
-                            className="gap-1"
-                          >
-                            <Gift className="h-4 w-4" />
-                            <span className="hidden sm:inline text-xs">
-                              {giftDelivered[guest.id] ? "Entregue" : "Presente"}
-                            </span>
-                          </Button>
-                          {giftDelivered[guest.id] && permissions.canEdit && (
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              onClick={() => handleCancelGiftDelivery(guest)}
-                              title="Cancelar recebimento do presente"
-                              className="gap-1"
-                            >
-                              <XCircle className="h-4 w-4" />
-                              <span className="hidden sm:inline text-xs">Cancelar</span>
-                            </Button>
-                          )}
-                        </>
-                      )}
-                    </div>
+                     {getStatusBadge(guest)}
+                     {giftDelivered[guest.id] && (
+                       <Badge variant="default" className="bg-green-600">
+                         <CheckCircle className="w-3 h-3 mr-1" />
+                         Presente recebido
+                       </Badge>
+                     )}
+                     <div className="flex items-center gap-1">
+                       <Button
+                         onClick={() => guest.checked_in_at ? handleUndoCheckin(guest) : handleCheckin(guest)}
+                         variant={guest.checked_in_at ? "outline" : "default"}
+                         size="sm"
+                         disabled={guest.checked_in_at && giftDelivered[guest.id]}
+                         title={guest.checked_in_at && giftDelivered[guest.id] ? "Cancele o recebimento do presente antes de desfazer o check-in" : undefined}
+                       >
+                         {guest.checked_in_at ? "Desfazer" : "Check-in"}
+                       </Button>
+                       {guestGifts[guest.id] && (
+                         <>
+                           <Button
+                             variant={giftDelivered[guest.id] ? "outline" : "default"}
+                             size="sm"
+                             disabled={!guest.checked_in_at || giftDelivered[guest.id]}
+                             onClick={() => handleGiftDelivery(guest)}
+                             title={giftDelivered[guest.id] ? "Presente já recebido" : guest.checked_in_at ? `🎁 ${guestGifts[guest.id]}` : "Faça o check-in primeiro"}
+                             className="gap-1"
+                           >
+                             <Gift className="h-4 w-4" />
+                             <span className="hidden sm:inline text-xs">
+                               Receber presente
+                             </span>
+                           </Button>
+                           {giftDelivered[guest.id] && permissions.canEdit && (
+                             <Button
+                               variant="destructive"
+                               size="sm"
+                               onClick={() => handleCancelGiftDelivery(guest)}
+                               title="Cancelar recebimento do presente"
+                               className="gap-1"
+                             >
+                               <XCircle className="h-4 w-4" />
+                               <span className="hidden sm:inline text-xs">Cancelar</span>
+                             </Button>
+                           )}
+                         </>
+                       )}
+                     </div>
                   </div>
                 </div>
               ))}

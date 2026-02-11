@@ -22,7 +22,7 @@ const MENU_PERMISSIONS: Record<MenuKey, Array<"view" | "add" | "edit" | "delete"
   playlist: ["view", "add", "edit", "delete", "publish"],
   presentes: ["view", "add", "edit", "delete", "publish"],
   momentos: ["view", "add", "edit", "delete"],
-  checkin: ["view"],
+  checkin: ["view", "edit"],
   usuarios: ["view", "add", "edit", "delete"],
   logs: ["view"],
 };
