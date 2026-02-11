@@ -24,6 +24,7 @@ const GiftsSection = ({ weddingId }: GiftsSectionProps) => {
   const [loading, setLoading] = useState(true);
 
   const [showSection, setShowSection] = useState(true);
+  const [hideReserved, setHideReserved] = useState(false);
 
   useEffect(() => {
     if (!weddingId) {
@@ -35,12 +36,13 @@ const GiftsSection = ({ weddingId }: GiftsSectionProps) => {
       // Fetch wedding details to check if gifts section should be shown
       const { data: weddingData } = await supabase
         .from("wedding_details")
-        .select("show_gifts_section")
+        .select("show_gifts_section, hide_reserved_gifts")
         .eq("id", weddingId)
         .single();
 
       if (weddingData) {
         setShowSection(weddingData.show_gifts_section ?? true);
+        setHideReserved(weddingData.hide_reserved_gifts ?? false);
       }
 
       // Fetch only public gifts
@@ -57,7 +59,11 @@ const GiftsSection = ({ weddingId }: GiftsSectionProps) => {
       if (error) {
         console.error("Error fetching gifts:", error);
       } else {
-        setGifts(data || []);
+        let filteredGifts = data || [];
+        if (hideReserved) {
+          filteredGifts = filteredGifts.filter(g => !g.selected_by_guest_id);
+        }
+        setGifts(filteredGifts);
       }
       setLoading(false);
     };
@@ -96,7 +102,7 @@ const GiftsSection = ({ weddingId }: GiftsSectionProps) => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [weddingId]);
+  }, [weddingId, hideReserved]);
 
   if (!showSection) {
     return null;

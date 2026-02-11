@@ -28,6 +28,7 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
   const [invitations, setInvitations] = useState<any[]>([]);
   const [weddingId, setWeddingId] = useState<string | null>(null);
   const [showGiftsSection, setShowGiftsSection] = useState<boolean>(true);
+  const [hideReservedGifts, setHideReservedGifts] = useState<boolean>(false);
   const [newItem, setNewItem] = useState({ 
     gift_name: "", 
     description: "", 
@@ -51,12 +52,13 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
   const fetchData = async () => {
     const { data: wedding } = await supabase
       .from("wedding_details")
-      .select("id, show_gifts_section")
+      .select("id, show_gifts_section, hide_reserved_gifts")
       .single();
 
     if (wedding) {
       setWeddingId(wedding.id);
       setShowGiftsSection(wedding.show_gifts_section ?? true);
+      setHideReservedGifts(wedding.hide_reserved_gifts ?? false);
       const { data: itemsData } = await supabase
         .from("gift_items")
         .select(`
@@ -218,19 +220,44 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
     }
   };
 
+  const handleToggleHideReserved = async (newValue: boolean) => {
+    if (!permissions.canPublish) {
+      toast({ title: "Sem permissão", description: "Você não tem permissão para publicar/ocultar seções", variant: "destructive" });
+      return;
+    }
+    if (!weddingId) return;
+
+    const { error } = await supabase.from("wedding_details").update({ hide_reserved_gifts: newValue }).eq("id", weddingId);
+
+    if (error) {
+      toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
+    } else {
+      toast({ title: "Atualizado", description: `Presentes reservados ${newValue ? 'ocultos' : 'visíveis'} na página inicial` });
+      await logAdminAction({ action: "update", tableName: "wedding_details", recordId: weddingId, newData: { hide_reserved_gifts: newValue } });
+      setHideReservedGifts(newValue);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
           <CardTitle>Visibilidade da Seção de Presentes</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
               <p className="font-medium">Exibir seção "Lista de Presentes" na página inicial</p>
               <p className="text-sm text-muted-foreground">Controla se toda a seção de presentes aparece na página inicial</p>
             </div>
             <Switch checked={showGiftsSection} onCheckedChange={handleToggleGiftsSection} disabled={!permissions.canPublish} />
+          </div>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium">Ocultar presentes já reservados na página inicial</p>
+              <p className="text-sm text-muted-foreground">Presentes que já foram escolhidos por convidados não serão exibidos</p>
+            </div>
+            <Switch checked={hideReservedGifts} onCheckedChange={handleToggleHideReserved} disabled={!permissions.canPublish} />
           </div>
         </CardContent>
       </Card>

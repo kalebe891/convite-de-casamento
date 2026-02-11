@@ -1,0 +1,1 @@
+ALTER TABLE public.wedding_details ADD COLUMN hide_reserved_gifts boolean NOT NULL DEFAULT false;

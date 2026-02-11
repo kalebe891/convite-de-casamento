@@ -718,6 +718,7 @@ export type Database = {
           couple_message: string | null
           created_at: string | null
           groom_name: string
+          hide_reserved_gifts: boolean
           id: string
           invitation_message: string | null
           show_buffet_section: boolean | null
@@ -739,6 +740,7 @@ export type Database = {
           couple_message?: string | null
           created_at?: string | null
           groom_name: string
+          hide_reserved_gifts?: boolean
           id?: string
           invitation_message?: string | null
           show_buffet_section?: boolean | null
@@ -760,6 +762,7 @@ export type Database = {
           couple_message?: string | null
           created_at?: string | null
           groom_name?: string
+          hide_reserved_gifts?: boolean
           id?: string
           invitation_message?: string | null
           show_buffet_section?: boolean | null
