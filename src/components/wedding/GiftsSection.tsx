@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Gift, ExternalLink } from "lucide-react";
+import { Gift, ExternalLink, Check } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
@@ -165,7 +165,7 @@ const GiftsSection = ({ weddingId }: GiftsSectionProps) => {
                           <CardTitle className="text-lg">{gift.gift_name}</CardTitle>
                         </div>
                         {(gift.selected_by_guest_id || gift.is_purchased) && (
-                          <span className="ml-2 text-green-600 dark:text-green-400 text-lg" title={gift.selected_by_guest_id ? "Reservado" : "Adquirido"}>✅</span>
+                          <Check className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0" />
                         )}
                       </div>
                       {gift.description && (
