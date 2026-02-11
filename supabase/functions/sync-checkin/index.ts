@@ -202,10 +202,27 @@ Deno.serve(async (req) => {
         const guestIdentifierForLog = guest.email || guest.phone || identifier;
 
         if (isUndo) {
-          // Undo check-in: set checked_in_at to null, status to confirmed
+          // Undo check-in: set checked_in_at to null, restore previous status
+          // Look up the original check-in log to find the status before check-in
+          let previousStatus = 'pending'; // fallback default
+          
+          const { data: logData } = await supabaseAdmin
+            .from('admin_logs')
+            .select('old_data')
+            .eq('record_id', guest.id)
+            .eq('action', 'checkin')
+            .eq('table_name', 'guests')
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (logData?.old_data && typeof logData.old_data === 'object' && 'status' in logData.old_data) {
+            previousStatus = (logData.old_data as Record<string, unknown>).status as string || 'pending';
+          }
+
           const { error: updateError } = await supabaseAdmin
             .from('guests')
-            .update({ checked_in_at: null, status: 'confirmed' })
+            .update({ checked_in_at: null, status: previousStatus })
             .eq('id', guest.id);
 
           if (updateError) {
@@ -233,7 +250,7 @@ Deno.serve(async (req) => {
             table_name: 'guests',
             record_id: guest.id,
             old_data: { checked_in_at: guest.checked_in_at, status: guest.status },
-            new_data: { checked_in_at: null, status: 'confirmed' },
+            new_data: { checked_in_at: null, status: previousStatus },
           });
 
           results.successCount++;

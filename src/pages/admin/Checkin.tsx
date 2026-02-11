@@ -18,6 +18,7 @@ import { Search, Wifi, WifiOff, RefreshCw, CheckCircle, XCircle, Clock, AlertCir
 import { useAuth } from "@/hooks/useAuth";
 import { ConflictDetailsDialog } from "@/components/admin/ConflictDetailsDialog";
 import { logAdminAction } from "@/lib/adminLogger";
+import { usePagePermissions } from "@/hooks/usePagePermissions";
 
 interface Guest {
   id: string;
@@ -31,6 +32,7 @@ interface Guest {
 const Checkin = () => {
   const { toast } = useToast();
   const { user } = useAuth();
+  const permissions = usePagePermissions("checkin");
   const isOnline = useOnlineStatus();
   const [guests, setGuests] = useState<Guest[]>([]);
   const [guestGifts, setGuestGifts] = useState<Record<string, string>>({});
@@ -343,6 +345,42 @@ const Checkin = () => {
     }
   };
 
+  // Handle cancel gift delivery
+  const handleCancelGiftDelivery = async (guest: Guest) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from("gift_items")
+        .update({ is_purchased: false })
+        .eq("selected_by_guest_id", guest.id);
+
+      if (error) throw error;
+
+      await logAdminAction({
+        action: "update",
+        tableName: "gift_items",
+        recordId: guest.id,
+        oldData: { is_purchased: true, guest_name: guest.name },
+        newData: { is_purchased: false, guest_name: guest.name, action: "gift_delivery_cancelled_at_checkin" },
+      });
+
+      setGiftDelivered((prev) => ({ ...prev, [guest.id]: false }));
+
+      toast({
+        title: "Recebimento cancelado",
+        description: `Recebimento do presente de ${guest.name} foi cancelado`,
+      });
+    } catch (error) {
+      console.error("Cancel gift delivery error:", error);
+      toast({
+        title: "Erro",
+        description: "Falha ao cancelar recebimento do presente",
+        variant: "destructive",
+      });
+    }
+  };
+
 
   useEffect(() => {
     if (searchTerm.trim() === "") {
@@ -514,19 +552,33 @@ const Checkin = () => {
                         {guest.checked_in_at ? "Desfazer" : "Check-in"}
                       </Button>
                       {guestGifts[guest.id] && (
-                        <Button
-                          variant={giftDelivered[guest.id] ? "outline" : "default"}
-                          size="sm"
-                          disabled={!guest.checked_in_at || giftDelivered[guest.id]}
-                          onClick={() => handleGiftDelivery(guest)}
-                          title={giftDelivered[guest.id] ? "Presente já entregue" : guest.checked_in_at ? `🎁 ${guestGifts[guest.id]}` : "Faça o check-in primeiro"}
-                          className="gap-1"
-                        >
-                          <Gift className="h-4 w-4" />
-                          <span className="hidden sm:inline text-xs">
-                            {giftDelivered[guest.id] ? "Entregue" : "Presente"}
-                          </span>
-                        </Button>
+                        <>
+                          <Button
+                            variant={giftDelivered[guest.id] ? "outline" : "default"}
+                            size="sm"
+                            disabled={!guest.checked_in_at || giftDelivered[guest.id]}
+                            onClick={() => handleGiftDelivery(guest)}
+                            title={giftDelivered[guest.id] ? "Presente já entregue" : guest.checked_in_at ? `🎁 ${guestGifts[guest.id]}` : "Faça o check-in primeiro"}
+                            className="gap-1"
+                          >
+                            <Gift className="h-4 w-4" />
+                            <span className="hidden sm:inline text-xs">
+                              {giftDelivered[guest.id] ? "Entregue" : "Presente"}
+                            </span>
+                          </Button>
+                          {giftDelivered[guest.id] && permissions.canEdit && (
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => handleCancelGiftDelivery(guest)}
+                              title="Cancelar recebimento do presente"
+                              className="gap-1"
+                            >
+                              <XCircle className="h-4 w-4" />
+                              <span className="hidden sm:inline text-xs">Cancelar</span>
+                            </Button>
+                          )}
+                        </>
                       )}
                     </div>
                   </div>
