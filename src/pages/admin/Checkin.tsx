@@ -17,6 +17,7 @@ import {
 import { Search, Wifi, WifiOff, RefreshCw, CheckCircle, XCircle, Clock, AlertCircle, Gift } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { ConflictDetailsDialog } from "@/components/admin/ConflictDetailsDialog";
+import { logAdminAction } from "@/lib/adminLogger";
 
 interface Guest {
   id: string;
@@ -41,6 +42,7 @@ const Checkin = () => {
   const [conflicts, setConflicts] = useState<any[]>([]);
   const [selectedConflict, setSelectedConflict] = useState<any | null>(null);
   const [conflictDialogOpen, setConflictDialogOpen] = useState(false);
+  const [giftDelivered, setGiftDelivered] = useState<Record<string, boolean>>({});
 
   // Fetch guests and sync with local DB
   const fetchGuests = async () => {
@@ -67,19 +69,24 @@ const Checkin = () => {
         // Fetch gift associations
         const { data: giftsData } = await supabase
           .from("gift_items")
-          .select("gift_name, selected_by_guest_id")
+          .select("gift_name, selected_by_guest_id, is_purchased")
           .not("selected_by_guest_id", "is", null);
 
         if (giftsData) {
           const map: Record<string, string> = {};
+          const delivered: Record<string, boolean> = {};
           for (const g of giftsData) {
             if (g.selected_by_guest_id) {
               map[g.selected_by_guest_id] = map[g.selected_by_guest_id]
                 ? `${map[g.selected_by_guest_id]}, ${g.gift_name}`
                 : g.gift_name;
+              if (g.is_purchased) {
+                delivered[g.selected_by_guest_id] = true;
+              }
             }
           }
           setGuestGifts(map);
+          setGiftDelivered(delivered);
         }
       } else {
         // Load from IndexedDB
@@ -300,7 +307,43 @@ const Checkin = () => {
     }
   };
 
-  // Search filter
+  // Handle gift delivery confirmation
+  const handleGiftDelivery = async (guest: Guest) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from("gift_items")
+        .update({ is_purchased: true })
+        .eq("selected_by_guest_id", guest.id);
+
+      if (error) throw error;
+
+      await logAdminAction({
+        action: "update",
+        tableName: "gift_items",
+        recordId: guest.id,
+        oldData: { is_purchased: false, guest_name: guest.name },
+        newData: { is_purchased: true, guest_name: guest.name, action: "gift_delivered_at_checkin" },
+      });
+
+      setGiftDelivered((prev) => ({ ...prev, [guest.id]: true }));
+
+      toast({
+        title: "Presente recebido",
+        description: `Presente de ${guest.name} foi registrado como entregue`,
+      });
+    } catch (error) {
+      console.error("Gift delivery error:", error);
+      toast({
+        title: "Erro",
+        description: "Falha ao registrar entrega do presente",
+        variant: "destructive",
+      });
+    }
+  };
+
+
   useEffect(() => {
     if (searchTerm.trim() === "") {
       setFilteredGuests(guests);
@@ -472,14 +515,17 @@ const Checkin = () => {
                       </Button>
                       {guestGifts[guest.id] && (
                         <Button
-                          variant={guest.checked_in_at ? "default" : "outline"}
+                          variant={giftDelivered[guest.id] ? "outline" : "default"}
                           size="sm"
-                          disabled={!guest.checked_in_at}
-                          title={guest.checked_in_at ? `🎁 ${guestGifts[guest.id]}` : "Faça o check-in primeiro"}
+                          disabled={!guest.checked_in_at || giftDelivered[guest.id]}
+                          onClick={() => handleGiftDelivery(guest)}
+                          title={giftDelivered[guest.id] ? "Presente já entregue" : guest.checked_in_at ? `🎁 ${guestGifts[guest.id]}` : "Faça o check-in primeiro"}
                           className="gap-1"
                         >
                           <Gift className="h-4 w-4" />
-                          <span className="hidden sm:inline text-xs">Presente</span>
+                          <span className="hidden sm:inline text-xs">
+                            {giftDelivered[guest.id] ? "Entregue" : "Presente"}
+                          </span>
                         </Button>
                       )}
                     </div>
