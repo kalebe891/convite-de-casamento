@@ -50,7 +50,7 @@ const MENU_PERMISSIONS: Record<MenuKey, Array<"view" | "add" | "edit" | "delete"
   playlist: ["view", "add", "edit", "delete", "publish"],
   presentes: ["view", "add", "edit", "delete", "publish"],
   momentos: ["view", "add", "edit", "delete"],
-  checkin: ["view"],
+  checkin: ["view", "edit"],
   usuarios: ["view", "add", "edit", "delete"],
   logs: ["view"],
 };
@@ -61,6 +61,13 @@ const PERMISSION_LABELS: Record<string, string> = {
   edit: "Pode alterar",
   delete: "Pode excluir",
   publish: "Pode tornar público",
+};
+
+// Custom permission labels per menu (overrides default labels)
+const CUSTOM_PERMISSION_LABELS: Partial<Record<MenuKey, Partial<Record<string, string>>>> = {
+  checkin: {
+    edit: "Pode cancelar recebimento de presentes",
+  },
 };
 
 // Menus que usam "acessar" ao invés de "visualizar"
@@ -296,7 +303,9 @@ const RolePermissionsManager = ({ roleKey, roleLabel }: RolePermissionsManagerPr
                         htmlFor={`${permission.menu_key}-${permType}`}
                         className="text-sm font-normal cursor-pointer"
                       >
-                        {permType === "view" ? getViewLabel(permission.menu_key) : PERMISSION_LABELS[permType]}
+                        {permType === "view" 
+                          ? getViewLabel(permission.menu_key) 
+                          : (CUSTOM_PERMISSION_LABELS[permission.menu_key]?.[permType] || PERMISSION_LABELS[permType])}
                       </Label>
                     </div>
                   ))}
