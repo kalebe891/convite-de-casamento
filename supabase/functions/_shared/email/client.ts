@@ -169,8 +169,8 @@ interface TenantEmailConfig {
 export function getTenantEmailConfig(_tenantId?: string): TenantEmailConfig {
   // Today: fixed values. Future: lookup by tenantId.
   return {
-    fromEmail: "noreply@trial-3vz9dlezpvplkj50.mlsender.net",
+    fromEmail: "noreply@test-q3enl6k0mkm42vwr.mlsender.net",
     fromName: "Beatriz & Diogo",
-    domain: "trial-3vz9dlezpvplkj50.mlsender.net",
+    domain: "test-q3enl6k0mkm42vwr.mlsender.net",
   };
 }
