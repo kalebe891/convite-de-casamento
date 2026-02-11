@@ -1,0 +1,2 @@
+ALTER TABLE public.admin_logs DROP CONSTRAINT admin_logs_action_check;
+ALTER TABLE public.admin_logs ADD CONSTRAINT admin_logs_action_check CHECK (action = ANY (ARRAY['insert'::text, 'update'::text, 'delete'::text, 'checkin'::text, 'undo_checkin'::text]));
