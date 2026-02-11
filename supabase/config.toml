@@ -23,3 +23,6 @@ verify_jwt = true
 
 [functions.complete-user-invite]
 verify_jwt = false
+
+[functions.test-email]
+verify_jwt = false
