@@ -58,10 +58,7 @@ const GiftCard = ({ gift, index }: { gift: GiftItem; index: number }) => {
             <CardTitle className="text-base leading-snug truncate">{gift.gift_name}</CardTitle>
           </div>
           {isReserved && (
-            <Badge variant="secondary" className="flex-shrink-0 gap-1 text-[11px] font-medium bg-primary/10 text-primary border-0">
-              <Check className="w-3 h-3" />
-              Reservado
-            </Badge>
+            <Check className="w-4 h-4 flex-shrink-0 text-green-600" />
           )}
         </div>
         {gift.description && (
@@ -173,7 +170,7 @@ const GiftsSection = ({ weddingId }: GiftsSectionProps) => {
               <Skeleton className="h-10 sm:h-12 w-56 sm:w-72 mx-auto rounded-lg mb-4" />
               <Skeleton className="h-5 w-64 sm:w-96 mx-auto rounded" />
             </div>
-            <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
+            <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5">
               {Array.from({ length: skeletonCount }).map((_, i) => (
                 <GiftCardSkeleton key={i} index={i} />
               ))}
@@ -194,7 +191,7 @@ const GiftsSection = ({ weddingId }: GiftsSectionProps) => {
 
             {allGifts.length > 0 && (
               <>
-                <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
+            <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5">
                   {visibleGifts.map((gift, index) => (
                     <GiftCard key={gift.id} gift={gift} index={index} />
                   ))}
