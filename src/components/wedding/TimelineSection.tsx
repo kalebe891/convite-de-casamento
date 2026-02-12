@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Clock } from "lucide-react";
 import { SkeletonText } from "@/components/ui/skeleton-text";
-import { SkeletonCard } from "@/components/ui/skeleton-card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
 
 interface TimelineEvent {
@@ -55,14 +54,19 @@ const TimelineSection = ({ weddingId }: TimelineSectionProps) => {
 
   if (events === null) {
     return (
-      <section className="py-20 bg-muted/30">
-        <div className="container mx-auto px-4">
+      <section className="py-24 bg-background">
+        <div className="max-w-2xl mx-auto px-4">
           <div className="text-center mb-16">
+            <SkeletonText variant="body" className="mx-auto max-w-[120px] mb-3" />
             <SkeletonText variant="heading" className="mx-auto max-w-md" />
           </div>
-          <div className="max-w-3xl mx-auto space-y-6">
+          <div className="space-y-10">
             {Array.from({ length: 4 }).map((_, i) => (
-              <SkeletonCard key={i} lines={1} />
+              <div key={i} className="flex items-center gap-6">
+                <Skeleton className="h-16 flex-1 rounded-lg" />
+                <Skeleton className="w-3 h-3 rounded-full flex-shrink-0" />
+                <Skeleton className="h-16 flex-1 rounded-lg" />
+              </div>
             ))}
           </div>
         </div>
@@ -73,46 +77,66 @@ const TimelineSection = ({ weddingId }: TimelineSectionProps) => {
   if (!showSection || events.length === 0) return null;
 
   return (
-    <section className="py-20 bg-muted/30">
-      <div className="container mx-auto px-4">
-        <motion.h2
-          className="text-5xl font-serif font-bold text-center mb-16 text-foreground"
+    <section className="py-24 bg-background">
+      <div className="max-w-2xl mx-auto px-4">
+        {/* Header */}
+        <motion.div
+          className="text-center mb-16"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
         >
-          Cronograma
-        </motion.h2>
+          <p className="font-sans text-xs tracking-[0.4em] uppercase text-muted-foreground mb-3">
+            Programação do dia
+          </p>
+          <h2 className="font-serif text-3xl md:text-5xl italic text-foreground">
+            Cronograma
+          </h2>
+        </motion.div>
 
-        <div className="max-w-3xl mx-auto space-y-6">
-          {events.map((event, index) => (
-            <motion.div
-              key={event.id}
-              className="flex items-start gap-4 p-6 bg-card rounded-lg shadow-soft"
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-            >
-              <div className="flex-shrink-0 w-20 text-right">
-                <div className="flex items-center justify-end gap-2">
-                  <Clock className="w-4 h-4 text-primary" />
-                  <span className="text-lg font-semibold text-primary">
-                    {event.time}
-                  </span>
-                </div>
-              </div>
-              <div className="flex-1 pt-1">
-                <h3 className="text-xl font-medium text-foreground">
-                  {event.activity}
-                </h3>
-                {event.observation && (
-                  <p className="text-sm text-muted-foreground mt-2 italic">{event.observation}</p>
-                )}
-              </div>
-            </motion.div>
-          ))}
+        {/* Timeline */}
+        <div className="relative">
+          {/* Vertical line */}
+          <div className="absolute left-1/2 top-0 bottom-0 w-px -translate-x-1/2 bg-gradient-to-b from-transparent via-primary/40 to-transparent" />
+
+          <div className="space-y-12">
+            {events.map((event, i) => {
+              const isEven = i % 2 === 0;
+
+              return (
+                <motion.div
+                  key={event.id}
+                  className={`flex items-center gap-4 ${isEven ? "flex-row" : "flex-row-reverse"}`}
+                  initial={{ opacity: 0, x: isEven ? -20 : 20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: i * 0.1 }}
+                >
+                  {/* Content */}
+                  <div className={`flex-1 ${isEven ? "text-right" : "text-left"}`}>
+                    <p className="font-sans text-xs tracking-[0.2em] text-muted-foreground mb-1">
+                      {event.time}
+                    </p>
+                    <p className="text-lg text-foreground/90">
+                      {event.activity}
+                    </p>
+                    {event.observation && (
+                      <p className="text-sm text-muted-foreground/70 italic mt-1">
+                        {event.observation}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Center dot */}
+                  <div className="w-3 h-3 rounded-full border border-primary bg-background flex-shrink-0 z-10" />
+
+                  {/* Spacer */}
+                  <div className="flex-1" />
+                </motion.div>
+              );
+            })}
+          </div>
         </div>
       </div>
     </section>
