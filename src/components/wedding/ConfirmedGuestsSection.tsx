@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SkeletonText } from "@/components/ui/skeleton-text";
 import { SkeletonCard } from "@/components/ui/skeleton-card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { motion } from "framer-motion";
 
 interface ConfirmedGuestsSectionProps {
   weddingId: string | null;
@@ -26,7 +27,6 @@ const ConfirmedGuestsSection = ({ weddingId }: ConfirmedGuestsSectionProps) => {
     }
 
     const fetchConfirmedGuests = async () => {
-      // Buscar configurações de visibilidade
       const { data: weddingData } = await supabase
         .from("wedding_details")
         .select("show_guest_list_public, show_rsvp_status_public")
@@ -40,7 +40,6 @@ const ConfirmedGuestsSection = ({ weddingId }: ConfirmedGuestsSectionProps) => {
         });
       }
 
-      // Buscar convidados confirmados da tabela guests
       const { data: confirmedGuestsData } = await supabase
         .from("guests")
         .select("id, name, email, phone")
@@ -48,13 +47,11 @@ const ConfirmedGuestsSection = ({ weddingId }: ConfirmedGuestsSectionProps) => {
         .is("archived_at", null)
         .order("name");
 
-      // Buscar total de convidados
       const { data: allGuestsData } = await supabase
         .from("guests")
         .select("id")
         .is("archived_at", null);
 
-      // Transformar dados para o formato esperado
       const formattedGuests = (confirmedGuestsData || []).map(guest => ({
         id: guest.id,
         guest_name: guest.name,
@@ -72,7 +69,6 @@ const ConfirmedGuestsSection = ({ weddingId }: ConfirmedGuestsSectionProps) => {
     fetchConfirmedGuests();
   }, [weddingId]);
 
-  // Show skeleton while loading
   if (loading) {
     return (
       <section className="py-20 bg-background">
@@ -95,18 +91,29 @@ const ConfirmedGuestsSection = ({ weddingId }: ConfirmedGuestsSectionProps) => {
     );
   }
 
-  // Não mostrar nada se não houver convidados ou se ambas as opções estiverem desabilitadas
   if (stats.total === 0 || (!settings.show_guest_list_public && !settings.show_rsvp_status_public)) return null;
 
   return (
     <section className="py-20 bg-background">
       <div className="container mx-auto px-4">
-        <h2 className="text-5xl font-serif font-bold text-center mb-8 text-foreground">
+        <motion.h2
+          className="text-5xl font-serif font-bold text-center mb-8 text-foreground"
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+        >
           Confirmados
-        </h2>
+        </motion.h2>
 
         {settings.show_rsvp_status_public && (
-          <div className="max-w-4xl mx-auto mb-12">
+          <motion.div
+            className="max-w-4xl mx-auto mb-12"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+          >
             <Card className="shadow-elegant">
               <CardHeader>
                 <CardTitle className="flex items-center justify-center gap-3 text-2xl">
@@ -128,17 +135,20 @@ const ConfirmedGuestsSection = ({ weddingId }: ConfirmedGuestsSectionProps) => {
                 </p>
               </CardContent>
             </Card>
-          </div>
+          </motion.div>
         )}
 
-        {settings.show_guest_list_public && confirmedGuests.length > 0 && (
+        {settings.show_guest_list_public && confirmedGuests && confirmedGuests.length > 0 && (
           <div className="max-w-4xl mx-auto">
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {confirmedGuests.map((guest, index) => (
-                <div
+                <motion.div
                   key={guest.id}
-                  className="flex items-center gap-3 p-4 bg-card rounded-lg shadow-soft animate-fade-in"
-                  style={{ animationDelay: `${index * 50}ms` }}
+                  className="flex items-center gap-3 p-4 bg-card rounded-lg shadow-soft"
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4, delay: index * 0.05 }}
                 >
                   <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
@@ -149,7 +159,7 @@ const ConfirmedGuestsSection = ({ weddingId }: ConfirmedGuestsSectionProps) => {
                       <p className="text-sm text-muted-foreground">+1 acompanhante</p>
                     )}
                   </div>
-                </div>
+                </motion.div>
               ))}
             </div>
           </div>

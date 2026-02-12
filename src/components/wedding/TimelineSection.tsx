@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Clock } from "lucide-react";
 import { SkeletonText } from "@/components/ui/skeleton-text";
 import { SkeletonCard } from "@/components/ui/skeleton-card";
+import { motion } from "framer-motion";
 
 interface TimelineEvent {
   id: string;
@@ -25,7 +26,6 @@ const TimelineSection = ({ weddingId }: TimelineSectionProps) => {
     if (!weddingId) return;
 
     const fetchData = async () => {
-      // Fetch section visibility setting
       const { data: weddingData } = await supabase
         .from("wedding_details")
         .select("show_timeline_section")
@@ -40,7 +40,6 @@ const TimelineSection = ({ weddingId }: TimelineSectionProps) => {
 
       setShowSection(true);
 
-      // Fetch timeline events
       const { data } = await supabase
         .from("timeline_events")
         .select("*")
@@ -54,7 +53,6 @@ const TimelineSection = ({ weddingId }: TimelineSectionProps) => {
     fetchData();
   }, [weddingId]);
 
-  // Show skeleton while loading
   if (events === null) {
     return (
       <section className="py-20 bg-muted/30">
@@ -77,16 +75,25 @@ const TimelineSection = ({ weddingId }: TimelineSectionProps) => {
   return (
     <section className="py-20 bg-muted/30">
       <div className="container mx-auto px-4">
-        <h2 className="text-5xl font-serif font-bold text-center mb-16 text-foreground">
+        <motion.h2
+          className="text-5xl font-serif font-bold text-center mb-16 text-foreground"
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+        >
           Cronograma
-        </h2>
+        </motion.h2>
 
         <div className="max-w-3xl mx-auto space-y-6">
           {events.map((event, index) => (
-            <div
+            <motion.div
               key={event.id}
-              className="flex items-start gap-4 p-6 bg-card rounded-lg shadow-soft animate-fade-in"
-              style={{ animationDelay: `${index * 100}ms` }}
+              className="flex items-start gap-4 p-6 bg-card rounded-lg shadow-soft"
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
             >
               <div className="flex-shrink-0 w-20 text-right">
                 <div className="flex items-center justify-end gap-2">
@@ -104,7 +111,7 @@ const TimelineSection = ({ weddingId }: TimelineSectionProps) => {
                   <p className="text-sm text-muted-foreground mt-2 italic">{event.observation}</p>
                 )}
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>
