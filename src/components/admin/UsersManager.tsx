@@ -169,19 +169,21 @@ const UsersManager = ({ roleProfiles, onRoleProfilesChange, permissions }: Users
                 </Select>
               </div>
 
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Enviando convite...
-                  </>
-                ) : (
-                  <>
-                    <Mail className="mr-2 h-4 w-4" />
-                    Enviar Convite por Email
-                  </>
-                )}
-              </Button>
+              {permissions.isAdmin && (
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Enviando convite...
+                    </>
+                  ) : (
+                    <>
+                      <Mail className="mr-2 h-4 w-4" />
+                      Enviar Convite por Email
+                    </>
+                  )}
+                </Button>
+              )}
 
               {magicLink && (
                 <div className="p-4 bg-muted rounded-lg space-y-3">
