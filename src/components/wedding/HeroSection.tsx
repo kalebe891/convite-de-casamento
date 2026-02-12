@@ -79,7 +79,7 @@ const HeroSection = ({ weddingDetails }: HeroSectionProps) => {
         }`}
         style={{ backgroundImage: `url(${backgroundImage})` }}
       >
-        <div className="absolute inset-0 bg-gradient-to-b from-background/30 via-background/50 to-background"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-background/10 via-background/30 to-background/80"></div>
       </div>
 
       {/* Preload image */}
