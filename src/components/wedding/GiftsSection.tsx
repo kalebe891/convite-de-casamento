@@ -3,9 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Gift, ExternalLink, Check } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { motion } from "framer-motion";
 
 interface GiftsSectionProps {
   weddingId: string | null;
@@ -25,8 +25,7 @@ const ITEMS_PER_PAGE = { mobile: 8, tablet: 12, desktop: 16 };
 
 const GiftCardSkeleton = ({ index }: { index: number }) => (
   <div
-    className="rounded-2xl bg-card border border-border p-5 space-y-3 animate-fade-in"
-    style={{ animationDelay: `${index * 60}ms` }}
+    className="rounded-2xl bg-card border border-border p-5 space-y-3"
   >
     <div className="flex items-center gap-2.5">
       <Skeleton className="w-5 h-5 rounded-full" />
@@ -42,46 +41,52 @@ const GiftCard = ({ gift, index }: { gift: GiftItem; index: number }) => {
   const isReserved = !!gift.selected_by_guest_id || !!gift.is_purchased;
 
   return (
-    <Card
-      className={`group rounded-2xl border border-border shadow-soft transition-all duration-300 animate-fade-in
-        hover:shadow-elegant hover:-translate-y-1
-        ${isReserved ? "opacity-60" : ""}
-      `}
-      style={{ animationDelay: `${index * 60}ms` }}
+    <motion.div
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.5, delay: index * 0.05 }}
     >
-      <CardHeader className="pb-2">
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex items-center gap-2.5 flex-1 min-w-0">
-            <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-              <Gift className="w-4 h-4 text-primary" />
+      <Card
+        className={`group rounded-2xl border border-border shadow-soft transition-all duration-300
+          hover:shadow-elegant hover:-translate-y-1
+          ${isReserved ? "opacity-60" : ""}
+        `}
+      >
+        <CardHeader className="pb-2">
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex items-center gap-2.5 flex-1 min-w-0">
+              <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <Gift className="w-4 h-4 text-primary" />
+              </div>
+              <CardTitle className="text-base leading-snug truncate">{gift.gift_name}</CardTitle>
             </div>
-            <CardTitle className="text-base leading-snug truncate">{gift.gift_name}</CardTitle>
+            {isReserved && (
+              <Check className="w-4 h-4 flex-shrink-0 text-green-600" />
+            )}
           </div>
-          {isReserved && (
-            <Check className="w-4 h-4 flex-shrink-0 text-green-600" />
+          {gift.description && (
+            <CardDescription className="mt-2 text-sm leading-relaxed line-clamp-2">
+              {gift.description}
+            </CardDescription>
           )}
-        </div>
-        {gift.description && (
-          <CardDescription className="mt-2 text-sm leading-relaxed line-clamp-2">
-            {gift.description}
-          </CardDescription>
+        </CardHeader>
+        {gift.link && (
+          <CardContent className="pt-1">
+            <Button
+              variant="outline"
+              className="w-full rounded-xl h-11 text-sm font-medium transition-all duration-200
+                group-hover:border-primary/30 group-hover:text-primary"
+              onClick={() => window.open(gift.link!, "_blank")}
+              disabled={isReserved}
+            >
+              <ExternalLink className="w-4 h-4 mr-2" />
+              Ver Presente
+            </Button>
+          </CardContent>
         )}
-      </CardHeader>
-      {gift.link && (
-        <CardContent className="pt-1">
-          <Button
-            variant="outline"
-            className="w-full rounded-xl h-11 text-sm font-medium transition-all duration-200
-              group-hover:border-primary/30 group-hover:text-primary"
-            onClick={() => window.open(gift.link!, "_blank")}
-            disabled={isReserved}
-          >
-            <ExternalLink className="w-4 h-4 mr-2" />
-            Ver Presente
-          </Button>
-        </CardContent>
-      )}
-    </Card>
+      </Card>
+    </motion.div>
   );
 };
 
@@ -93,7 +98,6 @@ const GiftsSection = ({ weddingId }: GiftsSectionProps) => {
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE.desktop);
   const isMobile = useIsMobile();
 
-  // Set initial visible count based on device
   useEffect(() => {
     const width = window.innerWidth;
     if (width < 768) setVisibleCount(ITEMS_PER_PAGE.mobile);
@@ -178,7 +182,13 @@ const GiftsSection = ({ weddingId }: GiftsSectionProps) => {
           </>
         ) : (
           <>
-            <div className="text-center mb-10 sm:mb-14">
+            <motion.div
+              className="text-center mb-10 sm:mb-14"
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+            >
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold mb-3 sm:mb-4 text-foreground">
                 Lista de Presentes
               </h2>
@@ -187,18 +197,24 @@ const GiftsSection = ({ weddingId }: GiftsSectionProps) => {
                   ? "Ainda não há presentes cadastrados"
                   : "Se você deseja nos presentear, aqui estão algumas sugestões especiais"}
               </p>
-            </div>
+            </motion.div>
 
             {allGifts.length > 0 && (
               <>
-            <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5">
+                <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5">
                   {visibleGifts.map((gift, index) => (
                     <GiftCard key={gift.id} gift={gift} index={index} />
                   ))}
                 </div>
 
                 {hasMore && (
-                  <div className="flex justify-center mt-10 sm:mt-14">
+                  <motion.div
+                    className="flex justify-center mt-10 sm:mt-14"
+                    initial={{ opacity: 0 }}
+                    whileInView={{ opacity: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5 }}
+                  >
                     <Button
                       variant="outline"
                       size="lg"
@@ -208,7 +224,7 @@ const GiftsSection = ({ weddingId }: GiftsSectionProps) => {
                     >
                       Ver mais presentes
                     </Button>
-                  </div>
+                  </motion.div>
                 )}
               </>
             )}

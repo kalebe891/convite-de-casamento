@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { SkeletonGallery } from "@/components/ui/skeleton-gallery";
 import { SkeletonText } from "@/components/ui/skeleton-text";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface GallerySectionProps {
   photos: any[] | null;
@@ -9,7 +10,6 @@ interface GallerySectionProps {
 const GallerySection = ({ photos }: GallerySectionProps) => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
-  // Show skeleton while loading
   if (!photos) {
     return (
       <section className="py-20 bg-gradient-elegant">
@@ -25,25 +25,32 @@ const GallerySection = ({ photos }: GallerySectionProps) => {
     );
   }
 
-  if (photos.length === 0) {
-    return null;
-  }
+  if (photos.length === 0) return null;
 
   const displayPhotos = photos.map(p => ({ photo_url: p.photo_url, caption: p.caption }));
 
   return (
     <section className="py-20 bg-gradient-elegant">
       <div className="container mx-auto px-4">
-        <h2 className="text-5xl font-serif font-bold text-center mb-16 text-foreground">
+        <motion.h2
+          className="text-5xl font-serif font-bold text-center mb-16 text-foreground"
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+        >
           Nossos Momentos
-        </h2>
+        </motion.h2>
         
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-6xl mx-auto">
           {displayPhotos.map((photo, index) => (
-            <div
+            <motion.div
               key={index}
-              className="aspect-square overflow-hidden rounded-lg shadow-soft hover:shadow-elegant transition-all duration-300 cursor-pointer animate-scale-in"
-              style={{ animationDelay: `${index * 100}ms` }}
+              className="aspect-square overflow-hidden rounded-lg shadow-soft hover:shadow-elegant transition-all duration-300 cursor-pointer"
+              initial={{ opacity: 0, scale: 0.95 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: index * 0.08 }}
               onClick={() => setSelectedImage(photo.photo_url)}
             >
               <img
@@ -51,22 +58,30 @@ const GallerySection = ({ photos }: GallerySectionProps) => {
                 alt={photo.caption || "Gallery photo"}
                 className="w-full h-full object-cover hover:scale-110 transition-transform duration-500"
               />
-            </div>
+            </motion.div>
           ))}
         </div>
 
-        {selectedImage && (
-          <div
-            className="fixed inset-0 bg-background/95 z-50 flex items-center justify-center p-4 animate-fade-in"
-            onClick={() => setSelectedImage(null)}
-          >
-            <img
-              src={selectedImage}
-              alt="Selected"
-              className="max-w-full max-h-full rounded-lg shadow-elegant"
-            />
-          </div>
-        )}
+        <AnimatePresence>
+          {selectedImage && (
+            <motion.div
+              className="fixed inset-0 bg-background/95 z-50 flex items-center justify-center p-4"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedImage(null)}
+            >
+              <motion.img
+                src={selectedImage}
+                alt="Selected"
+                className="max-w-full max-h-full rounded-lg shadow-elegant"
+                initial={{ scale: 0.9 }}
+                animate={{ scale: 1 }}
+                exit={{ scale: 0.9 }}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </section>
   );

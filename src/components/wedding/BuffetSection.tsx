@@ -5,6 +5,7 @@ import { UtensilsCrossed } from "lucide-react";
 import { SkeletonText } from "@/components/ui/skeleton-text";
 import { SkeletonCard } from "@/components/ui/skeleton-card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { motion } from "framer-motion";
 
 interface BuffetItem {
   id: string;
@@ -29,7 +30,6 @@ const BuffetSection = ({ weddingId }: BuffetSectionProps) => {
     }
 
     const fetchData = async () => {
-      // Fetch section visibility setting
       const { data: weddingData } = await supabase
         .from("wedding_details")
         .select("show_buffet_section")
@@ -44,7 +44,6 @@ const BuffetSection = ({ weddingId }: BuffetSectionProps) => {
 
       setShowSection(true);
 
-      // Fetch buffet items
       const { data } = await supabase
         .from("buffet_items")
         .select("*")
@@ -58,7 +57,6 @@ const BuffetSection = ({ weddingId }: BuffetSectionProps) => {
     fetchData();
   }, [weddingId]);
 
-  // Show skeleton while loading
   if (items === null) {
     return (
       <section className="py-16 px-4 bg-background">
@@ -80,12 +78,9 @@ const BuffetSection = ({ weddingId }: BuffetSectionProps) => {
 
   if (!weddingId || !showSection || items.length === 0) return null;
 
-  // Group items by category
   const groupedItems = items.reduce((acc, item) => {
     const category = item.category || "Outros";
-    if (!acc[category]) {
-      acc[category] = [];
-    }
+    if (!acc[category]) acc[category] = [];
     acc[category].push(item);
     return acc;
   }, {} as Record<string, BuffetItem[]>);
@@ -93,29 +88,43 @@ const BuffetSection = ({ weddingId }: BuffetSectionProps) => {
   return (
     <section className="py-16 px-4 bg-background">
       <div className="container mx-auto max-w-4xl">
-        <div className="text-center mb-12">
+        <motion.div
+          className="text-center mb-12"
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+        >
           <UtensilsCrossed className="w-12 h-12 mx-auto mb-4 text-primary" />
           <h2 className="text-4xl font-serif font-bold mb-2">Cardápio</h2>
           <p className="text-muted-foreground">Delícias que preparamos para você</p>
-        </div>
+        </motion.div>
 
         <div className="space-y-6">
-          {Object.entries(groupedItems).map(([category, categoryItems]) => (
-            <Card key={category} className="shadow-elegant">
-              <CardHeader>
-                <CardTitle className="text-2xl font-serif">{category}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2">
-                  {categoryItems.map((item) => (
-                    <li key={item.id} className="flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-primary flex-shrink-0" />
-                      <span>{item.item_name}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
+          {Object.entries(groupedItems).map(([category, categoryItems], index) => (
+            <motion.div
+              key={category}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
+            >
+              <Card className="shadow-elegant">
+                <CardHeader>
+                  <CardTitle className="text-2xl font-serif">{category}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-2">
+                    {categoryItems.map((item) => (
+                      <li key={item.id} className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-primary flex-shrink-0" />
+                        <span>{item.item_name}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            </motion.div>
           ))}
         </div>
       </div>

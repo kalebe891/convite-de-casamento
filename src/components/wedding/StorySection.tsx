@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { SkeletonImage } from "@/components/ui/skeleton-image";
-import { SkeletonText } from "@/components/ui/skeleton-text";
+import { motion } from "framer-motion";
 
 interface StorySectionProps {
   weddingDetails: any;
@@ -28,54 +28,58 @@ const StorySection = ({ weddingDetails }: StorySectionProps) => {
 
     fetchSecondaryPhoto();
 
-    // Realtime para atualizar foto secundária
     const photosChannel = supabase
       .channel('story-photos-changes')
       .on(
         'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'photos'
-        },
-        () => {
-          fetchSecondaryPhoto();
-        }
+        { event: '*', schema: 'public', table: 'photos' },
+        () => { fetchSecondaryPhoto(); }
       )
       .subscribe();
 
-    return () => {
-      supabase.removeChannel(photosChannel);
-    };
+    return () => { supabase.removeChannel(photosChannel); };
   }, [weddingDetails?.id]);
 
-  if (!weddingDetails) {
-    return null;
-  }
+  if (!weddingDetails) return null;
 
   return (
     <section className="py-20 bg-gradient-elegant">
       <div className="container mx-auto px-4">
-        <h2 className="text-5xl font-serif font-bold text-center mb-16 text-foreground animate-fade-in">
+        <motion.h2
+          className="text-5xl font-serif font-bold text-center mb-16 text-foreground"
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+        >
           Nossa História
-        </h2>
+        </motion.h2>
         
         <div className="grid md:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
-          {!secondaryPhoto ? (
-            <div className="animate-slide-in-left">
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7 }}
+          >
+            {!secondaryPhoto ? (
               <SkeletonImage className="w-full h-[500px]" />
-            </div>
-          ) : (
-            <div className="animate-slide-in-left">
+            ) : (
               <img
                 src={secondaryPhoto}
                 alt="Casal"
                 className="rounded-lg shadow-elegant w-full h-auto object-cover"
               />
-            </div>
-          )}
+            )}
+          </motion.div>
           
-          <div className="space-y-6 animate-slide-in-right">
+          <motion.div
+            className="space-y-6"
+            initial={{ opacity: 0, x: 30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7, delay: 0.2 }}
+          >
             <p className="text-lg text-muted-foreground leading-relaxed whitespace-pre-line">
               {weddingDetails?.story || 
                 "Desde o momento em que nos conhecemos, soubemos que algo especial havia começado. Entre risadas, aventuras e inúmeras memórias, nosso amor cresceu mais forte a cada dia.\n\nAgora, cercados por nossos entes queridos, estamos prontos para começar a maior aventura de todas – passar para sempre juntos."}
@@ -87,7 +91,7 @@ const StorySection = ({ weddingDetails }: StorySectionProps) => {
                 </p>
               </div>
             )}
-          </div>
+          </motion.div>
         </div>
       </div>
     </section>

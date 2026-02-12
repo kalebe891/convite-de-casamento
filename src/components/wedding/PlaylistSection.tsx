@@ -5,6 +5,7 @@ import { Music } from "lucide-react";
 import { SkeletonText } from "@/components/ui/skeleton-text";
 import { SkeletonCard } from "@/components/ui/skeleton-card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { motion } from "framer-motion";
 
 interface PlaylistSong {
   id: string;
@@ -30,7 +31,6 @@ const PlaylistSection = ({ weddingId }: PlaylistSectionProps) => {
     }
 
     const fetchData = async () => {
-      // Fetch section visibility setting
       const { data: weddingData } = await supabase
         .from("wedding_details")
         .select("show_playlist_section")
@@ -45,7 +45,6 @@ const PlaylistSection = ({ weddingId }: PlaylistSectionProps) => {
 
       setShowSection(true);
 
-      // Fetch playlist songs
       const { data } = await supabase
         .from("playlist_songs")
         .select("*")
@@ -59,7 +58,6 @@ const PlaylistSection = ({ weddingId }: PlaylistSectionProps) => {
     fetchData();
   }, [weddingId]);
 
-  // Show skeleton while loading
   if (songs === null) {
     return (
       <section className="py-16 px-4 bg-muted/50">
@@ -81,12 +79,9 @@ const PlaylistSection = ({ weddingId }: PlaylistSectionProps) => {
 
   if (!weddingId || !showSection || songs.length === 0) return null;
 
-  // Group songs by moment
   const groupedSongs = songs.reduce((acc, song) => {
     const moment = song.moment || "Outros";
-    if (!acc[moment]) {
-      acc[moment] = [];
-    }
+    if (!acc[moment]) acc[moment] = [];
     acc[moment].push(song);
     return acc;
   }, {} as Record<string, PlaylistSong[]>);
@@ -94,34 +89,48 @@ const PlaylistSection = ({ weddingId }: PlaylistSectionProps) => {
   return (
     <section className="py-16 px-4 bg-muted/50">
       <div className="container mx-auto max-w-4xl">
-        <div className="text-center mb-12">
+        <motion.div
+          className="text-center mb-12"
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+        >
           <Music className="w-12 h-12 mx-auto mb-4 text-primary" />
           <h2 className="text-4xl font-serif font-bold mb-2">Playlist</h2>
           <p className="text-muted-foreground">Músicas especiais do nosso dia</p>
-        </div>
+        </motion.div>
 
         <div className="space-y-6">
-          {Object.entries(groupedSongs).map(([moment, momentSongs]) => (
-            <Card key={moment} className="shadow-elegant">
-              <CardHeader>
-                <CardTitle className="text-2xl font-serif">{moment}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-3">
-                  {momentSongs.map((song) => (
-                    <li key={song.id} className="flex items-start gap-3">
-                      <Music className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                      <div>
-                        <p className="font-medium">{song.song_name}</p>
-                        {song.artist && (
-                          <p className="text-sm text-muted-foreground">{song.artist}</p>
-                        )}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
+          {Object.entries(groupedSongs).map(([moment, momentSongs], index) => (
+            <motion.div
+              key={moment}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
+            >
+              <Card className="shadow-elegant">
+                <CardHeader>
+                  <CardTitle className="text-2xl font-serif">{moment}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-3">
+                    {momentSongs.map((song) => (
+                      <li key={song.id} className="flex items-start gap-3">
+                        <Music className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                        <div>
+                          <p className="font-medium">{song.song_name}</p>
+                          {song.artist && (
+                            <p className="text-sm text-muted-foreground">{song.artist}</p>
+                          )}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            </motion.div>
           ))}
         </div>
       </div>
