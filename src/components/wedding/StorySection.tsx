@@ -56,17 +56,17 @@ const StorySection = ({ weddingDetails }: StorySectionProps) => {
   return (
     <section className="py-20 bg-gradient-elegant">
       <div className="container mx-auto px-4">
-        <h2 className="text-5xl font-serif font-bold text-center mb-16 text-foreground">
+        <h2 className="text-5xl font-serif font-bold text-center mb-16 text-foreground animate-fade-in">
           Nossa História
         </h2>
         
         <div className="grid md:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
           {!secondaryPhoto ? (
-            <div className="animate-fade-in">
+            <div className="animate-slide-in-left">
               <SkeletonImage className="w-full h-[500px]" />
             </div>
           ) : (
-            <div className="animate-fade-in">
+            <div className="animate-slide-in-left">
               <img
                 src={secondaryPhoto}
                 alt="Casal"
@@ -75,7 +75,7 @@ const StorySection = ({ weddingDetails }: StorySectionProps) => {
             </div>
           )}
           
-          <div className="space-y-6 animate-fade-in-up">
+          <div className="space-y-6 animate-slide-in-right">
             <p className="text-lg text-muted-foreground leading-relaxed whitespace-pre-line">
               {weddingDetails?.story || 
                 "Desde o momento em que nos conhecemos, soubemos que algo especial havia começado. Entre risadas, aventuras e inúmeras memórias, nosso amor cresceu mais forte a cada dia.\n\nAgora, cercados por nossos entes queridos, estamos prontos para começar a maior aventura de todas – passar para sempre juntos."}
