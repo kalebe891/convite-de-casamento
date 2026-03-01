@@ -81,13 +81,14 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Detalhes do casamento não encontrados");
     }
 
-    // Check if invitation already exists for this guest
+    // Check if active invitation already exists for this guest
     let invitation;
     const { data: existingInvitation } = await supabase
       .from("invitations")
       .select("*")
-      .eq("guest_email", guest.email)
+      .eq("guest_id", guest.id)
       .eq("wedding_id", weddingData.id)
+      .is("deleted_at", null)
       .single();
 
     if (existingInvitation) {

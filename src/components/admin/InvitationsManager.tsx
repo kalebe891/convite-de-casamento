@@ -39,6 +39,7 @@ const InvitationsManager = () => {
         .from("invitations")
         .select("*")
         .eq("wedding_id", weddingData.id)
+        .is("deleted_at", null)
         .order("created_at", { ascending: false });
 
       setInvitations(data || []);
@@ -80,7 +81,7 @@ const InvitationsManager = () => {
           .select("id")
           .eq("phone", phone)
           .is("archived_at", null)
-          .single();
+          .maybeSingle();
         guestId = guestByPhone?.id || null;
       }
       
@@ -90,7 +91,7 @@ const InvitationsManager = () => {
           .select("id")
           .eq("email", email)
           .is("archived_at", null)
-          .single();
+          .maybeSingle();
         guestId = guestByEmail?.id || null;
       }
 
@@ -145,7 +146,7 @@ const InvitationsManager = () => {
 
   const deleteInvitation = async (id: string) => {
     try {
-      const { error } = await supabase.from("invitations").delete().eq("id", id);
+      const { error } = await supabase.from("invitations").update({ deleted_at: new Date().toISOString() }).eq("id", id);
 
       if (error) throw error;
 

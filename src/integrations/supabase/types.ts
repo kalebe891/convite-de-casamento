@@ -315,6 +315,7 @@ export type Database = {
           attending: boolean | null
           checked_in_at: string | null
           created_at: string | null
+          deleted_at: string | null
           dietary_restrictions: string | null
           guest_email: string | null
           guest_id: string
@@ -332,6 +333,7 @@ export type Database = {
           attending?: boolean | null
           checked_in_at?: string | null
           created_at?: string | null
+          deleted_at?: string | null
           dietary_restrictions?: string | null
           guest_email?: string | null
           guest_id: string
@@ -349,6 +351,7 @@ export type Database = {
           attending?: boolean | null
           checked_in_at?: string | null
           created_at?: string | null
+          deleted_at?: string | null
           dietary_restrictions?: string | null
           guest_email?: string | null
           guest_id?: string
