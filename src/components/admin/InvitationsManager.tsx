@@ -146,7 +146,7 @@ const InvitationsManager = () => {
 
   const deleteInvitation = async (id: string) => {
     try {
-      const { error } = await supabase.from("invitations").update({ deleted_at: new Date().toISOString() }).eq("id", id);
+      const { error } = await supabase.from("invitations").update({ deleted_at: new Date().toISOString(), message: null }).eq("id", id);
 
       if (error) throw error;
 
