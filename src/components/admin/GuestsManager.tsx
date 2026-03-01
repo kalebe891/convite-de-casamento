@@ -256,6 +256,7 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
         .from("guests")
         .select("id, phone")
         .eq("phone", phoneToCheck)
+        .is("archived_at", null)
         .neq("id", editGuest.id);
 
       if (checkError) {
