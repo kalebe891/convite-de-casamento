@@ -100,6 +100,7 @@ const handler = async (req: Request): Promise<Response> => {
         .from("invitations")
         .insert({
           wedding_id: weddingData.id,
+          guest_id: guest.id,
           guest_name: guest.name,
           guest_email: guest.email,
           guest_phone: guest.phone,
