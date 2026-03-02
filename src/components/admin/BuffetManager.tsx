@@ -67,7 +67,7 @@ const BuffetManager = ({ permissions }: BuffetManagerProps) => {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
     } else {
       toast({ title: "Atualizado", description: `Seção de buffet ${newValue ? 'exibida' : 'oculta'} na página pública` });
-      await logAdminAction({ action: "update", tableName: "wedding_details", recordId: weddingId, newData: { show_buffet_section: newValue } });
+      await logAdminAction({ action: "update", tableName: "wedding_details", recordId: weddingId, newData: { show_buffet_section: newValue }, affectedName: "Seção Buffet" });
       setShowBuffetSection(newValue);
     }
   };
@@ -96,7 +96,7 @@ const BuffetManager = ({ permissions }: BuffetManagerProps) => {
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
     } else {
-      await logAdminAction({ action: "insert", tableName: "buffet_items", recordId: data?.id, newData: newItem });
+      await logAdminAction({ action: "insert", tableName: "buffet_items", recordId: data?.id, newData: newItem, affectedName: newItem.item_name });
       toast({ title: "Sucesso", description: "Item adicionado!" });
       setNewItem({ item_name: "", category: "", is_public: true });
       fetchData();
@@ -142,7 +142,7 @@ const BuffetManager = ({ permissions }: BuffetManagerProps) => {
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
     } else {
-      await logAdminAction({ action: "update", tableName: "buffet_items", recordId: editingId!, oldData: oldItem, newData: editItem });
+      await logAdminAction({ action: "update", tableName: "buffet_items", recordId: editingId!, oldData: oldItem, newData: editItem, affectedName: editItem.item_name });
       toast({ title: "Sucesso", description: "Item atualizado!" });
       setIsEditOpen(false);
       setEditingId(null);
@@ -161,7 +161,7 @@ const BuffetManager = ({ permissions }: BuffetManagerProps) => {
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
     } else {
-      await logAdminAction({ action: "delete", tableName: "buffet_items", recordId: id, oldData: deletedItem });
+      await logAdminAction({ action: "delete", tableName: "buffet_items", recordId: id, oldData: deletedItem, affectedName: deletedItem?.item_name });
       toast({ title: "Sucesso", description: "Item removido!" });
       fetchData();
     }
@@ -178,7 +178,8 @@ const BuffetManager = ({ permissions }: BuffetManagerProps) => {
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
     } else {
-      await logAdminAction({ action: "update", tableName: "buffet_items", recordId: id, oldData: { is_public: currentValue }, newData: { is_public: newValue } });
+      const item = items.find(i => i.id === id);
+      await logAdminAction({ action: "update", tableName: "buffet_items", recordId: id, oldData: { is_public: currentValue }, newData: { is_public: newValue }, affectedName: item?.item_name });
       fetchData();
     }
   };

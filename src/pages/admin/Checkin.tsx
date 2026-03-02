@@ -327,6 +327,7 @@ const Checkin = () => {
         recordId: guest.id,
         oldData: { is_purchased: false, guest_name: guest.name },
         newData: { is_purchased: true, guest_name: guest.name, action: "gift_delivered_at_checkin" },
+        affectedName: guest.name,
       });
 
       setGiftDelivered((prev) => ({ ...prev, [guest.id]: true }));
@@ -363,6 +364,7 @@ const Checkin = () => {
         recordId: guest.id,
         oldData: { is_purchased: true, guest_name: guest.name },
         newData: { is_purchased: false, guest_name: guest.name, action: "gift_delivery_cancelled_at_checkin" },
+        affectedName: guest.name,
       });
 
       setGiftDelivered((prev) => ({ ...prev, [guest.id]: false }));

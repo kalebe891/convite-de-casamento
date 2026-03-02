@@ -72,6 +72,7 @@ const WeddingSettingsForm = ({ permissions }: WeddingSettingsFormProps) => {
           recordId: weddingId,
           oldData: currentData,
           newData: formData,
+          affectedName: "Configurações",
         });
       }
 

@@ -109,7 +109,7 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
     } else {
-      await logAdminAction({ action: "insert", tableName: "gift_items", recordId: data?.id, newData: newItem });
+      await logAdminAction({ action: "insert", tableName: "gift_items", recordId: data?.id, newData: newItem, affectedName: newItem.gift_name });
       toast({ title: "Sucesso", description: "Presente adicionado!" });
       setNewItem({ gift_name: "", description: "", link: "", is_public: true });
       fetchData();
@@ -161,7 +161,7 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
     } else {
-      await logAdminAction({ action: "update", tableName: "gift_items", recordId: editingId!, oldData: oldItem, newData: editItem });
+      await logAdminAction({ action: "update", tableName: "gift_items", recordId: editingId!, oldData: oldItem, newData: editItem, affectedName: editItem.gift_name });
       toast({ title: "Sucesso", description: "Presente atualizado!" });
       setIsEditOpen(false);
       setEditingId(null);
@@ -180,7 +180,7 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
     } else {
-      await logAdminAction({ action: "delete", tableName: "gift_items", recordId: id, oldData: deletedItem });
+      await logAdminAction({ action: "delete", tableName: "gift_items", recordId: id, oldData: deletedItem, affectedName: deletedItem?.gift_name });
       toast({ title: "Sucesso", description: "Presente removido!" });
       fetchData();
     }
@@ -197,7 +197,8 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
     } else {
       toast({ title: "Atualizado", description: `Presente ${newValue ? 'visível' : 'oculto'} para o público` });
-      await logAdminAction({ action: "update", tableName: "gift_items", recordId: id, newData: { is_public: newValue } });
+      const gift = items.find(i => i.id === id);
+      await logAdminAction({ action: "update", tableName: "gift_items", recordId: id, newData: { is_public: newValue }, affectedName: gift?.gift_name });
       fetchData();
     }
   };
@@ -215,7 +216,7 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
     } else {
       toast({ title: "Atualizado", description: `Seção de presentes ${newValue ? 'exibida' : 'oculta'} na página inicial` });
-      await logAdminAction({ action: "update", tableName: "wedding_details", recordId: weddingId, newData: { show_gifts_section: newValue } });
+      await logAdminAction({ action: "update", tableName: "wedding_details", recordId: weddingId, newData: { show_gifts_section: newValue }, affectedName: "Seção Presentes" });
       setShowGiftsSection(newValue);
     }
   };
@@ -233,7 +234,7 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
     } else {
       toast({ title: "Atualizado", description: `Presentes reservados ${newValue ? 'ocultos' : 'visíveis'} na página inicial` });
-      await logAdminAction({ action: "update", tableName: "wedding_details", recordId: weddingId, newData: { hide_reserved_gifts: newValue } });
+      await logAdminAction({ action: "update", tableName: "wedding_details", recordId: weddingId, newData: { hide_reserved_gifts: newValue }, affectedName: "Ocultar Reservados" });
       setHideReservedGifts(newValue);
     }
   };

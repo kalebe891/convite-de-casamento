@@ -1,0 +1,1 @@
+ALTER TABLE public.admin_logs ADD COLUMN IF NOT EXISTS affected_name text;
