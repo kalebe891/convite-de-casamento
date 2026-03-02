@@ -6,6 +6,7 @@ interface LogParams {
   recordId?: string;
   oldData?: any;
   newData?: any;
+  affectedName?: string;
 }
 
 export const logAdminAction = async ({
@@ -14,6 +15,7 @@ export const logAdminAction = async ({
   recordId,
   oldData,
   newData,
+  affectedName,
 }: LogParams) => {
   try {
     const { data: { user } } = await supabase.auth.getUser();
@@ -28,6 +30,7 @@ export const logAdminAction = async ({
       record_id: recordId,
       old_data: oldData || null,
       new_data: newData || null,
+      affected_name: affectedName || null,
     });
   } catch (error) {
     console.error("Error logging admin action:", error);

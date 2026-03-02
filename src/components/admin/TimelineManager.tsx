@@ -67,7 +67,7 @@ const TimelineManager = ({ permissions }: TimelineManagerProps) => {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
     } else {
       toast({ title: "Atualizado", description: `Seção de cronograma ${newValue ? 'exibida' : 'oculta'} na página pública` });
-      await logAdminAction({ action: "update", tableName: "wedding_details", recordId: weddingId, newData: { show_timeline_section: newValue } });
+      await logAdminAction({ action: "update", tableName: "wedding_details", recordId: weddingId, newData: { show_timeline_section: newValue }, affectedName: "Seção Cronograma" });
       setShowTimelineSection(newValue);
     }
   };
@@ -97,7 +97,7 @@ const TimelineManager = ({ permissions }: TimelineManagerProps) => {
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
     } else {
-      await logAdminAction({ action: "insert", tableName: "timeline_events", recordId: data?.id, newData: newEvent });
+      await logAdminAction({ action: "insert", tableName: "timeline_events", recordId: data?.id, newData: newEvent, affectedName: newEvent.activity });
       toast({ title: "Sucesso", description: "Evento adicionado!" });
       setNewEvent({ time: "", activity: "", observation: "", is_public: true });
       fetchData();
@@ -145,7 +145,7 @@ const TimelineManager = ({ permissions }: TimelineManagerProps) => {
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
     } else {
-      await logAdminAction({ action: "update", tableName: "timeline_events", recordId: editingId!, oldData: oldEvent, newData: editEvent });
+      await logAdminAction({ action: "update", tableName: "timeline_events", recordId: editingId!, oldData: oldEvent, newData: editEvent, affectedName: editEvent.activity });
       toast({ title: "Sucesso", description: "Evento atualizado!" });
       setIsEditOpen(false);
       setEditingId(null);
@@ -164,7 +164,7 @@ const TimelineManager = ({ permissions }: TimelineManagerProps) => {
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
     } else {
-      await logAdminAction({ action: "delete", tableName: "timeline_events", recordId: id, oldData: deletedEvent });
+      await logAdminAction({ action: "delete", tableName: "timeline_events", recordId: id, oldData: deletedEvent, affectedName: deletedEvent?.activity });
       toast({ title: "Sucesso", description: "Evento removido!" });
       fetchData();
     }
@@ -181,7 +181,8 @@ const TimelineManager = ({ permissions }: TimelineManagerProps) => {
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
     } else {
-      await logAdminAction({ action: "update", tableName: "timeline_events", recordId: id, oldData: { is_public: currentValue }, newData: { is_public: newValue } });
+      const item = events.find(e => e.id === id);
+      await logAdminAction({ action: "update", tableName: "timeline_events", recordId: id, oldData: { is_public: currentValue }, newData: { is_public: newValue }, affectedName: item?.activity });
       fetchData();
     }
   };

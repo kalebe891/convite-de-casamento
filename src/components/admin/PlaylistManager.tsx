@@ -67,7 +67,7 @@ const PlaylistManager = ({ permissions }: PlaylistManagerProps) => {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
     } else {
       toast({ title: "Atualizado", description: `Seção de playlist ${newValue ? 'exibida' : 'oculta'} na página pública` });
-      await logAdminAction({ action: "update", tableName: "wedding_details", recordId: weddingId, newData: { show_playlist_section: newValue } });
+      await logAdminAction({ action: "update", tableName: "wedding_details", recordId: weddingId, newData: { show_playlist_section: newValue }, affectedName: "Seção Playlist" });
       setShowPlaylistSection(newValue);
     }
   };
@@ -97,7 +97,7 @@ const PlaylistManager = ({ permissions }: PlaylistManagerProps) => {
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
     } else {
-      await logAdminAction({ action: "insert", tableName: "playlist_songs", recordId: data?.id, newData: newSong });
+      await logAdminAction({ action: "insert", tableName: "playlist_songs", recordId: data?.id, newData: newSong, affectedName: newSong.song_name });
       toast({ title: "Sucesso", description: "Música adicionada!" });
       setNewSong({ moment: "", song_name: "", artist: "", is_public: true });
       fetchData();
@@ -145,7 +145,7 @@ const PlaylistManager = ({ permissions }: PlaylistManagerProps) => {
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
     } else {
-      await logAdminAction({ action: "update", tableName: "playlist_songs", recordId: editingId!, oldData: oldSong, newData: editSong });
+      await logAdminAction({ action: "update", tableName: "playlist_songs", recordId: editingId!, oldData: oldSong, newData: editSong, affectedName: editSong.song_name });
       toast({ title: "Sucesso", description: "Música atualizada!" });
       setIsEditOpen(false);
       setEditingId(null);
@@ -164,7 +164,7 @@ const PlaylistManager = ({ permissions }: PlaylistManagerProps) => {
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
     } else {
-      await logAdminAction({ action: "delete", tableName: "playlist_songs", recordId: id, oldData: deletedSong });
+      await logAdminAction({ action: "delete", tableName: "playlist_songs", recordId: id, oldData: deletedSong, affectedName: deletedSong?.song_name });
       toast({ title: "Sucesso", description: "Música removida!" });
       fetchData();
     }
@@ -181,7 +181,8 @@ const PlaylistManager = ({ permissions }: PlaylistManagerProps) => {
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
     } else {
-      await logAdminAction({ action: "update", tableName: "playlist_songs", recordId: id, oldData: { is_public: currentValue }, newData: { is_public: newValue } });
+      const song = songs.find(s => s.id === id);
+      await logAdminAction({ action: "update", tableName: "playlist_songs", recordId: id, oldData: { is_public: currentValue }, newData: { is_public: newValue }, affectedName: song?.song_name });
       fetchData();
     }
   };

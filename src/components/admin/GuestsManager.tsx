@@ -302,6 +302,7 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
             phone: validationResult.data.phone?.trim() || null,
             email: validationResult.data.email?.trim() || null,
           } as any,
+          affected_name: validationResult.data.name.trim(),
         });
       }
 
@@ -334,7 +335,7 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
       console.error("Error archiving guest:", error);
       toast.error(getSafeErrorMessage(error));
     } else {
-      await logAdminAction({ action: "update", tableName: "guests", recordId: id, oldData: guest, newData: { archived_at: new Date().toISOString() } });
+      await logAdminAction({ action: "update", tableName: "guests", recordId: id, oldData: guest, newData: { archived_at: new Date().toISOString() }, affectedName: guest.name });
       toast.success("Convidado arquivado com sucesso!");
       fetchGuests();
     }
@@ -357,7 +358,7 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
         toast.error(getSafeErrorMessage(error));
       }
     } else {
-      await logAdminAction({ action: "update", tableName: "guests", recordId: id, oldData: { archived_at: guest.archived_at }, newData: { archived_at: null } });
+      await logAdminAction({ action: "update", tableName: "guests", recordId: id, oldData: { archived_at: guest.archived_at }, newData: { archived_at: null }, affectedName: guest.name });
       toast.success("Convidado restaurado com sucesso!");
       fetchGuests();
       fetchArchivedGuests();

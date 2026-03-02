@@ -103,6 +103,7 @@ const EventsManager = ({ permissions }: EventsManagerProps) => {
           recordId: editingId,
           oldData: oldEvent,
           newData: data,
+          affectedName: data?.event_name,
         });
 
         setEvents(events.map((e) => (e.id === editingId ? data : e)));
@@ -136,6 +137,7 @@ const EventsManager = ({ permissions }: EventsManagerProps) => {
           tableName: "events",
           recordId: data.id,
           newData: data,
+          affectedName: data.event_name,
         });
 
         setEvents([...events, data]);
@@ -208,6 +210,7 @@ const EventsManager = ({ permissions }: EventsManagerProps) => {
         tableName: "events",
         recordId: id,
         oldData: eventToDelete,
+        affectedName: eventToDelete?.event_name,
       });
 
       setEvents(events.filter((e) => e.id !== id));

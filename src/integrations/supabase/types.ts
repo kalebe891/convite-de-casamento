@@ -17,6 +17,7 @@ export type Database = {
       admin_logs: {
         Row: {
           action: string
+          affected_name: string | null
           created_at: string
           id: string
           new_data: Json | null
@@ -28,6 +29,7 @@ export type Database = {
         }
         Insert: {
           action: string
+          affected_name?: string | null
           created_at?: string
           id?: string
           new_data?: Json | null
@@ -39,6 +41,7 @@ export type Database = {
         }
         Update: {
           action?: string
+          affected_name?: string | null
           created_at?: string
           id?: string
           new_data?: Json | null
