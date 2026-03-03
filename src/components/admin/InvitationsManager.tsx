@@ -6,18 +6,17 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import { Copy, Plus, Trash2, ArchiveRestore, ChevronDown, ChevronUp } from "lucide-react";
+import { Copy, Plus, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { invitationSchema } from "@/lib/validationSchemas";
 import { getSafeErrorMessage } from "@/lib/errorHandling";
 import { useAuth } from "@/hooks/useAuth";
+import { logAdminAction } from "@/lib/adminLogger";
 
 const InvitationsManager = () => {
   const { toast } = useToast();
   const { session } = useAuth();
   const [invitations, setInvitations] = useState<any[]>([]);
-  const [deletedInvitations, setDeletedInvitations] = useState<any[]>([]);
-  const [showDeleted, setShowDeleted] = useState(false);
   const [weddingId, setWeddingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -39,25 +38,13 @@ const InvitationsManager = () => {
     if (weddingData) {
       setWeddingId(weddingData.id);
 
-      // Fetch active invitations
-      const { data: active } = await supabase
+      const { data } = await supabase
         .from("invitations")
         .select("*")
         .eq("wedding_id", weddingData.id)
-        .is("deleted_at", null)
         .order("created_at", { ascending: false });
 
-      setInvitations(active || []);
-
-      // Fetch deleted invitations
-      const { data: deleted } = await supabase
-        .from("invitations")
-        .select("*")
-        .eq("wedding_id", weddingData.id)
-        .not("deleted_at", "is", null)
-        .order("deleted_at", { ascending: false });
-
-      setDeletedInvitations(deleted || []);
+      setInvitations(data || []);
     }
   };
 
@@ -157,60 +144,44 @@ const InvitationsManager = () => {
     });
   };
 
-  const deleteInvitation = async (id: string, guestId: string) => {
+  const deleteInvitation = async (invitation: any) => {
     try {
-      const userEmail = session?.user?.email || "desconhecido";
-
       // 1. Unclaim gift linked to this guest
-      await supabase.rpc("unclaim_gift", { p_guest_id: guestId });
+      await supabase.rpc("unclaim_gift", { p_guest_id: invitation.guest_id });
 
-      // 2. Soft delete invitation + permanently clear all interaction data
+      // 2. Delete RSVP tokens for this guest
+      await supabase
+        .from("rsvp_tokens")
+        .delete()
+        .eq("guest_id", invitation.guest_id);
+
+      // 3. Hard delete the invitation
       const { error } = await supabase
         .from("invitations")
-        .update({
-          deleted_at: new Date().toISOString(),
-          deleted_by: userEmail,
-          message: null,
-          attending: null,
-          plus_one: null,
-          responded_at: null,
-          dietary_restrictions: null,
-        })
-        .eq("id", id);
+        .delete()
+        .eq("id", invitation.id);
 
       if (error) throw error;
+
+      // 4. Log the action
+      await logAdminAction({
+        action: "delete",
+        tableName: "invitations",
+        recordId: invitation.id,
+        oldData: {
+          guest_name: invitation.guest_name,
+          guest_phone: invitation.guest_phone,
+          guest_email: invitation.guest_email,
+          unique_code: invitation.unique_code,
+          attending: invitation.attending,
+          message: invitation.message,
+        },
+        affectedName: invitation.guest_name,
+      });
 
       toast({
         title: "Convite excluído",
-        description: "O convite e todas as interações foram removidos com sucesso.",
-      });
-
-      fetchInvitations();
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: getSafeErrorMessage(error),
-        variant: "destructive",
-      });
-    }
-  };
-
-  const restoreInvitation = async (id: string) => {
-    try {
-      // Restore only cadastral data — interaction fields stay null
-      const { error } = await supabase
-        .from("invitations")
-        .update({
-          deleted_at: null,
-          deleted_by: null,
-        })
-        .eq("id", id);
-
-      if (error) throw error;
-
-      toast({
-        title: "Convite restaurado",
-        description: "O convite foi restaurado em estado limpo, sem dados de interação anteriores.",
+        description: "O convite foi removido permanentemente do sistema.",
       });
 
       fetchInvitations();
@@ -333,7 +304,7 @@ const InvitationsManager = () => {
                       <Button
                         variant="destructive"
                         size="icon"
-                        onClick={() => deleteInvitation(invitation.id, invitation.guest_id)}
+                        onClick={() => deleteInvitation(invitation)}
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
@@ -345,62 +316,6 @@ const InvitationsManager = () => {
           </Table>
         </CardContent>
       </Card>
-
-      {/* Deleted Invitations Section */}
-      {deletedInvitations.length > 0 && (
-        <Card>
-          <CardHeader>
-            <div
-              className="flex justify-between items-center cursor-pointer"
-              onClick={() => setShowDeleted(!showDeleted)}
-            >
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Convites Excluídos ({deletedInvitations.length})
-              </CardTitle>
-              {showDeleted ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-            </div>
-          </CardHeader>
-          {showDeleted && (
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nome</TableHead>
-                    <TableHead>Telefone</TableHead>
-                    <TableHead>Excluído em</TableHead>
-                    <TableHead>Usuário</TableHead>
-                    <TableHead>Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {deletedInvitations.map((invitation) => (
-                    <TableRow key={invitation.id} className="opacity-60">
-                      <TableCell>{invitation.guest_name}</TableCell>
-                      <TableCell>{invitation.guest_phone || "-"}</TableCell>
-                      <TableCell>
-                        {invitation.deleted_at
-                          ? new Date(invitation.deleted_at).toLocaleDateString("pt-BR")
-                          : "-"}
-                      </TableCell>
-                      <TableCell>{invitation.deleted_by || "-"}</TableCell>
-                      <TableCell>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => restoreInvitation(invitation.id)}
-                        >
-                          <ArchiveRestore className="h-4 w-4 mr-1" />
-                          Restaurar
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          )}
-        </Card>
-      )}
     </div>
   );
 };

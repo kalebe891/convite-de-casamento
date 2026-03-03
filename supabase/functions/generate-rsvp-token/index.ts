@@ -88,7 +88,6 @@ const handler = async (req: Request): Promise<Response> => {
       .select("*")
       .eq("guest_id", guest.id)
       .eq("wedding_id", weddingData.id)
-      .is("deleted_at", null)
       .single();
 
     if (existingInvitation) {
