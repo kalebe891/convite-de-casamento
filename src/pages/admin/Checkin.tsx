@@ -322,11 +322,11 @@ const Checkin = () => {
       if (error) throw error;
 
       await logAdminAction({
-        action: "update",
+        action: "gift_received",
         tableName: "gift_items",
         recordId: guest.id,
         oldData: { is_purchased: false, guest_name: guest.name },
-        newData: { is_purchased: true, guest_name: guest.name, action: "gift_delivered_at_checkin" },
+        newData: { is_purchased: true, guest_name: guest.name },
         affectedName: guest.name,
       });
 
@@ -359,11 +359,11 @@ const Checkin = () => {
       if (error) throw error;
 
       await logAdminAction({
-        action: "update",
+        action: "gift_cancelled",
         tableName: "gift_items",
         recordId: guest.id,
         oldData: { is_purchased: true, guest_name: guest.name },
-        newData: { is_purchased: false, guest_name: guest.name, action: "gift_delivery_cancelled_at_checkin" },
+        newData: { is_purchased: false, guest_name: guest.name },
         affectedName: guest.name,
       });
 

@@ -131,11 +131,19 @@ const Logs = () => {
       insert: "default",
       update: "secondary",
       delete: "destructive",
+      checkin: "default",
+      undo_checkin: "destructive",
+      gift_received: "default",
+      gift_cancelled: "destructive",
     };
     const labels: Record<string, string> = {
       insert: "Criação",
       update: "Edição",
       delete: "Exclusão",
+      checkin: "Check-in",
+      undo_checkin: "Check-in cancelado",
+      gift_received: "Presente recebido",
+      gift_cancelled: "Presente cancelado",
     };
     return (
       <Badge variant={variants[action] || "default"} className="gap-1">
