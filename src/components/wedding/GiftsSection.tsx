@@ -21,7 +21,7 @@ interface GiftItem {
   selected_by_guest_id: string | null;
 }
 
-const ITEMS_PER_PAGE = { mobile: 8, tablet: 12, desktop: 16 };
+const ITEMS_PER_PAGE = { mobile: 8, tablet: 10, desktop: 15 };
 
 const GiftCardSkeleton = ({ index }: { index: number }) => (
   <div

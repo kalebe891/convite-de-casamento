@@ -1,0 +1,2 @@
+ALTER TABLE public.admin_logs DROP CONSTRAINT IF EXISTS admin_logs_action_check;
+ALTER TABLE public.admin_logs ADD CONSTRAINT admin_logs_action_check CHECK (action IN ('insert', 'update', 'delete', 'checkin', 'undo_checkin', 'gift_received', 'gift_cancelled'));
