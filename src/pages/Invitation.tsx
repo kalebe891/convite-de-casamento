@@ -487,11 +487,25 @@ const Invitation = () => {
         <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
           <DrawerTrigger asChild>
             <Button 
-              className="fixed bottom-6 right-6 rounded-full shadow-lg px-6 py-6 text-lg z-50"
+              className="fixed bottom-6 right-6 rounded-full shadow-lg px-6 py-6 text-lg z-50 overflow-hidden"
               size="lg"
+              style={{
+                opacity: 0,
+                transform: 'translateY(80px)',
+                animation: 'gift-btn-slide-up 1.1s cubic-bezier(0.22, 1, 0.36, 1) 1.2s forwards',
+              }}
             >
-              <Gift className="w-5 h-5 mr-2" />
-              Lista de Presentes
+              {/* Diagonal shine overlay */}
+              <span
+                className="pointer-events-none absolute inset-0"
+                style={{
+                  background: 'linear-gradient(135deg, transparent 30%, rgba(255,255,255,0.2) 50%, transparent 70%)',
+                  backgroundSize: '200% 200%',
+                  animation: 'gift-btn-shine 4s ease-in-out infinite',
+                }}
+              />
+              <Gift className="w-5 h-5 mr-2 relative z-10" />
+              <span className="relative z-10">Lista de Presentes</span>
             </Button>
           </DrawerTrigger>
           <DrawerContent className="max-h-[85vh]">

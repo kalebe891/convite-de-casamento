@@ -189,7 +189,7 @@ const WeddingDetailsForm = ({ permissions }: WeddingDetailsFormProps) => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="invitationMessage">Mensagem do Convite (WhatsApp/Email)</Label>
+            <Label htmlFor="invitationMessage">Mensagem do Convite (WhatsApp)</Label>
             <Textarea
               id="invitationMessage"
               value={formData.invitationMessage}

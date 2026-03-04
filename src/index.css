@@ -121,6 +121,31 @@ All colors MUST be HSL.
   display: none !important;
 }
 
+/* Gift button animations */
+@keyframes gift-btn-slide-up {
+  0% {
+    opacity: 0;
+    transform: translateY(80px);
+    filter: brightness(2);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    filter: brightness(1);
+  }
+}
+
+@keyframes gift-btn-shine {
+  0%, 100% {
+    background-position: 200% 200%;
+    opacity: 0.2;
+  }
+  50% {
+    background-position: -100% -100%;
+    opacity: 0.2;
+  }
+}
+
 /* Fix button text wrapping on very small screens */
 @media (max-width: 372px) {
   .confirm-button {
