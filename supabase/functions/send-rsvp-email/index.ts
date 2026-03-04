@@ -114,6 +114,24 @@ const handler = async (req: Request): Promise<Response> => {
     const origin = req.headers.get("origin") || "http://localhost:8080";
     const invitationLink = `${origin}/convite/${invitation.unique_code}`;
 
+    // Get invitation message template from wedding_details
+    const { data: weddingDetails } = await supabase
+      .from("wedding_details")
+      .select("invitation_message")
+      .single();
+
+    const defaultTemplate = `Olá, {guest_name}! ❤️\n\nEstamos muito felizes em convidá-lo(a) para celebrar conosco este momento tão especial!\n\nConfirme sua presença pelo link abaixo:\n{invitation_link}`;
+    const rawTemplate = (weddingDetails as any)?.invitation_message?.trim() || defaultTemplate;
+    const messageText = rawTemplate
+      .replace(/\{guest_name\}/g, guest.name)
+      .replace(/\{invitation_link\}/g, invitationLink);
+
+    // Convert plain text to HTML paragraphs
+    const messageHtml = messageText
+      .split("\n")
+      .map((line: string) => line.trim() === "" ? "<br>" : `<p style="font-size: 16px; color: #666; text-align: center; margin: 4px 0;">${line}</p>`)
+      .join("");
+
     // Send email
     const emailResponse = await resend.emails.send({
       from: "Convite de Casamento <onboarding@resend.dev>",
@@ -121,13 +139,7 @@ const handler = async (req: Request): Promise<Response> => {
       subject: "Você está convidado para o nosso casamento! ❤️",
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <h1 style="color: #333; text-align: center;">Você está convidado!</h1>
-          <p style="font-size: 16px; color: #666; text-align: center;">
-            Olá, ${guest.name}! ❤️
-          </p>
-          <p style="font-size: 16px; color: #666; text-align: center;">
-            Estamos muito felizes em convidá-lo(a) para celebrar conosco este momento tão especial!
-          </p>
+          ${messageHtml}
           <div style="text-align: center; margin: 30px 0;">
             <a href="${invitationLink}" 
                style="background-color: #8B5CF6; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-size: 16px; display: inline-block;">
