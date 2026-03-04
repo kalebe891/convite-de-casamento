@@ -435,17 +435,7 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
 
       const invitationMessage = (weddingData as any)?.invitation_message;
       
-      // Get gift info for this guest
-      let giftInfo = "";
-      const { data: selectedGift } = await supabase
-        .from("gift_items")
-        .select("gift_name")
-        .eq("selected_by_guest_id", guest.id)
-        .single();
 
-      if (selectedGift) {
-        giftInfo = `\n\n🎁 Presente selecionado anteriormente: ${selectedGift.gift_name}\nVocê pode alterar sua escolha através do link.`;
-      }
 
       const fallback = `{guest_name}, confirme sua presença:\n{invitation_link}`;
       const template = invitationMessage?.trim() || fallback;
