@@ -189,18 +189,18 @@ const WeddingDetailsForm = ({ permissions }: WeddingDetailsFormProps) => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="invitationMessage">Mensagem do Casal (WhatsApp/Email)</Label>
+            <Label htmlFor="invitationMessage">Mensagem do Convite (WhatsApp/Email)</Label>
             <Textarea
               id="invitationMessage"
               value={formData.invitationMessage}
               onChange={(e) => setFormData({ ...formData, invitationMessage: e.target.value })}
-              rows={4}
-              placeholder="Mensagem personalizada que será enviada junto com o convite via WhatsApp ou Email..."
+              rows={6}
+              placeholder={`Olá, {guest_name}! 🎉\nEstamos te convidando para o nosso casamento!\nAcesse o link abaixo e confirme sua presença:\n{invitation_link}`}
               disabled={!permissions.canEdit}
               readOnly={!permissions.canEdit}
             />
             <p className="text-xs text-muted-foreground">
-              Esta mensagem será incluída nos convites enviados por WhatsApp e Email.
+              Use as variáveis: <code className="bg-muted px-1 rounded">{'{guest_name}'}</code> para o nome do convidado e <code className="bg-muted px-1 rounded">{'{invitation_link}'}</code> para o link do convite.
             </p>
           </div>
 

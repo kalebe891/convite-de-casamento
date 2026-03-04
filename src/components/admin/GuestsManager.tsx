@@ -381,11 +381,11 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
       const invitationMessage = (weddingData as any)?.invitation_message;
 
       const link = data.link;
-      let message = `Olá, ${guest.name}! 🎉\n\nEstamos te convidando para o nosso casamento!\nAcesse o link abaixo e confirme sua presença:\n\n${link}`;
-      
-      if (invitationMessage) {
-        message += `\n\n${invitationMessage}`;
-      }
+      const defaultTemplate = `Olá, {guest_name}! 🎉\n\nEstamos te convidando para o nosso casamento!\nAcesse o link abaixo e confirme sua presença:\n\n{invitation_link}`;
+      const template = invitationMessage?.trim() || defaultTemplate;
+      const message = template
+        .replace(/\{guest_name\}/g, guest.name)
+        .replace(/\{invitation_link\}/g, link);
 
       setWhatsAppMessage(message);
       setWhatsAppLink(link);
@@ -435,7 +435,7 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
 
       const invitationMessage = (weddingData as any)?.invitation_message;
       
-      // Get invitation for this guest using guest_id
+      // Get gift info for this guest
       let giftInfo = "";
       const { data: selectedGift } = await supabase
         .from("gift_items")
@@ -447,11 +447,11 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
         giftInfo = `\n\n🎁 Presente selecionado anteriormente: ${selectedGift.gift_name}\nVocê pode alterar sua escolha através do link.`;
       }
 
-      let message = `Olá, ${guest.name}! 🎉\n\nSe desejar alterar sua confirmação de presença para o nosso casamento, acesse o link abaixo:\n\n${link}${giftInfo}\n\nO link é válido por 30 dias.`;
-      
-      if (invitationMessage) {
-        message += `\n\n${invitationMessage}`;
-      }
+      const defaultTemplate = `Olá, {guest_name}! 🎉\n\nSe desejar alterar sua confirmação de presença para o nosso casamento, acesse o link abaixo:\n\n{invitation_link}\n\nO link é válido por 30 dias.`;
+      const template = invitationMessage?.trim() || defaultTemplate;
+      const message = template
+        .replace(/\{guest_name\}/g, guest.name)
+        .replace(/\{invitation_link\}/g, link) + giftInfo;
 
       setWhatsAppMessage(message);
       setWhatsAppLink(link);
