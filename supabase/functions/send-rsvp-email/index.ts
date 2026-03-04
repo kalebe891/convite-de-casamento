@@ -120,8 +120,8 @@ const handler = async (req: Request): Promise<Response> => {
       .select("invitation_message")
       .single();
 
-    const defaultTemplate = `Olá, {guest_name}! ❤️\n\nEstamos muito felizes em convidá-lo(a) para celebrar conosco este momento tão especial!\n\nConfirme sua presença pelo link abaixo:\n{invitation_link}`;
-    const rawTemplate = (weddingDetails as any)?.invitation_message?.trim() || defaultTemplate;
+    const fallback = `{guest_name}, confirme sua presença:\n{invitation_link}`;
+    const rawTemplate = (weddingDetails as any)?.invitation_message?.trim() || fallback;
     const messageText = rawTemplate
       .replace(/\{guest_name\}/g, guest.name)
       .replace(/\{invitation_link\}/g, invitationLink);
