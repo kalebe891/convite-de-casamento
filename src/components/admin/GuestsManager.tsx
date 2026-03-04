@@ -381,8 +381,8 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
       const invitationMessage = (weddingData as any)?.invitation_message;
 
       const link = data.link;
-      const defaultTemplate = `Olá, {guest_name}! 🎉\n\nEstamos te convidando para o nosso casamento!\nAcesse o link abaixo e confirme sua presença:\n\n{invitation_link}`;
-      const template = invitationMessage?.trim() || defaultTemplate;
+      const fallback = `{guest_name}, confirme sua presença:\n{invitation_link}`;
+      const template = invitationMessage?.trim() || fallback;
       const message = template
         .replace(/\{guest_name\}/g, guest.name)
         .replace(/\{invitation_link\}/g, link);
@@ -435,23 +435,13 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
 
       const invitationMessage = (weddingData as any)?.invitation_message;
       
-      // Get gift info for this guest
-      let giftInfo = "";
-      const { data: selectedGift } = await supabase
-        .from("gift_items")
-        .select("gift_name")
-        .eq("selected_by_guest_id", guest.id)
-        .single();
 
-      if (selectedGift) {
-        giftInfo = `\n\n🎁 Presente selecionado anteriormente: ${selectedGift.gift_name}\nVocê pode alterar sua escolha através do link.`;
-      }
 
-      const defaultTemplate = `Olá, {guest_name}! 🎉\n\nSe desejar alterar sua confirmação de presença para o nosso casamento, acesse o link abaixo:\n\n{invitation_link}\n\nO link é válido por 30 dias.`;
-      const template = invitationMessage?.trim() || defaultTemplate;
+      const fallback = `{guest_name}, confirme sua presença:\n{invitation_link}`;
+      const template = invitationMessage?.trim() || fallback;
       const message = template
         .replace(/\{guest_name\}/g, guest.name)
-        .replace(/\{invitation_link\}/g, link) + giftInfo;
+        .replace(/\{invitation_link\}/g, link);
 
       setWhatsAppMessage(message);
       setWhatsAppLink(link);
