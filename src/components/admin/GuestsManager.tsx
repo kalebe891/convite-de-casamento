@@ -564,16 +564,6 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
                       required
                     />
                   </div>
-                  <div>
-                    <Label htmlFor="email">E-mail</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={newGuest.email}
-                      onChange={(e) => setNewGuest({ ...newGuest, email: e.target.value })}
-                      placeholder="email@exemplo.com"
-                    />
-                  </div>
                   <Button onClick={handleAddGuest} className="w-full" disabled={!permissions.canAdd}>
                     Adicionar
                   </Button>
@@ -598,12 +588,6 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
                   onClick={() => handleSort("phone")}
                 >
                   Telefone {getSortIcon("phone")}
-                </TableHead>
-                <TableHead 
-                  className="cursor-pointer hover:bg-muted/50 transition-colors select-none"
-                  onClick={() => handleSort("email")}
-                >
-                  E-mail {getSortIcon("email")}
                 </TableHead>
                 <TableHead 
                   className="cursor-pointer hover:bg-muted/50 transition-colors select-none"
@@ -635,7 +619,7 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
                     </div>
                   </TableCell>
                   <TableCell>{guest.phone || "-"}</TableCell>
-                  <TableCell>{guest.email || "-"}</TableCell>
+                  
                   <TableCell>{getStatusBadge(guest.status)}</TableCell>
                   <TableCell>
                     <div className="flex gap-2">
@@ -648,17 +632,6 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
                       >
                         <Pencil className="h-4 w-4" />
                       </Button>
-                      {guest.email && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleSendEmail(guest)}
-                          title="Enviar e-mail"
-                          disabled={!permissions.canAdd}
-                        >
-                          <Mail className="h-4 w-4" />
-                        </Button>
-                      )}
                       <Button
                         variant="outline"
                         size="sm"
