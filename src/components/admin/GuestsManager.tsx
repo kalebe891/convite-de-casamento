@@ -404,7 +404,10 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
 
   const handleOpenWhatsApp = () => {
     if (selectedGuest?.phone) {
-      const phone = selectedGuest.phone.replace(/\D/g, "");
+      let phone = selectedGuest.phone.replace(/\D/g, "");
+      if (!phone.startsWith("55")) {
+        phone = "55" + phone;
+      }
       const encodedMessage = encodeURIComponent(whatsAppMessage);
       window.open(`https://wa.me/${phone}?text=${encodedMessage}`, "_blank");
     } else {
