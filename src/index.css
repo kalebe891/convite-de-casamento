@@ -136,13 +136,11 @@ All colors MUST be HSL.
 }
 
 @keyframes gift-btn-shine {
-  0%, 100% {
-    background-position: 200% 200%;
-    opacity: 0.2;
+  0% {
+    transform: translateX(-100%);
   }
-  50% {
-    background-position: -100% -100%;
-    opacity: 0.2;
+  100% {
+    transform: translateX(100%);
   }
 }
 

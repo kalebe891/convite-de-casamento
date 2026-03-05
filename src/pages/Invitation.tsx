@@ -499,9 +499,8 @@ const Invitation = () => {
               <span
                 className="pointer-events-none absolute inset-0"
                 style={{
-                  background: 'linear-gradient(135deg, transparent 30%, rgba(255,255,255,0.2) 50%, transparent 70%)',
-                  backgroundSize: '200% 200%',
-                  animation: 'gift-btn-shine 4s ease-in-out infinite',
+                  background: 'linear-gradient(135deg, transparent 20%, rgba(255,255,255,0.35) 45%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0.35) 55%, transparent 80%)',
+                  animation: 'gift-btn-shine 3.5s ease-in-out infinite',
                 }}
               />
               <Gift className="w-5 h-5 mr-2 relative z-10" />
