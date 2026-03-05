@@ -6,9 +6,11 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, Plus, Pencil, X } from "lucide-react";
+import { Trash2, Plus, Pencil, X, PackageCheck, AlertTriangle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { getSafeErrorMessage } from "@/lib/errorHandling";
 import { logAdminAction } from "@/lib/adminLogger";
 
@@ -117,10 +119,6 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
   };
 
   const handleOpenEdit = (item: any) => {
-    if (!permissions.canEdit) {
-      toast({ title: "Sem permissão", description: "Você não tem permissão para editar itens", variant: "destructive" });
-      return;
-    }
     setEditingId(item.id);
     setEditItem({
       gift_name: item.gift_name,
@@ -130,6 +128,34 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
       selected_by_guest_id: item.selected_by_guest_id || "",
     });
     setIsEditOpen(true);
+  };
+
+  const handleToggleReceived = async (item: any) => {
+    const newValue = !item.is_purchased;
+    const { error } = await supabase
+      .from("gift_items")
+      .update({ is_purchased: newValue })
+      .eq("id", item.id);
+
+    if (error) {
+      toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
+    } else {
+      await logAdminAction({
+        action: newValue ? "gift_received" : "gift_cancelled",
+        tableName: "gift_items",
+        recordId: item.id,
+        oldData: { is_purchased: !newValue, gift_name: item.gift_name },
+        newData: { is_purchased: newValue, gift_name: item.gift_name },
+        affectedName: item.gift_name,
+      });
+      toast({
+        title: newValue ? "Presente recebido" : "Recebimento cancelado",
+        description: newValue
+          ? `"${item.gift_name}" marcado como recebido`
+          : `"${item.gift_name}" não está mais marcado como recebido`,
+      });
+      fetchData();
+    }
   };
 
   const handleUpdate = async () => {
@@ -297,56 +323,82 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
           <DialogHeader>
             <DialogTitle>Editar Presente</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label>Nome do Presente</Label>
-              <Input value={editItem.gift_name} onChange={(e) => setEditItem({ ...editItem, gift_name: e.target.value })} disabled={!permissions.canEdit} />
-            </div>
-            <div>
-              <Label>Descrição (opcional)</Label>
-              <Input value={editItem.description} onChange={(e) => setEditItem({ ...editItem, description: e.target.value })} disabled={!permissions.canEdit} />
-            </div>
-            <div>
-              <Label>Link (opcional)</Label>
-              <Input value={editItem.link} onChange={(e) => setEditItem({ ...editItem, link: e.target.value })} disabled={!permissions.canEdit} />
-            </div>
-            <div className="flex items-center gap-2">
-              <Switch checked={editItem.is_public} onCheckedChange={(checked) => setEditItem({ ...editItem, is_public: checked })} disabled={!permissions.canPublish} />
-              <Label>Exibir publicamente</Label>
-            </div>
-            <div>
-              <Label>Vincular a convidado (opcional)</Label>
-              <Select
-                value={editItem.selected_by_guest_id || "none"}
-                onValueChange={(val) => setEditItem({ ...editItem, selected_by_guest_id: val === "none" ? "" : val })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Nenhum convidado vinculado" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Nenhum</SelectItem>
-                  {invitations.map((inv) => {
-                    const statusLabel = inv.status === "confirmed" ? "Confirmado" : inv.status === "declined" ? "Recusado" : "Pendente";
-                    return (
-                      <SelectItem key={inv.id} value={inv.id}>
-                        {inv.guest_name} ({statusLabel})
-                      </SelectItem>
-                    );
-                  })}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex gap-2">
-              <Button onClick={handleUpdate} disabled={!editItem.gift_name || !permissions.canEdit}>
-                <Pencil className="w-4 h-4 mr-2" />
-                Atualizar
-              </Button>
-              <Button onClick={() => setIsEditOpen(false)} variant="outline">
-                <X className="w-4 h-4 mr-2" />
-                Cancelar
-              </Button>
-            </div>
-          </div>
+          {(() => {
+            const currentItem = items.find(i => i.id === editingId);
+            const isReceived = currentItem?.is_purchased === true;
+            return (
+              <div className="space-y-4">
+                {isReceived && (
+                  <Alert variant="destructive">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertDescription>
+                      Este presente já foi marcado como recebido. Para editar ou excluir, primeiro reverta o status de recebimento.
+                    </AlertDescription>
+                  </Alert>
+                )}
+                <div>
+                  <Label>Nome do Presente</Label>
+                  <Input value={editItem.gift_name} onChange={(e) => setEditItem({ ...editItem, gift_name: e.target.value })} disabled={!permissions.canEdit || isReceived} />
+                </div>
+                <div>
+                  <Label>Descrição (opcional)</Label>
+                  <Input value={editItem.description} onChange={(e) => setEditItem({ ...editItem, description: e.target.value })} disabled={!permissions.canEdit || isReceived} />
+                </div>
+                <div>
+                  <Label>Link (opcional)</Label>
+                  <Input value={editItem.link} onChange={(e) => setEditItem({ ...editItem, link: e.target.value })} disabled={!permissions.canEdit || isReceived} />
+                </div>
+                <div className="flex items-center gap-2">
+                  <Switch checked={editItem.is_public} onCheckedChange={(checked) => setEditItem({ ...editItem, is_public: checked })} disabled={!permissions.canPublish || isReceived} />
+                  <Label>Exibir publicamente</Label>
+                </div>
+                <div>
+                  <Label>Vincular a convidado (opcional)</Label>
+                  <Select
+                    value={editItem.selected_by_guest_id || "none"}
+                    onValueChange={(val) => setEditItem({ ...editItem, selected_by_guest_id: val === "none" ? "" : val })}
+                    disabled={isReceived}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Nenhum convidado vinculado" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Nenhum</SelectItem>
+                      {invitations.map((inv) => {
+                        const statusLabel = inv.status === "confirmed" ? "Confirmado" : inv.status === "declined" ? "Recusado" : "Pendente";
+                        return (
+                          <SelectItem key={inv.id} value={inv.id}>
+                            {inv.guest_name} ({statusLabel})
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {/* Received toggle button */}
+                {currentItem?.selected_by_guest_id && permissions.canEdit && (
+                  <Button
+                    variant={isReceived ? "destructive" : "default"}
+                    className="w-full"
+                    onClick={() => handleToggleReceived(currentItem)}
+                  >
+                    <PackageCheck className="w-4 h-4 mr-2" />
+                    {isReceived ? "Não recebido" : "Recebido"}
+                  </Button>
+                )}
+                <div className="flex gap-2">
+                  <Button onClick={handleUpdate} disabled={!editItem.gift_name || !permissions.canEdit || isReceived}>
+                    <Pencil className="w-4 h-4 mr-2" />
+                    Atualizar
+                  </Button>
+                  <Button onClick={() => setIsEditOpen(false)} variant="outline">
+                    <X className="w-4 h-4 mr-2" />
+                    Cancelar
+                  </Button>
+                </div>
+              </div>
+            );
+          })()}
         </DialogContent>
       </Dialog>
 
@@ -359,29 +411,40 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
             <p className="text-muted-foreground text-center py-8">Nenhum presente adicionado.</p>
           ) : (
             <div className="space-y-4">
-              {items.map((item) => (
-                <div key={item.id} className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex-1">
-                    <p className="font-semibold">{item.gift_name}</p>
-                    {item.description && <p className="text-sm text-muted-foreground">{item.description}</p>}
-                    {item.link && (
-                      <a href={item.link} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline">Ver link</a>
-                    )}
-                    {item.guest?.name && (
-                      <p className="text-sm text-green-600 dark:text-green-400 font-medium mt-1">🎁 Selecionado por: {item.guest.name}</p>
-                    )}
+              {items.map((item) => {
+                const isReceived = item.is_purchased === true;
+                return (
+                  <div key={item.id} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <p className="font-semibold">{item.gift_name}</p>
+                        {isReceived && (
+                          <Badge variant="default" className="bg-green-600 text-xs">
+                            <PackageCheck className="w-3 h-3 mr-1" />
+                            Recebido
+                          </Badge>
+                        )}
+                      </div>
+                      {item.description && <p className="text-sm text-muted-foreground">{item.description}</p>}
+                      {item.link && (
+                        <a href={item.link} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline">Ver link</a>
+                      )}
+                      {item.guest?.name && (
+                        <p className="text-sm text-green-600 dark:text-green-400 font-medium mt-1">🎁 Selecionado por: {item.guest.name}</p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Switch checked={item.is_public} onCheckedChange={(checked) => handleTogglePublic(item.id, checked)} disabled={!permissions.canPublish} />
+                      <Button variant="outline" size="icon" onClick={() => handleOpenEdit(item)}>
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+                      <Button variant="destructive" size="icon" onClick={() => handleDelete(item.id)} disabled={!permissions.canDelete || isReceived} title={isReceived ? "Reverta o recebimento antes de excluir" : undefined}>
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Switch checked={item.is_public} onCheckedChange={(checked) => handleTogglePublic(item.id, checked)} disabled={!permissions.canPublish} />
-                    <Button variant="outline" size="icon" onClick={() => handleOpenEdit(item)} disabled={!permissions.canEdit}>
-                      <Pencil className="w-4 h-4" />
-                    </Button>
-                    <Button variant="destructive" size="icon" onClick={() => handleDelete(item.id)} disabled={!permissions.canDelete}>
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </CardContent>

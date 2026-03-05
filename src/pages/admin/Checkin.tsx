@@ -571,7 +571,7 @@ const Checkin = () => {
                            <Button
                              variant={giftDelivered[guest.id] ? "outline" : "default"}
                              size="sm"
-                             disabled={!guest.checked_in_at || giftDelivered[guest.id]}
+                             disabled={giftDelivered[guest.id] || !guest.checked_in_at}
                              onClick={() => handleGiftDelivery(guest)}
                              title={giftDelivered[guest.id] ? "Presente já recebido" : guest.checked_in_at ? `🎁 ${guestGifts[guest.id]}` : "Faça o check-in primeiro"}
                              className="gap-1"
