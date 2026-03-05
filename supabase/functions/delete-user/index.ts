@@ -87,7 +87,44 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log('Deleting user:', userId);
 
-    // Delete user using admin client
+    // Clean up dependent records before deleting auth user
+    // 1. Delete user_roles
+    const { error: rolesError } = await supabaseAdmin
+      .from('user_roles')
+      .delete()
+      .eq('user_id', userId);
+    if (rolesError) {
+      console.error('Error deleting user_roles:', rolesError);
+    }
+
+    // 2. Delete admin_logs referencing user
+    const { error: logsError } = await supabaseAdmin
+      .from('admin_logs')
+      .delete()
+      .eq('user_id', userId);
+    if (logsError) {
+      console.error('Error deleting admin_logs:', logsError);
+    }
+
+    // 3. Delete checkin_logs performed by user
+    const { error: checkinLogsError } = await supabaseAdmin
+      .from('checkin_logs')
+      .delete()
+      .eq('performed_by', userId);
+    if (checkinLogsError) {
+      console.error('Error deleting checkin_logs:', checkinLogsError);
+    }
+
+    // 4. Delete profile
+    const { error: profileError } = await supabaseAdmin
+      .from('profiles')
+      .delete()
+      .eq('id', userId);
+    if (profileError) {
+      console.error('Error deleting profile:', profileError);
+    }
+
+    // Now delete the auth user
     const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(userId);
 
     if (deleteError) {
