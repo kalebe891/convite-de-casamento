@@ -48,7 +48,7 @@ const EventsSection = ({ events }: EventsSectionProps) => {
           Detalhes da Celebração
         </motion.h2>
         
-        <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+        <div className={`grid gap-8 max-w-5xl mx-auto ${events.length === 1 ? 'md:grid-cols-1 max-w-2xl' : 'md:grid-cols-2'}`}>
           {events.map((event, index) => (
             <motion.div
               key={index}
