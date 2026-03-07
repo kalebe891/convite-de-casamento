@@ -375,17 +375,6 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
                     </SelectContent>
                   </Select>
                 </div>
-                {/* Received toggle button */}
-                {currentItem?.selected_by_guest_id && permissions.canEdit && (
-                  <Button
-                    variant={isReceived ? "destructive" : "default"}
-                    className="w-full"
-                    onClick={() => handleToggleReceived(currentItem)}
-                  >
-                    <PackageCheck className="w-4 h-4 mr-2" />
-                    {isReceived ? "Não recebido" : "Recebido"}
-                  </Button>
-                )}
                 <div className="flex gap-2">
                   <Button onClick={handleUpdate} disabled={!editItem.gift_name || !permissions.canEdit || isReceived}>
                     <Pencil className="w-4 h-4 mr-2" />
@@ -395,6 +384,16 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
                     <X className="w-4 h-4 mr-2" />
                     Cancelar
                   </Button>
+                  {currentItem?.selected_by_guest_id && permissions.canEdit && (
+                    <Button
+                      variant={isReceived ? "destructive" : "default"}
+                      className={isReceived ? "" : "bg-green-600 hover:bg-green-700 text-white"}
+                      onClick={() => handleToggleReceived(currentItem)}
+                    >
+                      <PackageCheck className="w-4 h-4 mr-2" />
+                      {isReceived ? "Não recebido" : "Recebido"}
+                    </Button>
+                  )}
                 </div>
               </div>
             );
