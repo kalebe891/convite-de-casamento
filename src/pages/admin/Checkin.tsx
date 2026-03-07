@@ -29,6 +29,41 @@ interface Guest {
   checked_in_at: string | null;
 }
 
+// Priority sorting:
+// 1. Check-in done + gift pending (not delivered) → alphabetical
+// 2. Confirmed + gift pending → alphabetical
+// 3. Confirmed, no gift → alphabetical
+// 4. Not confirmed → alphabetical
+// 5. Check-in done + gift received → alphabetical
+// 6. Check-in done + no gift to receive → alphabetical
+const sortGuestsByPriority = (
+  guests: Guest[],
+  giftMap: Record<string, string>,
+  deliveredMap: Record<string, boolean>
+): Guest[] => {
+  const getPriority = (g: Guest): number => {
+    const hasGift = !!giftMap[g.id];
+    const giftReceived = !!deliveredMap[g.id];
+    const checkedIn = !!g.checked_in_at;
+    const confirmed = g.status === "confirmed";
+
+    if (checkedIn && hasGift && !giftReceived) return 1;
+    if (!checkedIn && confirmed && hasGift && !giftReceived) return 2;
+    if (!checkedIn && confirmed && !hasGift) return 3;
+    if (!checkedIn && !confirmed) return 4;
+    if (checkedIn && hasGift && giftReceived) return 5;
+    if (checkedIn && !hasGift) return 6;
+    return 7;
+  };
+
+  return [...guests].sort((a, b) => {
+    const pa = getPriority(a);
+    const pb = getPriority(b);
+    if (pa !== pb) return pa - pb;
+    return a.name.localeCompare(b.name);
+  });
+};
+
 const Checkin = () => {
   const { toast } = useToast();
   const { user } = useAuth();
