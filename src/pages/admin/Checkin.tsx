@@ -61,11 +61,10 @@ const Checkin = () => {
 
         if (error) throw error;
 
-        // We'll sort after gifts are fetched
         const rawGuests = data || [];
 
         // Save to IndexedDB
-        await saveGuests(guestData);
+        await saveGuests(rawGuests);
 
         // Fetch gift associations
         const { data: giftsData } = await supabase
@@ -73,22 +72,27 @@ const Checkin = () => {
           .select("gift_name, selected_by_guest_id, is_purchased")
           .not("selected_by_guest_id", "is", null);
 
+        const giftMap: Record<string, string> = {};
+        const deliveredMap: Record<string, boolean> = {};
         if (giftsData) {
-          const map: Record<string, string> = {};
-          const delivered: Record<string, boolean> = {};
           for (const g of giftsData) {
             if (g.selected_by_guest_id) {
-              map[g.selected_by_guest_id] = map[g.selected_by_guest_id]
-                ? `${map[g.selected_by_guest_id]}, ${g.gift_name}`
+              giftMap[g.selected_by_guest_id] = giftMap[g.selected_by_guest_id]
+                ? `${giftMap[g.selected_by_guest_id]}, ${g.gift_name}`
                 : g.gift_name;
               if (g.is_purchased) {
-                delivered[g.selected_by_guest_id] = true;
+                deliveredMap[g.selected_by_guest_id] = true;
               }
             }
           }
-          setGuestGifts(map);
-          setGiftDelivered(delivered);
+          setGuestGifts(giftMap);
+          setGiftDelivered(deliveredMap);
         }
+
+        // Sort guests by priority
+        const sortedGuests = sortGuestsByPriority(rawGuests, giftMap, deliveredMap);
+        setGuests(sortedGuests);
+        setFilteredGuests(sortedGuests);
       } else {
         // Load from IndexedDB
         const cachedGuests = await getGuests() as Guest[];
