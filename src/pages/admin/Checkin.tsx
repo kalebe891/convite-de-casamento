@@ -61,14 +61,8 @@ const Checkin = () => {
 
         if (error) throw error;
 
-        const guestData = (data || []).sort((a, b) => {
-          const aConfirmed = a.status === "confirmed" ? 0 : 1;
-          const bConfirmed = b.status === "confirmed" ? 0 : 1;
-          if (aConfirmed !== bConfirmed) return aConfirmed - bConfirmed;
-          return a.name.localeCompare(b.name);
-        });
-        setGuests(guestData);
-        setFilteredGuests(guestData);
+        // We'll sort after gifts are fetched
+        const rawGuests = data || [];
 
         // Save to IndexedDB
         await saveGuests(guestData);
