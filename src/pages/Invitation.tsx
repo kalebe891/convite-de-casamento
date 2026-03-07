@@ -438,7 +438,7 @@ const Invitation = () => {
                   onClick={() => handleRSVPResponse(true)}
                   disabled={submitting}
                   size="lg"
-                  className="confirm-button text-base sm:text-lg py-6 px-4 min-w-[120px] whitespace-normal break-words"
+                  className="confirm-button text-sm sm:text-lg py-6 px-3 sm:px-4 min-w-0 h-auto whitespace-normal break-words leading-tight"
                 >
                   {submitting ? "Enviando..." : "✓ Sim, estarei presente!"}
                 </Button>
@@ -447,7 +447,7 @@ const Invitation = () => {
                   disabled={submitting}
                   variant="outline"
                   size="lg"
-                  className="confirm-button text-base sm:text-lg py-6 px-4 min-w-[120px] whitespace-normal break-words"
+                  className="confirm-button text-sm sm:text-lg py-6 px-3 sm:px-4 min-w-0 h-auto whitespace-normal break-words leading-tight"
                 >
                   {submitting ? "Enviando..." : "✗ Não poderei ir"}
                 </Button>
