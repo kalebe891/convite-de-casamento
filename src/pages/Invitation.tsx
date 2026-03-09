@@ -440,7 +440,7 @@ const Invitation = () => {
                   size="lg"
                   className="confirm-button w-full max-w-full px-4 py-3 text-sm sm:text-lg rounded-lg flex items-center justify-center leading-tight whitespace-normal overflow-hidden"
                 >
-                  <span className="block text-center break-words">
+                  <span className="block text-center break-words min-w-0">
                     {submitting ? "Enviando..." : "✓ Sim, estarei presente!"}
                   </span>
                 </Button>
