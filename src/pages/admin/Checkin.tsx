@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,11 +14,18 @@ import {
   updateGuestCheckin,
   removeFromOutbox,
 } from "@/lib/db";
-import { Search, Wifi, WifiOff, RefreshCw, CheckCircle, XCircle, Clock, AlertCircle, Gift } from "lucide-react";
+import { Search, RefreshCw, CheckCircle, XCircle, Clock, Gift, Bell, Wifi, WifiOff } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { ConflictDetailsDialog } from "@/components/admin/ConflictDetailsDialog";
 import { logAdminAction } from "@/lib/adminLogger";
 import { usePagePermissions } from "@/hooks/usePagePermissions";
+import { useNavigate } from "react-router-dom";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 interface Guest {
   id: string;
@@ -29,13 +36,17 @@ interface Guest {
   checked_in_at: string | null;
 }
 
-// Priority sorting:
-// 1. Check-in done + gift pending (not delivered) → alphabetical
-// 2. Confirmed + gift pending → alphabetical
-// 3. Confirmed, no gift → alphabetical
-// 4. Not confirmed → alphabetical
-// 5. Check-in done + gift received → alphabetical
-// 6. Check-in done + no gift to receive → alphabetical
+interface ConflictLog {
+  id: string;
+  guest_email: string;
+  guest_id: string | null;
+  source: string;
+  checked_in_at: string;
+  created_at: string | null;
+  metadata: any;
+}
+
+// Priority sorting
 const sortGuestsByPriority = (
   guests: Guest[],
   giftMap: Record<string, string>,
@@ -69,6 +80,7 @@ const Checkin = () => {
   const { user } = useAuth();
   const permissions = usePagePermissions("checkin");
   const isOnline = useOnlineStatus();
+  const navigate = useNavigate();
   const [guests, setGuests] = useState<Guest[]>([]);
   const [guestGifts, setGuestGifts] = useState<Record<string, string>>({});
   const [filteredGuests, setFilteredGuests] = useState<Guest[]>([]);
@@ -76,18 +88,40 @@ const Checkin = () => {
   const [pendingCount, setPendingCount] = useState(0);
   const [syncing, setSyncing] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [conflicts, setConflicts] = useState<any[]>([]);
-  const [selectedConflict, setSelectedConflict] = useState<any | null>(null);
-  const [conflictDialogOpen, setConflictDialogOpen] = useState(false);
   const [giftDelivered, setGiftDelivered] = useState<Record<string, boolean>>({});
+
+  // Conflict badge state
+  const [recentConflicts, setRecentConflicts] = useState<ConflictLog[]>([]);
+  const [unseenConflictCount, setUnseenConflictCount] = useState(0);
+  const conflictBufferRef = useRef<number>(0);
+  const conflictTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Buffer conflicts for grouped toast
+  const notifyConflicts = useCallback((count: number) => {
+    conflictBufferRef.current += count;
+
+    if (conflictTimerRef.current) clearTimeout(conflictTimerRef.current);
+
+    conflictTimerRef.current = setTimeout(() => {
+      const total = conflictBufferRef.current;
+      if (total > 0) {
+        toast({
+          title: total === 1
+            ? "1 conflito resolvido automaticamente"
+            : `${total} conflitos resolvidos automaticamente`,
+          duration: 3000,
+        });
+        conflictBufferRef.current = 0;
+      }
+    }, 5000);
+  }, [toast]);
 
   // Fetch guests and sync with local DB
   const fetchGuests = async () => {
     try {
       setLoading(true);
-      
+
       if (isOnline) {
-        // Fetch from server
         const { data, error } = await supabase
           .from("guests")
           .select("id, name, email, phone, status, checked_in_at")
@@ -97,11 +131,8 @@ const Checkin = () => {
         if (error) throw error;
 
         const rawGuests = data || [];
-
-        // Save to IndexedDB
         await saveGuests(rawGuests);
 
-        // Fetch gift associations
         const { data: giftsData } = await supabase
           .from("gift_items")
           .select("gift_name, selected_by_guest_id, is_purchased")
@@ -124,12 +155,10 @@ const Checkin = () => {
           setGiftDelivered(deliveredMap);
         }
 
-        // Sort guests by priority
         const sortedGuests = sortGuestsByPriority(rawGuests, giftMap, deliveredMap);
         setGuests(sortedGuests);
         setFilteredGuests(sortedGuests);
       } else {
-        // Load from IndexedDB
         const cachedGuests = await getGuests() as Guest[];
         setGuests(cachedGuests);
         setFilteredGuests(cachedGuests);
@@ -145,23 +174,35 @@ const Checkin = () => {
     }
   };
 
-  // Update pending count and fetch conflicts
   const updatePendingCount = async () => {
     const pending = await getPendingCheckins();
     setPendingCount(pending.length);
   };
 
-  const fetchConflicts = async () => {
+  // Fetch recent conflicts for badge/drawer
+  const fetchRecentConflicts = async () => {
     try {
       const { data, error } = await supabase
         .from("checkin_logs")
         .select("*")
         .not("metadata->>conflict", "is", null)
         .order("created_at", { ascending: false })
-        .limit(10);
+        .limit(20);
 
       if (error) throw error;
-      setConflicts(data || []);
+
+      const newConflicts = data || [];
+      const prevCount = recentConflicts.length;
+      setRecentConflicts(newConflicts);
+
+      // Detect new conflicts and notify via toast
+      if (newConflicts.length > prevCount && prevCount > 0) {
+        const newCount = newConflicts.length - prevCount;
+        setUnseenConflictCount((prev) => prev + newCount);
+        notifyConflicts(newCount);
+      } else if (prevCount === 0 && newConflicts.length > 0) {
+        setUnseenConflictCount(newConflicts.length);
+      }
     } catch (error) {
       console.error("Error fetching conflicts:", error);
     }
@@ -197,7 +238,6 @@ const Checkin = () => {
 
       if (error) throw error;
 
-      // Remove synced items from outbox
       for (const item of pending) {
         await removeFromOutbox(item.id);
       }
@@ -213,7 +253,7 @@ const Checkin = () => {
 
       await updatePendingCount();
       await fetchGuests();
-      await fetchConflicts();
+      await fetchRecentConflicts();
     } catch (error) {
       toast({
         title: "Erro na sincronização",
@@ -229,7 +269,6 @@ const Checkin = () => {
   const handleCheckin = async (guest: Guest) => {
     if (!user) return;
 
-    // Use email or phone as identifier
     const guestIdentifier = guest.email || guest.phone;
     if (!guestIdentifier) {
       toast({
@@ -244,7 +283,6 @@ const Checkin = () => {
 
     try {
       if (isOnline) {
-        // Online: call edge function directly
         const { data, error } = await supabase.functions.invoke("sync-checkin", {
           body: {
             checks: [
@@ -271,7 +309,6 @@ const Checkin = () => {
           throw new Error(data.failed[0].reason);
         }
       } else {
-        // Offline: save to outbox
         await addToOutbox({
           guest_id: guest.id,
           guest_email: guestIdentifier,
@@ -280,7 +317,6 @@ const Checkin = () => {
           source: "offline",
         });
 
-        // Update local cache
         await updateGuestCheckin(guest.id, checked_in_at);
 
         toast({
@@ -315,7 +351,6 @@ const Checkin = () => {
     }
 
     try {
-      // Use edge function to undo check-in (bypasses RLS issues for custom roles)
       const guestIdentifier = guest.email || guest.phone;
       const { data, error } = await supabase.functions.invoke("sync-checkin", {
         body: {
@@ -421,7 +456,6 @@ const Checkin = () => {
     }
   };
 
-
   useEffect(() => {
     if (searchTerm.trim() === "") {
       setFilteredGuests(guests);
@@ -448,7 +482,7 @@ const Checkin = () => {
   useEffect(() => {
     fetchGuests();
     updatePendingCount();
-    fetchConflicts();
+    fetchRecentConflicts();
   }, []);
 
   const getStatusBadge = (guest: Guest) => {
@@ -476,70 +510,99 @@ const Checkin = () => {
     );
   };
 
+  const handleOpenConflictDrawer = () => {
+    setUnseenConflictCount(0);
+  };
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-serif font-bold">Check-in</h1>
-          <p className="text-muted-foreground mt-2">
-            Sistema de check-in de convidados (suporta modo offline)
+          <p className="text-muted-foreground mt-1">
+            Sistema de check-in de presença de convidados na data do evento.
           </p>
         </div>
-        <Button onClick={syncCheckins} disabled={!isOnline || syncing} size="sm">
-          <RefreshCw className={`w-4 h-4 mr-2 ${syncing ? "animate-spin" : ""}`} />
-          Sincronizar
-        </Button>
+        <div className="flex items-center gap-2">
+          {/* Conflict badge with drawer */}
+          <Sheet onOpenChange={(open) => open && handleOpenConflictDrawer()}>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="relative">
+                <Bell className="w-5 h-5 text-muted-foreground" />
+                {unseenConflictCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                    {unseenConflictCount > 9 ? "9+" : unseenConflictCount}
+                  </span>
+                )}
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-[340px] sm:w-[400px]">
+              <SheetHeader>
+                <SheetTitle>Conflitos recentes</SheetTitle>
+              </SheetHeader>
+              <div className="mt-4 space-y-3">
+                {recentConflicts.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-6">
+                    Nenhum conflito registrado.
+                  </p>
+                ) : (
+                  <>
+                    {recentConflicts.slice(0, 10).map((c) => (
+                      <div key={c.id} className="border rounded-md p-3 text-sm space-y-1">
+                        <p className="font-medium">{c.guest_email}</p>
+                        <p className="text-muted-foreground text-xs">
+                          {c.metadata?.reason === "duplicate" && "Duplicado — mantido existente"}
+                          {c.metadata?.reason === "older_offline" && "Offline anterior — substituído"}
+                          {c.metadata?.reason === "same_timestamp" && "Mesmo horário — mantido online"}
+                          {!c.metadata?.reason && "Conflito resolvido"}
+                        </p>
+                        <p className="text-muted-foreground text-xs">
+                          {c.created_at
+                            ? new Date(c.created_at).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })
+                            : ""}
+                        </p>
+                      </div>
+                    ))}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full text-muted-foreground"
+                      onClick={() => navigate("/admin/logs")}
+                    >
+                      Ver todos os logs
+                    </Button>
+                  </>
+                )}
+              </div>
+            </SheetContent>
+          </Sheet>
+
+          <Button onClick={syncCheckins} disabled={!isOnline || syncing} size="sm" variant="outline">
+            <RefreshCw className={`w-4 h-4 mr-2 ${syncing ? "animate-spin" : ""}`} />
+            Sincronizar
+          </Button>
+        </div>
       </div>
 
-      {/* Status Banner */}
-      <Card className={isOnline ? "bg-green-50 border-green-200" : "bg-yellow-50 border-yellow-200"}>
-        <CardContent className="pt-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              {isOnline ? (
-                <Wifi className="w-5 h-5 text-green-600" />
-              ) : (
-                <WifiOff className="w-5 h-5 text-yellow-600" />
-              )}
-              <span className="font-medium">
-                {isOnline ? "Conectado — Tudo sincronizado" : `Modo offline — ${pendingCount} alterações pendentes`}
-              </span>
-            </div>
-            {!isOnline && pendingCount > 0 && (
-              <Badge variant="secondary">{pendingCount} pendentes</Badge>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Conflicts Alert */}
-      {conflicts.length > 0 && (
-        <Card className="bg-yellow-50 border-yellow-200">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <AlertCircle className="w-5 h-5 text-yellow-600" />
-                <span className="font-medium">
-                  ⚠️ {conflicts.length} conflito(s) detectado(s) e resolvido(s) automaticamente
-                </span>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  if (conflicts[0]) {
-                    setSelectedConflict(conflicts[0]);
-                    setConflictDialogOpen(true);
-                  }
-                }}
-              >
-                Ver detalhes
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      {/* Minimal Status Banner */}
+      <div className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm ${
+        isOnline
+          ? "bg-green-50 text-green-700 dark:bg-green-950/30 dark:text-green-400"
+          : "bg-yellow-50 text-yellow-700 dark:bg-yellow-950/30 dark:text-yellow-400"
+      }`}>
+        {isOnline ? (
+          <>
+            <Wifi className="w-3.5 h-3.5" />
+            <span>🟢 Sincronizado</span>
+          </>
+        ) : (
+          <>
+            <WifiOff className="w-3.5 h-3.5" />
+            <span>🟡 Offline • {pendingCount} pendência{pendingCount !== 1 ? "s" : ""}</span>
+          </>
+        )}
+      </div>
 
       {/* Search */}
       <Card>
@@ -636,13 +699,6 @@ const Checkin = () => {
           )}
         </CardContent>
       </Card>
-
-      {/* Conflict Details Dialog */}
-      <ConflictDetailsDialog
-        open={conflictDialogOpen}
-        onOpenChange={setConflictDialogOpen}
-        log={selectedConflict}
-      />
     </div>
   );
 };
