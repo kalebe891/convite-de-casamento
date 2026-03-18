@@ -543,11 +543,30 @@ const Checkin = () => {
             Sistema de check-in de presença de convidados na data do evento.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
+          {/* Sync status dot */}
+          <StatusIndicator
+            color={isOnline ? (pendingCount > 0 ? "yellow" : "green") : "yellow"}
+            label={isOnline ? (pendingCount > 0 ? `Não sincronizado • ${pendingCount} pendência${pendingCount !== 1 ? "s" : ""}` : "Sincronizado") : "Não sincronizado"}
+            ariaLabel={isOnline ? "Status de sincronização" : "Status de sincronização: offline"}
+          />
+
+          {/* Wi-Fi status icon */}
+          <StatusIndicator
+            color={isOnline ? "green" : "red"}
+            label={isOnline ? "On-line" : "Off-line"}
+            ariaLabel={isOnline ? "Conexão: on-line" : "Conexão: off-line"}
+            icon={
+              isOnline
+                ? <Wifi className="w-4 h-4 text-green-500" />
+                : <WifiOff className="w-4 h-4 text-destructive" />
+            }
+          />
+
           {/* Conflict badge with drawer */}
           <Sheet onOpenChange={(open) => open && handleOpenConflictDrawer()}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="relative">
+              <Button variant="ghost" size="icon" className="relative" aria-label="Conflitos recentes">
                 <Bell className="w-5 h-5 text-muted-foreground" />
                 {unseenConflictCount > 0 && (
                   <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
@@ -602,25 +621,6 @@ const Checkin = () => {
             Sincronizar
           </Button>
         </div>
-      </div>
-
-      {/* Minimal Status Banner */}
-      <div className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm ${
-        isOnline
-          ? "bg-green-50 text-green-700 dark:bg-green-950/30 dark:text-green-400"
-          : "bg-yellow-50 text-yellow-700 dark:bg-yellow-950/30 dark:text-yellow-400"
-      }`}>
-        {isOnline ? (
-          <>
-            <Wifi className="w-3.5 h-3.5" />
-            <span>🟢 Sincronizado</span>
-          </>
-        ) : (
-          <>
-            <WifiOff className="w-3.5 h-3.5" />
-            <span>🟡 Offline • {pendingCount} pendência{pendingCount !== 1 ? "s" : ""}</span>
-          </>
-        )}
       </div>
 
       {/* Search */}
