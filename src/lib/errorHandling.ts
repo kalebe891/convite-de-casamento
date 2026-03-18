@@ -7,7 +7,7 @@ export function getSafeErrorMessage(error: any): string {
   const errorMsg = error?.message?.toLowerCase() || '';
   
   // Log full error server-side for debugging (only visible in dev console)
-  if (process.env.NODE_ENV === 'development') {
+  if (import.meta.env.DEV) {
     console.error('Database error:', error);
   }
   
