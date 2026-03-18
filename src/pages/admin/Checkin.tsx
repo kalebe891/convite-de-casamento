@@ -26,6 +26,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { StatusIndicator } from "@/components/admin/StatusIndicator";
 
 interface Guest {
   id: string;
@@ -510,9 +511,27 @@ const Checkin = () => {
     );
   };
 
+  const CONFLICT_SEEN_KEY = `checkin_conflicts_seen_${user?.id || "anon"}`;
+
   const handleOpenConflictDrawer = () => {
     setUnseenConflictCount(0);
+    // Persist seen state per user
+    try {
+      localStorage.setItem(CONFLICT_SEEN_KEY, JSON.stringify(recentConflicts.map((c) => c.id)));
+    } catch {}
   };
+
+  // On load, calculate unseen based on localStorage
+  useEffect(() => {
+    if (recentConflicts.length === 0) return;
+    try {
+      const seen = JSON.parse(localStorage.getItem(CONFLICT_SEEN_KEY) || "[]") as string[];
+      const unseen = recentConflicts.filter((c) => !seen.includes(c.id)).length;
+      setUnseenConflictCount(unseen);
+    } catch {
+      setUnseenConflictCount(recentConflicts.length);
+    }
+  }, [recentConflicts, user?.id]);
 
   return (
     <div className="space-y-4">
@@ -524,11 +543,30 @@ const Checkin = () => {
             Sistema de check-in de presença de convidados na data do evento.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
+          {/* Sync status dot */}
+          <StatusIndicator
+            color={isOnline ? (pendingCount > 0 ? "yellow" : "green") : "yellow"}
+            label={isOnline ? (pendingCount > 0 ? `Não sincronizado • ${pendingCount} pendência${pendingCount !== 1 ? "s" : ""}` : "Sincronizado") : "Não sincronizado"}
+            ariaLabel={isOnline ? "Status de sincronização" : "Status de sincronização: offline"}
+          />
+
+          {/* Wi-Fi status icon */}
+          <StatusIndicator
+            color={isOnline ? "green" : "red"}
+            label={isOnline ? "On-line" : "Off-line"}
+            ariaLabel={isOnline ? "Conexão: on-line" : "Conexão: off-line"}
+            icon={
+              isOnline
+                ? <Wifi className="w-4 h-4 text-green-500" />
+                : <WifiOff className="w-4 h-4 text-destructive" />
+            }
+          />
+
           {/* Conflict badge with drawer */}
           <Sheet onOpenChange={(open) => open && handleOpenConflictDrawer()}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="relative">
+              <Button variant="ghost" size="icon" className="relative" aria-label="Conflitos recentes">
                 <Bell className="w-5 h-5 text-muted-foreground" />
                 {unseenConflictCount > 0 && (
                   <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
@@ -583,25 +621,6 @@ const Checkin = () => {
             Sincronizar
           </Button>
         </div>
-      </div>
-
-      {/* Minimal Status Banner */}
-      <div className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm ${
-        isOnline
-          ? "bg-green-50 text-green-700 dark:bg-green-950/30 dark:text-green-400"
-          : "bg-yellow-50 text-yellow-700 dark:bg-yellow-950/30 dark:text-yellow-400"
-      }`}>
-        {isOnline ? (
-          <>
-            <Wifi className="w-3.5 h-3.5" />
-            <span>🟢 Sincronizado</span>
-          </>
-        ) : (
-          <>
-            <WifiOff className="w-3.5 h-3.5" />
-            <span>🟡 Offline • {pendingCount} pendência{pendingCount !== 1 ? "s" : ""}</span>
-          </>
-        )}
       </div>
 
       {/* Search */}
