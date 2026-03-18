@@ -511,9 +511,27 @@ const Checkin = () => {
     );
   };
 
+  const CONFLICT_SEEN_KEY = `checkin_conflicts_seen_${user?.id || "anon"}`;
+
   const handleOpenConflictDrawer = () => {
     setUnseenConflictCount(0);
+    // Persist seen state per user
+    try {
+      localStorage.setItem(CONFLICT_SEEN_KEY, JSON.stringify(recentConflicts.map((c) => c.id)));
+    } catch {}
   };
+
+  // On load, calculate unseen based on localStorage
+  useEffect(() => {
+    if (recentConflicts.length === 0) return;
+    try {
+      const seen = JSON.parse(localStorage.getItem(CONFLICT_SEEN_KEY) || "[]") as string[];
+      const unseen = recentConflicts.filter((c) => !seen.includes(c.id)).length;
+      setUnseenConflictCount(unseen);
+    } catch {
+      setUnseenConflictCount(recentConflicts.length);
+    }
+  }, [recentConflicts, user?.id]);
 
   return (
     <div className="space-y-4">
