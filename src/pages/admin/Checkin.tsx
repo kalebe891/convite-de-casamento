@@ -26,6 +26,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { StatusIndicator } from "@/components/admin/StatusIndicator";
 
 interface Guest {
   id: string;
