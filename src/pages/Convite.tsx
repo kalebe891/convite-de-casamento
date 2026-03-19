@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { SkeletonText } from "@/components/ui/skeleton-text";
 import { SkeletonCard } from "@/components/ui/skeleton-card";
 import { SkeletonImage } from "@/components/ui/skeleton-image";
+import CountdownTimer from "@/components/wedding/CountdownTimer";
 
 const Convite = () => {
   const { id } = useParams();
