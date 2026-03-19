@@ -160,6 +160,10 @@ const Convite = () => {
           <p className="text-2xl md:text-3xl text-muted-foreground">
             {format(weddingDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
           </p>
+          <CountdownTimer
+            targetDate={weddingData.wedding_date}
+            firstEventTime={timeline.length > 0 ? timeline[0].time : null}
+          />
           {weddingData.couple_message && (
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto italic">
               "{weddingData.couple_message}"
