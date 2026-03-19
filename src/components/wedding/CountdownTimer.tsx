@@ -63,19 +63,26 @@ const CountdownTimer = ({ targetDate, firstEventTime }: CountdownTimerProps) => 
 
   return (
     <motion.div
-      className="flex gap-6 md:gap-10 justify-center"
+      className="flex gap-0 justify-center items-start"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay: 1.5, ease: "easeOut" }}
     >
-      {units.map(({ key, label }) => (
-        <div key={key} className="flex flex-col items-center">
-          <span className="font-display text-3xl md:text-5xl text-foreground tabular-nums leading-none">
-            {pad(timeLeft[key])}
-          </span>
-          <span className="font-sans-alt text-[10px] tracking-[0.3em] uppercase text-muted-foreground mt-2">
-            {label}
-          </span>
+      {units.map(({ key, label }, index) => (
+        <div key={key} className="flex items-center">
+          <div className="flex flex-col items-center">
+            <span className="font-display text-3xl md:text-5xl text-foreground tabular-nums leading-none">
+              {pad(timeLeft[key])}
+            </span>
+            <span className="font-sans-alt text-[10px] tracking-[0.3em] uppercase text-muted-foreground mt-2">
+              {label}
+            </span>
+          </div>
+          {index < units.length - 1 && (
+            <span className={`font-display text-3xl md:text-5xl text-muted-foreground self-start leading-none ${index === 0 ? 'mx-6 md:mx-10' : 'mx-2 md:mx-3'}`}>
+              {index === 0 ? '' : ':'}
+            </span>
+          )}
         </div>
       ))}
     </motion.div>
