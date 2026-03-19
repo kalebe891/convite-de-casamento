@@ -74,6 +74,8 @@ export default {
       fontFamily: {
         serif: ['Playfair Display', 'serif'],
         sans: ['Inter', 'sans-serif'],
+        'sans-alt': ['Josefin Sans', 'sans-serif'],
+        display: ['Playfair Display', 'serif'],
       },
       keyframes: {
         "accordion-down": {
