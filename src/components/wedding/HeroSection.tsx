@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Heart } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SkeletonText } from "@/components/ui/skeleton-text";
+import CountdownTimer from "@/components/wedding/CountdownTimer";
 
 interface HeroSectionProps {
   weddingDetails: any;
@@ -13,25 +14,61 @@ interface HeroSectionProps {
 const HeroSection = ({ weddingDetails }: HeroSectionProps) => {
   const [mainPhoto, setMainPhoto] = useState<string | null>(null);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [firstEventTime, setFirstEventTime] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchMainPhoto = async () => {
+    const fetchData = async () => {
       if (!weddingDetails?.id) return;
 
-      const { data, error } = await supabase
-        .from("photos")
-        .select("photo_url")
-        .eq("wedding_id", weddingDetails.id)
-        .eq("is_main", true)
-        .single();
+      const [photoRes, timelineRes] = await Promise.all([
+        supabase
+          .from("photos")
+          .select("photo_url")
+          .eq("wedding_id", weddingDetails.id)
+          .eq("is_main", true)
+          .single(),
+        supabase
+          .from("timeline_events")
+          .select("time")
+          .eq("wedding_id", weddingDetails.id)
+          .eq("is_public", true)
+          .order("display_order", { ascending: true })
+          .limit(1),
+      ]);
 
-      if (!error && data) {
-        setMainPhoto(data.photo_url);
+      if (!photoRes.error && photoRes.data) {
+        setMainPhoto(photoRes.data.photo_url);
+      }
+
+      if (!timelineRes.error && timelineRes.data?.[0]) {
+        setFirstEventTime(timelineRes.data[0].time);
       }
     };
 
-    fetchMainPhoto();
+    fetchData();
   }, [weddingDetails?.id]);
+
+  const renderContent = () => (
+    <>
+      <Heart className="w-16 h-16 mx-auto mb-6 text-primary animate-scale-in" />
+      <h1 className="text-6xl md:text-8xl font-serif font-bold mb-4 text-foreground">
+        {weddingDetails.bride_name} & {weddingDetails.groom_name}
+      </h1>
+      <div className="h-px w-32 mx-auto bg-primary my-6"></div>
+      <p className="text-2xl md:text-3xl text-muted-foreground mb-8">
+        {format(new Date(weddingDetails.wedding_date + 'T00:00:00'), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+      </p>
+      <CountdownTimer
+        targetDate={weddingDetails.wedding_date}
+        firstEventTime={firstEventTime}
+      />
+      {weddingDetails.venue_name && (
+        <p className="text-xl text-muted-foreground mt-8">
+          {weddingDetails.venue_name}
+        </p>
+      )}
+    </>
+  );
 
   if (!weddingDetails) {
     return (
@@ -51,25 +88,11 @@ const HeroSection = ({ weddingDetails }: HeroSectionProps) => {
     return (
       <section className="relative h-screen flex items-center justify-center overflow-hidden bg-muted/30">
         <div className="relative z-10 text-center px-4 animate-fade-in-up">
-          <Heart className="w-16 h-16 mx-auto mb-6 text-primary animate-scale-in" />
-          <h1 className="text-6xl md:text-8xl font-serif font-bold mb-4 text-foreground">
-            {weddingDetails.bride_name} & {weddingDetails.groom_name}
-          </h1>
-          <div className="h-px w-32 mx-auto bg-primary my-6"></div>
-          <p className="text-2xl md:text-3xl text-muted-foreground mb-8">
-            {format(new Date(weddingDetails.wedding_date + 'T00:00:00'), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
-          </p>
-          {weddingDetails.venue_name && (
-            <p className="text-xl text-muted-foreground">
-              {weddingDetails.venue_name}
-            </p>
-          )}
+          {renderContent()}
         </div>
       </section>
     );
   }
-
-  const backgroundImage = mainPhoto;
 
   return (
     <section className="relative h-screen flex items-center justify-center overflow-hidden">
@@ -77,37 +100,20 @@ const HeroSection = ({ weddingDetails }: HeroSectionProps) => {
         className={`absolute inset-0 bg-cover bg-center transition-opacity duration-500 ${
           imageLoaded ? "animate-fade-in" : "opacity-0"
         }`}
-        style={{ backgroundImage: `url(${backgroundImage})` }}
+        style={{ backgroundImage: `url(${mainPhoto})` }}
       >
         <div className="absolute inset-0 bg-gradient-to-b from-background/10 via-background/30 to-background/80"></div>
       </div>
 
-      {/* Preload image */}
       <img
-        src={backgroundImage}
+        src={mainPhoto}
         alt="Hero"
         className="hidden"
         onLoad={() => setImageLoaded(true)}
       />
 
       <div className="relative z-10 text-center px-4 animate-fade-in-up">
-        <Heart className="w-16 h-16 mx-auto mb-6 text-primary animate-scale-in" />
-        
-        <h1 className="text-6xl md:text-8xl font-serif font-bold mb-4 text-foreground">
-          {weddingDetails.bride_name} & {weddingDetails.groom_name}
-        </h1>
-        
-        <div className="h-px w-32 mx-auto bg-primary my-6"></div>
-        
-        <p className="text-2xl md:text-3xl text-muted-foreground mb-8">
-          {format(new Date(weddingDetails.wedding_date + 'T00:00:00'), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
-        </p>
-        
-        {weddingDetails.venue_name && (
-          <p className="text-xl text-muted-foreground">
-            {weddingDetails.venue_name}
-          </p>
-        )}
+        {renderContent()}
       </div>
 
       <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 animate-bounce">
