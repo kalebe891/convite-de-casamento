@@ -79,7 +79,7 @@ const CountdownTimer = ({ targetDate, firstEventTime }: CountdownTimerProps) => 
             </span>
           </div>
           {index < units.length - 1 && (
-            <span className={`font-display text-3xl md:text-5xl text-muted-foreground self-start leading-none ${index === 0 ? 'mx-4 md:mx-6' : 'mx-2 md:mx-3'}`}>
+            <span className={`font-display text-3xl md:text-5xl text-muted-foreground self-start leading-none ${index === 0 ? 'mx-3 md:mx-4' : 'mx-2 md:mx-3'}`}>
               {index === 0 ? '' : ':'}
             </span>
           )}
