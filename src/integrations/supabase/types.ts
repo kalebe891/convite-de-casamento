@@ -715,11 +715,44 @@ export type Database = {
           },
         ]
       }
+      user_weddings: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: string
+          user_id: string
+          wedding_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role?: string
+          user_id: string
+          wedding_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: string
+          user_id?: string
+          wedding_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_weddings_wedding_id_fkey"
+            columns: ["wedding_id"]
+            isOneToOne: false
+            referencedRelation: "wedding_details"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       wedding_details: {
         Row: {
           bride_name: string
           couple_message: string | null
           created_at: string | null
+          event_type: string | null
           groom_name: string
           hide_reserved_gifts: boolean
           id: string
@@ -730,8 +763,10 @@ export type Database = {
           show_playlist_section: boolean | null
           show_rsvp_status_public: boolean | null
           show_timeline_section: boolean | null
+          slug: string | null
           story: string | null
           theme_color: string | null
+          theme_id: string | null
           updated_at: string | null
           venue_address: string | null
           venue_map_url: string | null
@@ -742,6 +777,7 @@ export type Database = {
           bride_name: string
           couple_message?: string | null
           created_at?: string | null
+          event_type?: string | null
           groom_name: string
           hide_reserved_gifts?: boolean
           id?: string
@@ -752,8 +788,10 @@ export type Database = {
           show_playlist_section?: boolean | null
           show_rsvp_status_public?: boolean | null
           show_timeline_section?: boolean | null
+          slug?: string | null
           story?: string | null
           theme_color?: string | null
+          theme_id?: string | null
           updated_at?: string | null
           venue_address?: string | null
           venue_map_url?: string | null
@@ -764,6 +802,7 @@ export type Database = {
           bride_name?: string
           couple_message?: string | null
           created_at?: string | null
+          event_type?: string | null
           groom_name?: string
           hide_reserved_gifts?: boolean
           id?: string
@@ -774,8 +813,10 @@ export type Database = {
           show_playlist_section?: boolean | null
           show_rsvp_status_public?: boolean | null
           show_timeline_section?: boolean | null
+          slug?: string | null
           story?: string | null
           theme_color?: string | null
+          theme_id?: string | null
           updated_at?: string | null
           venue_address?: string | null
           venue_map_url?: string | null
@@ -802,12 +843,17 @@ export type Database = {
         }[]
       }
       cleanup_archived_guests: { Args: never; Returns: number }
+      get_user_wedding_ids: { Args: { _user_id: string }; Returns: string[] }
       has_role: { Args: { _role: string; _user_id: string }; Returns: boolean }
       has_table_permission: {
         Args: { _menu_key: string; _permission_type: string; _user_id: string }
         Returns: boolean
       }
       unclaim_gift: { Args: { p_guest_id: string }; Returns: boolean }
+      user_has_wedding_access: {
+        Args: { _user_id: string; _wedding_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "admin" | "couple" | "planner" | "cerimonial"
