@@ -26,6 +26,7 @@ export type Database = {
           table_name: string
           user_email: string | null
           user_id: string
+          wedding_id: string | null
         }
         Insert: {
           action: string
@@ -38,6 +39,7 @@ export type Database = {
           table_name: string
           user_email?: string | null
           user_id: string
+          wedding_id?: string | null
         }
         Update: {
           action?: string
@@ -50,8 +52,17 @@ export type Database = {
           table_name?: string
           user_email?: string | null
           user_id?: string
+          wedding_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "admin_logs_wedding_id_fkey"
+            columns: ["wedding_id"]
+            isOneToOne: false
+            referencedRelation: "wedding_details"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       admin_permissions: {
         Row: {
@@ -140,6 +151,7 @@ export type Database = {
           metadata: Json | null
           performed_by: string | null
           source: string
+          wedding_id: string | null
         }
         Insert: {
           checked_in_at: string
@@ -150,6 +162,7 @@ export type Database = {
           metadata?: Json | null
           performed_by?: string | null
           source: string
+          wedding_id?: string | null
         }
         Update: {
           checked_in_at?: string
@@ -160,8 +173,17 @@ export type Database = {
           metadata?: Json | null
           performed_by?: string | null
           source?: string
+          wedding_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "checkin_logs_wedding_id_fkey"
+            columns: ["wedding_id"]
+            isOneToOne: false
+            referencedRelation: "wedding_details"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       events: {
         Row: {
@@ -403,6 +425,7 @@ export type Database = {
           papel: string
           token: string
           usado: boolean
+          wedding_id: string | null
         }
         Insert: {
           created_at?: string
@@ -413,6 +436,7 @@ export type Database = {
           papel: string
           token?: string
           usado?: boolean
+          wedding_id?: string | null
         }
         Update: {
           created_at?: string
@@ -423,6 +447,7 @@ export type Database = {
           papel?: string
           token?: string
           usado?: boolean
+          wedding_id?: string | null
         }
         Relationships: [
           {
@@ -431,6 +456,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "role_profiles"
             referencedColumns: ["role_key"]
+          },
+          {
+            foreignKeyName: "pending_users_wedding_id_fkey"
+            columns: ["wedding_id"]
+            isOneToOne: false
+            referencedRelation: "wedding_details"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -578,6 +610,7 @@ export type Database = {
           id: string
           token: string
           used: boolean
+          wedding_id: string | null
         }
         Insert: {
           created_at?: string
@@ -586,6 +619,7 @@ export type Database = {
           id?: string
           token: string
           used?: boolean
+          wedding_id?: string | null
         }
         Update: {
           created_at?: string
@@ -594,6 +628,7 @@ export type Database = {
           id?: string
           token?: string
           used?: boolean
+          wedding_id?: string | null
         }
         Relationships: [
           {
@@ -601,6 +636,13 @@ export type Database = {
             columns: ["guest_id"]
             isOneToOne: false
             referencedRelation: "guests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rsvp_tokens_wedding_id_fkey"
+            columns: ["wedding_id"]
+            isOneToOne: false
+            referencedRelation: "wedding_details"
             referencedColumns: ["id"]
           },
         ]
