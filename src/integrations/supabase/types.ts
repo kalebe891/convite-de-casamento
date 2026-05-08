@@ -290,6 +290,7 @@ export type Database = {
           name: string
           phone: string
           status: string
+          wedding_id: string
         }
         Insert: {
           archived_at?: string | null
@@ -300,6 +301,7 @@ export type Database = {
           name: string
           phone: string
           status?: string
+          wedding_id: string
         }
         Update: {
           archived_at?: string | null
@@ -310,8 +312,17 @@ export type Database = {
           name?: string
           phone?: string
           status?: string
+          wedding_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "guests_wedding_id_fkey"
+            columns: ["wedding_id"]
+            isOneToOne: false
+            referencedRelation: "wedding_details"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       invitations: {
         Row: {
