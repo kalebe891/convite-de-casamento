@@ -843,6 +843,16 @@ export type Database = {
         }[]
       }
       cleanup_archived_guests: { Args: never; Returns: number }
+      create_new_event: {
+        Args: {
+          _event_date?: string
+          _event_type?: string
+          _primary_name?: string
+          _secondary_name?: string
+          _slug: string
+        }
+        Returns: string
+      }
       get_user_wedding_ids: { Args: { _user_id: string }; Returns: string[] }
       has_role: { Args: { _role: string; _user_id: string }; Returns: boolean }
       has_table_permission: {
