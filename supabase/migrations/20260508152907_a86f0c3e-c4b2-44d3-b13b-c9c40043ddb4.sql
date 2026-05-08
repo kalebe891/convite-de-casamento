@@ -1,0 +1,1 @@
+DELETE FROM public.wedding_details WHERE slug='teste-aniversario-mt';
