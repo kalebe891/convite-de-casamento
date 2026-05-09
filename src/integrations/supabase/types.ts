@@ -111,7 +111,7 @@ export type Database = {
           id: string
           is_public: boolean | null
           item_name: string
-          wedding_id: string | null
+          wedding_id: string
         }
         Insert: {
           category?: string | null
@@ -120,7 +120,7 @@ export type Database = {
           id?: string
           is_public?: boolean | null
           item_name: string
-          wedding_id?: string | null
+          wedding_id: string
         }
         Update: {
           category?: string | null
@@ -129,7 +129,7 @@ export type Database = {
           id?: string
           is_public?: boolean | null
           item_name?: string
-          wedding_id?: string | null
+          wedding_id?: string
         }
         Relationships: [
           {
@@ -196,7 +196,7 @@ export type Database = {
           id: string
           location: string | null
           maps_url: string | null
-          wedding_id: string | null
+          wedding_id: string
         }
         Insert: {
           address?: string | null
@@ -208,7 +208,7 @@ export type Database = {
           id?: string
           location?: string | null
           maps_url?: string | null
-          wedding_id?: string | null
+          wedding_id: string
         }
         Update: {
           address?: string | null
@@ -220,7 +220,7 @@ export type Database = {
           id?: string
           location?: string | null
           maps_url?: string | null
-          wedding_id?: string | null
+          wedding_id?: string
         }
         Relationships: [
           {
@@ -246,7 +246,7 @@ export type Database = {
           link: string | null
           selected_by_guest_id: string | null
           selected_by_invitation_id: string | null
-          wedding_id: string | null
+          wedding_id: string
         }
         Insert: {
           claimed_at?: string | null
@@ -261,7 +261,7 @@ export type Database = {
           link?: string | null
           selected_by_guest_id?: string | null
           selected_by_invitation_id?: string | null
-          wedding_id?: string | null
+          wedding_id: string
         }
         Update: {
           claimed_at?: string | null
@@ -276,7 +276,7 @@ export type Database = {
           link?: string | null
           selected_by_guest_id?: string | null
           selected_by_invitation_id?: string | null
-          wedding_id?: string | null
+          wedding_id?: string
         }
         Relationships: [
           {
@@ -362,7 +362,7 @@ export type Database = {
           plus_one: boolean | null
           responded_at: string | null
           unique_code: string
-          wedding_id: string | null
+          wedding_id: string
         }
         Insert: {
           attending?: boolean | null
@@ -379,7 +379,7 @@ export type Database = {
           plus_one?: boolean | null
           responded_at?: string | null
           unique_code: string
-          wedding_id?: string | null
+          wedding_id: string
         }
         Update: {
           attending?: boolean | null
@@ -396,7 +396,7 @@ export type Database = {
           plus_one?: boolean | null
           responded_at?: string | null
           unique_code?: string
-          wedding_id?: string | null
+          wedding_id?: string
         }
         Relationships: [
           {
@@ -475,7 +475,7 @@ export type Database = {
           is_main: boolean | null
           is_secondary: boolean | null
           photo_url: string
-          wedding_id: string | null
+          wedding_id: string
         }
         Insert: {
           caption?: string | null
@@ -485,7 +485,7 @@ export type Database = {
           is_main?: boolean | null
           is_secondary?: boolean | null
           photo_url: string
-          wedding_id?: string | null
+          wedding_id: string
         }
         Update: {
           caption?: string | null
@@ -495,7 +495,7 @@ export type Database = {
           is_main?: boolean | null
           is_secondary?: boolean | null
           photo_url?: string
-          wedding_id?: string | null
+          wedding_id?: string
         }
         Relationships: [
           {
@@ -516,7 +516,7 @@ export type Database = {
           is_public: boolean | null
           moment: string
           song_name: string
-          wedding_id: string | null
+          wedding_id: string
         }
         Insert: {
           artist?: string | null
@@ -526,7 +526,7 @@ export type Database = {
           is_public?: boolean | null
           moment: string
           song_name: string
-          wedding_id?: string | null
+          wedding_id: string
         }
         Update: {
           artist?: string | null
@@ -536,7 +536,7 @@ export type Database = {
           is_public?: boolean | null
           moment?: string
           song_name?: string
-          wedding_id?: string | null
+          wedding_id?: string
         }
         Relationships: [
           {
@@ -658,7 +658,7 @@ export type Database = {
           id: string
           message: string | null
           plus_one: boolean | null
-          wedding_id: string | null
+          wedding_id: string
         }
         Insert: {
           attending: boolean
@@ -670,7 +670,7 @@ export type Database = {
           id?: string
           message?: string | null
           plus_one?: boolean | null
-          wedding_id?: string | null
+          wedding_id: string
         }
         Update: {
           attending?: boolean
@@ -682,7 +682,7 @@ export type Database = {
           id?: string
           message?: string | null
           plus_one?: boolean | null
-          wedding_id?: string | null
+          wedding_id?: string
         }
         Relationships: [
           {
@@ -703,7 +703,7 @@ export type Database = {
           is_public: boolean | null
           observation: string | null
           time: string
-          wedding_id: string | null
+          wedding_id: string
         }
         Insert: {
           activity: string
@@ -713,7 +713,7 @@ export type Database = {
           is_public?: boolean | null
           observation?: string | null
           time: string
-          wedding_id?: string | null
+          wedding_id: string
         }
         Update: {
           activity?: string
@@ -723,7 +723,7 @@ export type Database = {
           is_public?: boolean | null
           observation?: string | null
           time?: string
-          wedding_id?: string | null
+          wedding_id?: string
         }
         Relationships: [
           {
