@@ -33,12 +33,27 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Index />} />
+          <Route path="/" element={<Navigate to="/casamento/beatriz-e-diogo" replace />} />
+          <Route
+            path="/casamento/:slug"
+            element={
+              <WeddingProvider mode="public">
+                <Index />
+              </WeddingProvider>
+            }
+          />
           <Route path="/convite/:invitation_code" element={<Invitation />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/criar-senha" element={<CriarSenha />} />
           <Route path="/acesso-negado" element={<AccessDenied />} />
-          <Route path="/admin" element={<AdminLayout />}>
+          <Route
+            path="/admin"
+            element={
+              <WeddingProvider mode="admin">
+                <AdminLayout />
+              </WeddingProvider>
+            }
+          >
             <Route index element={<Detalhes />} />
             <Route path="detalhes" element={<Detalhes />} />
             <Route path="usuarios" element={<Usuarios />} />
