@@ -253,6 +253,7 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
         .from("guests")
         .select("id, phone")
         .eq("phone", phoneToCheck)
+        .eq("wedding_id", weddingId!)
         .is("archived_at", null)
         .neq("id", editGuest.id);
 
@@ -278,7 +279,8 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
         phone: validationResult.data.phone?.trim() || null,
         email: validationResult.data.email?.trim() || null,
       })
-      .eq("id", editGuest.id);
+      .eq("id", editGuest.id)
+      .eq("wedding_id", weddingId!);
 
     if (error) {
       console.error("Error updating guest:", error);
@@ -333,7 +335,7 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
       await supabase.from("invitations").delete().eq("guest_id", id);
 
       // 4. Hard delete the guest
-      const { error } = await supabase.from("guests").delete().eq("id", id);
+      const { error } = await supabase.from("guests").delete().eq("id", id).eq("wedding_id", weddingId!);
 
       if (error) throw error;
 
