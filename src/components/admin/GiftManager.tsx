@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useWedding } from "@/contexts/WeddingContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,9 +27,9 @@ interface GiftManagerProps {
 
 const GiftManager = ({ permissions }: GiftManagerProps) => {
   const { toast } = useToast();
+  const { weddingId, wedding } = useWedding();
   const [items, setItems] = useState<any[]>([]);
   const [invitations, setInvitations] = useState<any[]>([]);
-  const [weddingId, setWeddingId] = useState<string | null>(null);
   const [showGiftsSection, setShowGiftsSection] = useState<boolean>(true);
   const [hideReservedGifts, setHideReservedGifts] = useState<boolean>(false);
   const [newItem, setNewItem] = useState({ 
@@ -48,44 +49,43 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
   });
 
   useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
-    const { data: wedding } = await supabase
-      .from("wedding_details")
-      .select("id, show_gifts_section, hide_reserved_gifts")
-      .single();
-
     if (wedding) {
-      setWeddingId(wedding.id);
       setShowGiftsSection(wedding.show_gifts_section ?? true);
       setHideReservedGifts(wedding.hide_reserved_gifts ?? false);
-      const { data: itemsData } = await supabase
-        .from("gift_items")
-        .select(`
-          *,
-          guest:guests(id, name)
-        `)
-        .eq("wedding_id", wedding.id)
-        .order("gift_name", { ascending: true });
-      setItems(itemsData || []);
-
-      // Fetch all guests as source of truth for linking
-      const { data: guestsData } = await supabase
-        .from("guests")
-        .select("id, name, status")
-        .is("archived_at", null)
-        .order("name")
-        .limit(1000);
-
-      const guestsList = (guestsData || []).map((guest) => ({
-        id: guest.id,
-        guest_name: guest.name,
-        status: guest.status,
-      }));
-      setInvitations(guestsList.sort((a, b) => a.guest_name.localeCompare(b.guest_name)));
     }
+  }, [wedding]);
+
+  useEffect(() => {
+    if (weddingId) fetchData();
+  }, [weddingId]);
+
+  const fetchData = async () => {
+    if (!weddingId) return;
+    const { data: itemsData } = await supabase
+      .from("gift_items")
+      .select(`
+        *,
+        guest:guests(id, name)
+      `)
+      .eq("wedding_id", weddingId)
+      .order("gift_name", { ascending: true });
+    setItems(itemsData || []);
+
+    // Fetch all guests as source of truth for linking
+    const { data: guestsData } = await supabase
+      .from("guests")
+      .select("id, name, status")
+      .eq("wedding_id", weddingId)
+      .is("archived_at", null)
+      .order("name")
+      .limit(1000);
+
+    const guestsList = (guestsData || []).map((guest) => ({
+      id: guest.id,
+      guest_name: guest.name,
+      status: guest.status,
+    }));
+    setInvitations(guestsList.sort((a, b) => a.guest_name.localeCompare(b.guest_name)));
   };
 
   const handleAdd = async () => {
@@ -135,7 +135,8 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
     const { error } = await supabase
       .from("gift_items")
       .update({ is_purchased: newValue })
-      .eq("id", item.id);
+      .eq("id", item.id)
+      .eq("wedding_id", weddingId!);
 
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
@@ -182,7 +183,8 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
         claimed_at: guestId ? new Date().toISOString() : null,
         claimed_via_admin: guestId ? true : false,
       })
-      .eq("id", editingId);
+      .eq("id", editingId)
+      .eq("wedding_id", weddingId!);
 
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
@@ -201,7 +203,7 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
       return;
     }
     const deletedItem = items.find(item => item.id === id);
-    const { error } = await supabase.from("gift_items").delete().eq("id", id);
+    const { error } = await supabase.from("gift_items").delete().eq("id", id).eq("wedding_id", weddingId!);
 
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
@@ -217,7 +219,7 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
       toast({ title: "Sem permissão", description: "Você não tem permissão para tornar itens públicos/privados", variant: "destructive" });
       return;
     }
-    const { error } = await supabase.from("gift_items").update({ is_public: newValue }).eq("id", id);
+    const { error } = await supabase.from("gift_items").update({ is_public: newValue }).eq("id", id).eq("wedding_id", weddingId!);
 
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });

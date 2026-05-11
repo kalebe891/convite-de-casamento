@@ -1,41 +1,37 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useWedding } from "@/contexts/WeddingContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, XCircle, Users } from "lucide-react";
 
 const RSVPList = () => {
+  const { weddingId } = useWedding();
   const [rsvps, setRsvps] = useState<any[]>([]);
   const [stats, setStats] = useState({ attending: 0, notAttending: 0, total: 0 });
 
   useEffect(() => {
+    if (!weddingId) return;
     const fetchRSVPs = async () => {
-      const { data: weddingData } = await supabase
-        .from("wedding_details")
-        .select("id")
-        .single();
+      const { data: rsvpData } = await supabase
+        .from("rsvps")
+        .select("*")
+        .eq("wedding_id", weddingId)
+        .order("created_at", { ascending: false });
 
-      if (weddingData) {
-        const { data: rsvpData } = await supabase
-          .from("rsvps")
-          .select("*")
-          .eq("wedding_id", weddingData.id)
-          .order("created_at", { ascending: false });
-
-        if (rsvpData) {
-          setRsvps(rsvpData);
-          const attending = rsvpData.filter((r) => r.attending).length;
-          setStats({
-            attending,
-            notAttending: rsvpData.length - attending,
-            total: rsvpData.length,
-          });
-        }
+      if (rsvpData) {
+        setRsvps(rsvpData);
+        const attending = rsvpData.filter((r) => r.attending).length;
+        setStats({
+          attending,
+          notAttending: rsvpData.length - attending,
+          total: rsvpData.length,
+        });
       }
     };
 
     fetchRSVPs();
-  }, []);
+  }, [weddingId]);
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">

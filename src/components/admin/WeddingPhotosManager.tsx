@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useWedding } from "@/contexts/WeddingContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,36 +30,28 @@ interface WeddingPhotosManagerProps {
 
 const WeddingPhotosManager = ({ permissions }: WeddingPhotosManagerProps) => {
   const { toast } = useToast();
+  const { weddingId } = useWedding();
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [mainPhoto, setMainPhoto] = useState<Photo | null>(null);
   const [secondaryPhoto, setSecondaryPhoto] = useState<Photo | null>(null);
-  const [weddingId, setWeddingId] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
-    fetchPhotos();
-  }, []);
+    if (weddingId) fetchPhotos();
+  }, [weddingId]);
 
   const fetchPhotos = async () => {
-    const { data: weddingData } = await supabase
-      .from("wedding_details")
-      .select("id")
-      .single();
+    if (!weddingId) return;
+    const { data: photosData } = await supabase
+      .from("photos")
+      .select("*")
+      .eq("wedding_id", weddingId)
+      .order("display_order");
 
-    if (weddingData) {
-      setWeddingId(weddingData.id);
-
-      const { data: photosData } = await supabase
-        .from("photos")
-        .select("*")
-        .eq("wedding_id", weddingData.id)
-        .order("display_order");
-
-      if (photosData) {
-        setPhotos(photosData);
-        setMainPhoto(photosData.find(p => p.is_main) || null);
-        setSecondaryPhoto(photosData.find(p => p.is_secondary) || null);
-      }
+    if (photosData) {
+      setPhotos(photosData);
+      setMainPhoto(photosData.find(p => p.is_main) || null);
+      setSecondaryPhoto(photosData.find(p => p.is_secondary) || null);
     }
   };
 
@@ -185,7 +178,7 @@ const WeddingPhotosManager = ({ permissions }: WeddingPhotosManagerProps) => {
 
       await supabase.storage.from("wedding-photos").remove([filePath]);
 
-      const { error } = await supabase.from("photos").delete().eq("id", id);
+      const { error } = await supabase.from("photos").delete().eq("id", id).eq("wedding_id", weddingId!);
 
       if (error) throw error;
 
@@ -226,7 +219,8 @@ const WeddingPhotosManager = ({ permissions }: WeddingPhotosManagerProps) => {
       const { error } = await supabase
         .from("photos")
         .update({ is_main: true })
-        .eq("id", photoId);
+        .eq("id", photoId)
+        .eq("wedding_id", weddingId!);
 
       if (error) throw error;
 
@@ -265,7 +259,8 @@ const WeddingPhotosManager = ({ permissions }: WeddingPhotosManagerProps) => {
       const { error } = await supabase
         .from("photos")
         .update({ is_secondary: true })
-        .eq("id", photoId);
+        .eq("id", photoId)
+        .eq("wedding_id", weddingId!);
 
       if (error) throw error;
 

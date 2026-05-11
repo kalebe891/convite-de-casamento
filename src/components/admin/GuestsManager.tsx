@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useWedding } from "@/contexts/WeddingContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -41,6 +42,7 @@ interface GuestsManagerProps {
 }
 
 const GuestsManager = ({ permissions }: GuestsManagerProps) => {
+  const { weddingId } = useWedding();
   const [guests, setGuests] = useState<Guest[]>([]);
   const [guestGifts, setGuestGifts] = useState<Record<string, string>>({});
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -117,9 +119,11 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
   };
 
   const fetchGuests = async () => {
+    if (!weddingId) return;
     const { data, error } = await supabase
       .from("guests")
       .select("*")
+      .eq("wedding_id", weddingId)
       .is("archived_at", null)
       .order("name", { ascending: true });
 
@@ -134,6 +138,7 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
     const { data: giftsData } = await supabase
       .from("gift_items")
       .select("gift_name, selected_by_guest_id")
+      .eq("wedding_id", weddingId)
       .not("selected_by_guest_id", "is", null);
 
     if (giftsData) {
@@ -150,6 +155,7 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
   };
 
   useEffect(() => {
+    if (!weddingId) return;
     fetchGuests();
 
     const channel = supabase
@@ -187,14 +193,7 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
       return;
     }
 
-    // Multi-tenant: vincular ao casamento atual (única tenant ativo no momento)
-    const { data: weddingRow, error: weddingErr } = await supabase
-      .from("wedding_details")
-      .select("id")
-      .limit(1)
-      .maybeSingle();
-
-    if (weddingErr || !weddingRow) {
+    if (!weddingId) {
       toast.error("Não foi possível identificar o evento para vincular o convidado.");
       return;
     }
@@ -204,7 +203,7 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
       phone: validationResult.data.phone?.trim() || null,
       email: validationResult.data.email?.trim() || null,
       status: "pending",
-      wedding_id: weddingRow.id,
+      wedding_id: weddingId,
     });
 
     if (error) {
@@ -254,6 +253,7 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
         .from("guests")
         .select("id, phone")
         .eq("phone", phoneToCheck)
+        .eq("wedding_id", weddingId!)
         .is("archived_at", null)
         .neq("id", editGuest.id);
 
@@ -279,7 +279,8 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
         phone: validationResult.data.phone?.trim() || null,
         email: validationResult.data.email?.trim() || null,
       })
-      .eq("id", editGuest.id);
+      .eq("id", editGuest.id)
+      .eq("wedding_id", weddingId!);
 
     if (error) {
       console.error("Error updating guest:", error);
@@ -334,7 +335,7 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
       await supabase.from("invitations").delete().eq("guest_id", id);
 
       // 4. Hard delete the guest
-      const { error } = await supabase.from("guests").delete().eq("id", id);
+      const { error } = await supabase.from("guests").delete().eq("id", id).eq("wedding_id", weddingId!);
 
       if (error) throw error;
 

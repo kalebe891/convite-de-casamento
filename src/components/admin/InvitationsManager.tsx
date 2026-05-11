@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useWedding } from "@/contexts/WeddingContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,8 +17,8 @@ import { logAdminAction } from "@/lib/adminLogger";
 const InvitationsManager = () => {
   const { toast } = useToast();
   const { session } = useAuth();
+  const { weddingId } = useWedding();
   const [invitations, setInvitations] = useState<any[]>([]);
-  const [weddingId, setWeddingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     guestName: "",
@@ -26,26 +27,17 @@ const InvitationsManager = () => {
   });
 
   useEffect(() => {
-    fetchInvitations();
-  }, []);
+    if (weddingId) fetchInvitations();
+  }, [weddingId]);
 
   const fetchInvitations = async () => {
-    const { data: weddingData } = await supabase
-      .from("wedding_details")
-      .select("id")
-      .single();
-
-    if (weddingData) {
-      setWeddingId(weddingData.id);
-
-      const { data } = await supabase
-        .from("invitations")
-        .select("*")
-        .eq("wedding_id", weddingData.id)
-        .order("created_at", { ascending: false });
-
-      setInvitations(data || []);
-    }
+    if (!weddingId) return;
+    const { data } = await supabase
+      .from("invitations")
+      .select("*")
+      .eq("wedding_id", weddingId)
+      .order("created_at", { ascending: false });
+    setInvitations(data || []);
   };
 
   const generateUniqueCode = () => {
@@ -80,6 +72,7 @@ const InvitationsManager = () => {
           .from("guests")
           .select("id")
           .eq("phone", phone)
+          .eq("wedding_id", weddingId!)
           .is("archived_at", null)
           .maybeSingle();
         guestId = guestByPhone?.id || null;
@@ -90,6 +83,7 @@ const InvitationsManager = () => {
           .from("guests")
           .select("id")
           .eq("email", email)
+          .eq("wedding_id", weddingId!)
           .is("archived_at", null)
           .maybeSingle();
         guestId = guestByEmail?.id || null;
@@ -159,7 +153,8 @@ const InvitationsManager = () => {
       const { error } = await supabase
         .from("invitations")
         .delete()
-        .eq("id", invitation.id);
+        .eq("id", invitation.id)
+        .eq("wedding_id", weddingId!);
 
       if (error) throw error;
 

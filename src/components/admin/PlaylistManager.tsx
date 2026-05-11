@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useWedding } from "@/contexts/WeddingContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,8 +25,8 @@ interface PlaylistManagerProps {
 
 const PlaylistManager = ({ permissions }: PlaylistManagerProps) => {
   const { toast } = useToast();
+  const { weddingId, wedding } = useWedding();
   const [songs, setSongs] = useState<any[]>([]);
-  const [weddingId, setWeddingId] = useState<string | null>(null);
   const [showPlaylistSection, setShowPlaylistSection] = useState<boolean>(true);
   const [newSong, setNewSong] = useState({ moment: "", song_name: "", artist: "", is_public: true });
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -33,25 +34,21 @@ const PlaylistManager = ({ permissions }: PlaylistManagerProps) => {
   const [editSong, setEditSong] = useState({ moment: "", song_name: "", artist: "", is_public: true });
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (wedding) setShowPlaylistSection(wedding.show_playlist_section ?? true);
+  }, [wedding]);
+
+  useEffect(() => {
+    if (weddingId) fetchData();
+  }, [weddingId]);
 
   const fetchData = async () => {
-    const { data: wedding } = await supabase
-      .from("wedding_details")
-      .select("id, show_playlist_section")
-      .single();
-
-    if (wedding) {
-      setWeddingId(wedding.id);
-      setShowPlaylistSection(wedding.show_playlist_section ?? true);
-      const { data: songsData } = await supabase
-        .from("playlist_songs")
-        .select("*")
-        .eq("wedding_id", wedding.id)
-        .order("song_name", { ascending: true });
-      setSongs(songsData || []);
-    }
+    if (!weddingId) return;
+    const { data: songsData } = await supabase
+      .from("playlist_songs")
+      .select("*")
+      .eq("wedding_id", weddingId)
+      .order("song_name", { ascending: true });
+    setSongs(songsData || []);
   };
 
   const handleTogglePlaylistSection = async (newValue: boolean) => {
@@ -140,7 +137,8 @@ const PlaylistManager = ({ permissions }: PlaylistManagerProps) => {
         artist: validationResult.data.artist?.trim() || null,
         is_public: editSong.is_public,
       })
-      .eq("id", editingId);
+      .eq("id", editingId)
+      .eq("wedding_id", weddingId!);
 
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
@@ -159,7 +157,7 @@ const PlaylistManager = ({ permissions }: PlaylistManagerProps) => {
       return;
     }
     const deletedSong = songs.find(s => s.id === id);
-    const { error } = await supabase.from("playlist_songs").delete().eq("id", id);
+    const { error } = await supabase.from("playlist_songs").delete().eq("id", id).eq("wedding_id", weddingId!);
 
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
@@ -176,7 +174,7 @@ const PlaylistManager = ({ permissions }: PlaylistManagerProps) => {
       return;
     }
     const newValue = !currentValue;
-    const { error } = await supabase.from("playlist_songs").update({ is_public: newValue }).eq("id", id);
+    const { error } = await supabase.from("playlist_songs").update({ is_public: newValue }).eq("id", id).eq("wedding_id", weddingId!);
 
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });

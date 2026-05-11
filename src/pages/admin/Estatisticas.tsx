@@ -2,8 +2,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { BarChart3, Users, CheckCircle, XCircle, UserCheck, Gift, PackageCheck } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useWedding } from "@/contexts/WeddingContext";
 
 const Estatisticas = () => {
+  const { weddingId } = useWedding();
   const [stats, setStats] = useState({
     totalGuests: 0,
     pending: 0,
@@ -16,10 +18,11 @@ const Estatisticas = () => {
   });
 
   useEffect(() => {
+    if (!weddingId) return;
     const fetchStats = async () => {
       const [{ data: guests }, { data: gifts }] = await Promise.all([
-        supabase.from('guests').select('*'),
-        supabase.from('gift_items').select('id, selected_by_guest_id, is_purchased'),
+        supabase.from('guests').select('*').eq('wedding_id', weddingId),
+        supabase.from('gift_items').select('id, selected_by_guest_id, is_purchased').eq('wedding_id', weddingId),
       ]);
 
       const allGuests = guests || [];
