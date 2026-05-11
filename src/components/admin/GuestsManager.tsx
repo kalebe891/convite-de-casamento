@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useWedding } from "@/contexts/WeddingContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -41,6 +42,7 @@ interface GuestsManagerProps {
 }
 
 const GuestsManager = ({ permissions }: GuestsManagerProps) => {
+  const { weddingId } = useWedding();
   const [guests, setGuests] = useState<Guest[]>([]);
   const [guestGifts, setGuestGifts] = useState<Record<string, string>>({});
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -117,9 +119,11 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
   };
 
   const fetchGuests = async () => {
+    if (!weddingId) return;
     const { data, error } = await supabase
       .from("guests")
       .select("*")
+      .eq("wedding_id", weddingId)
       .is("archived_at", null)
       .order("name", { ascending: true });
 
@@ -134,6 +138,7 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
     const { data: giftsData } = await supabase
       .from("gift_items")
       .select("gift_name, selected_by_guest_id")
+      .eq("wedding_id", weddingId)
       .not("selected_by_guest_id", "is", null);
 
     if (giftsData) {
@@ -150,6 +155,7 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
   };
 
   useEffect(() => {
+    if (!weddingId) return;
     fetchGuests();
 
     const channel = supabase
