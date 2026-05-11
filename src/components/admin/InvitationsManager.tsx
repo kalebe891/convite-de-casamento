@@ -72,6 +72,7 @@ const InvitationsManager = () => {
           .from("guests")
           .select("id")
           .eq("phone", phone)
+          .eq("wedding_id", weddingId!)
           .is("archived_at", null)
           .maybeSingle();
         guestId = guestByPhone?.id || null;
@@ -82,6 +83,7 @@ const InvitationsManager = () => {
           .from("guests")
           .select("id")
           .eq("email", email)
+          .eq("wedding_id", weddingId!)
           .is("archived_at", null)
           .maybeSingle();
         guestId = guestByEmail?.id || null;
@@ -151,7 +153,8 @@ const InvitationsManager = () => {
       const { error } = await supabase
         .from("invitations")
         .delete()
-        .eq("id", invitation.id);
+        .eq("id", invitation.id)
+        .eq("wedding_id", weddingId!);
 
       if (error) throw error;
 
