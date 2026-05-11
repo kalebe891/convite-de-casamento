@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useWedding } from "@/contexts/WeddingContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,8 +25,8 @@ interface BuffetManagerProps {
 
 const BuffetManager = ({ permissions }: BuffetManagerProps) => {
   const { toast } = useToast();
+  const { weddingId, wedding } = useWedding();
   const [items, setItems] = useState<any[]>([]);
-  const [weddingId, setWeddingId] = useState<string | null>(null);
   const [showBuffetSection, setShowBuffetSection] = useState<boolean>(true);
   const [newItem, setNewItem] = useState({ item_name: "", category: "", is_public: true });
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -33,25 +34,23 @@ const BuffetManager = ({ permissions }: BuffetManagerProps) => {
   const [editItem, setEditItem] = useState({ item_name: "", category: "", is_public: true });
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (wedding) {
+      setShowBuffetSection(wedding.show_buffet_section ?? true);
+    }
+  }, [wedding]);
+
+  useEffect(() => {
+    if (weddingId) fetchData();
+  }, [weddingId]);
 
   const fetchData = async () => {
-    const { data: wedding } = await supabase
-      .from("wedding_details")
-      .select("id, show_buffet_section")
-      .single();
-
-    if (wedding) {
-      setWeddingId(wedding.id);
-      setShowBuffetSection(wedding.show_buffet_section ?? true);
-      const { data: itemsData } = await supabase
-        .from("buffet_items")
-        .select("*")
-        .eq("wedding_id", wedding.id)
-        .order("item_name", { ascending: true });
-      setItems(itemsData || []);
-    }
+    if (!weddingId) return;
+    const { data: itemsData } = await supabase
+      .from("buffet_items")
+      .select("*")
+      .eq("wedding_id", weddingId)
+      .order("item_name", { ascending: true });
+    setItems(itemsData || []);
   };
 
   const handleToggleBuffetSection = async (newValue: boolean) => {
@@ -137,7 +136,8 @@ const BuffetManager = ({ permissions }: BuffetManagerProps) => {
         category: validationResult.data.category?.trim() || null,
         is_public: editItem.is_public,
       })
-      .eq("id", editingId);
+      .eq("id", editingId)
+      .eq("wedding_id", weddingId!);
 
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
@@ -156,7 +156,7 @@ const BuffetManager = ({ permissions }: BuffetManagerProps) => {
       return;
     }
     const deletedItem = items.find(item => item.id === id);
-    const { error } = await supabase.from("buffet_items").delete().eq("id", id);
+    const { error } = await supabase.from("buffet_items").delete().eq("id", id).eq("wedding_id", weddingId!);
 
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
@@ -173,7 +173,7 @@ const BuffetManager = ({ permissions }: BuffetManagerProps) => {
       return;
     }
     const newValue = !currentValue;
-    const { error } = await supabase.from("buffet_items").update({ is_public: newValue }).eq("id", id);
+    const { error } = await supabase.from("buffet_items").update({ is_public: newValue }).eq("id", id).eq("wedding_id", weddingId!);
 
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
