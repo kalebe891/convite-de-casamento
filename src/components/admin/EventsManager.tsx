@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useWedding } from "@/contexts/WeddingContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -28,8 +29,8 @@ interface EventsManagerProps {
 
 const EventsManager = ({ permissions }: EventsManagerProps) => {
   const { toast } = useToast();
+  const { weddingId } = useWedding();
   const [events, setEvents] = useState<any[]>([]);
-  const [weddingId, setWeddingId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [newEvent, setNewEvent] = useState({
     event_type: "",
@@ -43,26 +44,16 @@ const EventsManager = ({ permissions }: EventsManagerProps) => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const { data: weddingData } = await supabase
-        .from("wedding_details")
-        .select("id")
-        .single();
-
-      if (weddingData) {
-        setWeddingId(weddingData.id);
-
-        const { data: eventsData } = await supabase
-          .from("events")
-          .select("*")
-          .eq("wedding_id", weddingData.id)
-          .order("event_date");
-
-        setEvents(eventsData || []);
-      }
+      if (!weddingId) return;
+      const { data: eventsData } = await supabase
+        .from("events")
+        .select("*")
+        .eq("wedding_id", weddingId)
+        .order("event_date");
+      setEvents(eventsData || []);
     };
-
     fetchData();
-  }, []);
+  }, [weddingId]);
 
   const handleSubmitEvent = async (e: React.FormEvent) => {
     e.preventDefault();
