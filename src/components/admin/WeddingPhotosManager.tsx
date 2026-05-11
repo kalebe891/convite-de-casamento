@@ -178,7 +178,7 @@ const WeddingPhotosManager = ({ permissions }: WeddingPhotosManagerProps) => {
 
       await supabase.storage.from("wedding-photos").remove([filePath]);
 
-      const { error } = await supabase.from("photos").delete().eq("id", id);
+      const { error } = await supabase.from("photos").delete().eq("id", id).eq("wedding_id", weddingId!);
 
       if (error) throw error;
 
@@ -219,7 +219,8 @@ const WeddingPhotosManager = ({ permissions }: WeddingPhotosManagerProps) => {
       const { error } = await supabase
         .from("photos")
         .update({ is_main: true })
-        .eq("id", photoId);
+        .eq("id", photoId)
+        .eq("wedding_id", weddingId!);
 
       if (error) throw error;
 
@@ -258,7 +259,8 @@ const WeddingPhotosManager = ({ permissions }: WeddingPhotosManagerProps) => {
       const { error } = await supabase
         .from("photos")
         .update({ is_secondary: true })
-        .eq("id", photoId);
+        .eq("id", photoId)
+        .eq("wedding_id", weddingId!);
 
       if (error) throw error;
 
