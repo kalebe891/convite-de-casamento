@@ -83,6 +83,7 @@ const EventsManager = ({ permissions }: EventsManagerProps) => {
             description: newEvent.description || null,
           })
           .eq("id", editingId)
+          .eq("wedding_id", weddingId!)
           .select()
           .single();
 
@@ -192,7 +193,7 @@ const EventsManager = ({ permissions }: EventsManagerProps) => {
     const eventToDelete = events.find((e) => e.id === id);
     
     try {
-      const { error } = await supabase.from("events").delete().eq("id", id);
+      const { error } = await supabase.from("events").delete().eq("id", id).eq("wedding_id", weddingId!);
 
       if (error) throw error;
 
