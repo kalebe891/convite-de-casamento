@@ -135,7 +135,8 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
     const { error } = await supabase
       .from("gift_items")
       .update({ is_purchased: newValue })
-      .eq("id", item.id);
+      .eq("id", item.id)
+      .eq("wedding_id", weddingId!);
 
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
@@ -182,7 +183,8 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
         claimed_at: guestId ? new Date().toISOString() : null,
         claimed_via_admin: guestId ? true : false,
       })
-      .eq("id", editingId);
+      .eq("id", editingId)
+      .eq("wedding_id", weddingId!);
 
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
@@ -201,7 +203,7 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
       return;
     }
     const deletedItem = items.find(item => item.id === id);
-    const { error } = await supabase.from("gift_items").delete().eq("id", id);
+    const { error } = await supabase.from("gift_items").delete().eq("id", id).eq("wedding_id", weddingId!);
 
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
@@ -217,7 +219,7 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
       toast({ title: "Sem permissão", description: "Você não tem permissão para tornar itens públicos/privados", variant: "destructive" });
       return;
     }
-    const { error } = await supabase.from("gift_items").update({ is_public: newValue }).eq("id", id);
+    const { error } = await supabase.from("gift_items").update({ is_public: newValue }).eq("id", id).eq("wedding_id", weddingId!);
 
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
