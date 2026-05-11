@@ -193,14 +193,7 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
       return;
     }
 
-    // Multi-tenant: vincular ao casamento atual (única tenant ativo no momento)
-    const { data: weddingRow, error: weddingErr } = await supabase
-      .from("wedding_details")
-      .select("id")
-      .limit(1)
-      .maybeSingle();
-
-    if (weddingErr || !weddingRow) {
+    if (!weddingId) {
       toast.error("Não foi possível identificar o evento para vincular o convidado.");
       return;
     }
@@ -210,7 +203,7 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
       phone: validationResult.data.phone?.trim() || null,
       email: validationResult.data.email?.trim() || null,
       status: "pending",
-      wedding_id: weddingRow.id,
+      wedding_id: weddingId,
     });
 
     if (error) {
