@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useWedding } from "@/contexts/WeddingContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,8 +25,8 @@ interface TimelineManagerProps {
 
 const TimelineManager = ({ permissions }: TimelineManagerProps) => {
   const { toast } = useToast();
+  const { weddingId, wedding } = useWedding();
   const [events, setEvents] = useState<any[]>([]);
-  const [weddingId, setWeddingId] = useState<string | null>(null);
   const [showTimelineSection, setShowTimelineSection] = useState<boolean>(true);
   const [newEvent, setNewEvent] = useState({ time: "", activity: "", observation: "", is_public: true });
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -33,25 +34,21 @@ const TimelineManager = ({ permissions }: TimelineManagerProps) => {
   const [editEvent, setEditEvent] = useState({ time: "", activity: "", observation: "", is_public: true });
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (wedding) setShowTimelineSection(wedding.show_timeline_section ?? true);
+  }, [wedding]);
+
+  useEffect(() => {
+    if (weddingId) fetchData();
+  }, [weddingId]);
 
   const fetchData = async () => {
-    const { data: wedding } = await supabase
-      .from("wedding_details")
-      .select("id, show_timeline_section")
-      .single();
-
-    if (wedding) {
-      setWeddingId(wedding.id);
-      setShowTimelineSection(wedding.show_timeline_section ?? true);
-      const { data: eventsData } = await supabase
-        .from("timeline_events")
-        .select("*")
-        .eq("wedding_id", wedding.id)
-        .order("time", { ascending: true });
-      setEvents(eventsData || []);
-    }
+    if (!weddingId) return;
+    const { data: eventsData } = await supabase
+      .from("timeline_events")
+      .select("*")
+      .eq("wedding_id", weddingId)
+      .order("time", { ascending: true });
+    setEvents(eventsData || []);
   };
 
   const handleToggleTimelineSection = async (newValue: boolean) => {
@@ -140,7 +137,8 @@ const TimelineManager = ({ permissions }: TimelineManagerProps) => {
         observation: editEvent.observation.trim() || null,
         is_public: editEvent.is_public,
       })
-      .eq("id", editingId);
+      .eq("id", editingId)
+      .eq("wedding_id", weddingId!);
 
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
@@ -159,7 +157,7 @@ const TimelineManager = ({ permissions }: TimelineManagerProps) => {
       return;
     }
     const deletedEvent = events.find(e => e.id === id);
-    const { error } = await supabase.from("timeline_events").delete().eq("id", id);
+    const { error } = await supabase.from("timeline_events").delete().eq("id", id).eq("wedding_id", weddingId!);
 
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
@@ -176,7 +174,7 @@ const TimelineManager = ({ permissions }: TimelineManagerProps) => {
       return;
     }
     const newValue = !currentValue;
-    const { error } = await supabase.from("timeline_events").update({ is_public: newValue }).eq("id", id);
+    const { error } = await supabase.from("timeline_events").update({ is_public: newValue }).eq("id", id).eq("wedding_id", weddingId!);
 
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
