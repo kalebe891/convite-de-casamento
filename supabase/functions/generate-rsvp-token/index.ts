@@ -60,25 +60,32 @@ const handler = async (req: Request): Promise<Response> => {
 
     const { guest_id }: GenerateTokenRequest = await req.json();
 
-    // Get guest details
+    if (!guest_id || typeof guest_id !== "string") {
+      throw new Error("guest_id obrigatório");
+    }
+
+    // Get guest details (includes wedding_id — source of truth)
     const { data: guest, error: guestError } = await supabase
       .from("guests")
-      .select("*")
+      .select("id, name, email, phone, wedding_id")
       .eq("id", guest_id)
-      .single();
+      .maybeSingle();
 
     if (guestError || !guest) {
       throw new Error("Convidado não encontrado");
     }
 
-    // Get wedding details
-    const { data: weddingData } = await supabase
-      .from("wedding_details")
-      .select("id")
-      .single();
+    if (!guest.wedding_id) {
+      throw new Error("Convidado sem casamento vinculado");
+    }
 
-    if (!weddingData) {
-      throw new Error("Detalhes do casamento não encontrados");
+    // Multi-tenant access validation
+    const { data: hasAccess, error: accessErr } = await supabase.rpc(
+      "user_has_wedding_access",
+      { _user_id: user.id, _wedding_id: guest.wedding_id }
+    );
+    if (accessErr || !hasAccess) {
+      throw new Error("Permissão negada");
     }
 
     // Check if active invitation already exists for this guest
@@ -87,19 +94,18 @@ const handler = async (req: Request): Promise<Response> => {
       .from("invitations")
       .select("*")
       .eq("guest_id", guest.id)
-      .eq("wedding_id", weddingData.id)
-      .single();
+      .eq("wedding_id", guest.wedding_id)
+      .maybeSingle();
 
     if (existingInvitation) {
       invitation = existingInvitation;
     } else {
-      // Create new invitation with unique code
       const uniqueCode = crypto.randomUUID().replace(/-/g, "").substring(0, 12).toUpperCase();
-      
+
       const { data: newInvitation, error: invitationError } = await supabase
         .from("invitations")
         .insert({
-          wedding_id: weddingData.id,
+          wedding_id: guest.wedding_id,
           guest_id: guest.id,
           guest_name: guest.name,
           guest_email: guest.email,

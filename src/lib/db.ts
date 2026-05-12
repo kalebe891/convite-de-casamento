@@ -23,6 +23,7 @@ interface CheckinDB extends DBSchema {
       performed_by: string;
       source: 'offline' | 'online';
       synced: boolean;
+      wedding_id?: string;
     };
   };
 }

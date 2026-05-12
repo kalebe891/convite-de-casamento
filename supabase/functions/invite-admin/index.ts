@@ -23,6 +23,7 @@ interface InviteRequest {
   email: string;
   nome?: string;
   role: 'admin' | 'couple' | 'planner';
+  wedding_id?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -68,10 +69,21 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("User is not an admin");
     }
 
-    const { email, nome, role }: InviteRequest = await req.json();
-    
+    const { email, nome, role, wedding_id }: InviteRequest = await req.json();
+
+    // If wedding_id provided, validate inviter has access to it
+    if (wedding_id) {
+      const { data: inviterAccess, error: inviterAccessErr } = await supabase.rpc(
+        'user_has_wedding_access',
+        { _user_id: user.id, _wedding_id: wedding_id }
+      );
+      if (inviterAccessErr || !inviterAccess) {
+        throw new Error('Sem permissão para convidar para este evento');
+      }
+    }
+
     if (isDev) {
-      console.log(`[invite-admin] Starting invitation process for:`, maskEmail(email), 'with role:', role);
+      console.log(`[invite-admin] Starting invitation process for:`, maskEmail(email), 'with role:', role, 'wedding_id:', wedding_id ?? '(none)');
     }
 
     // Delete any existing pending invite for this email to generate a new token
@@ -116,6 +128,7 @@ const handler = async (req: Request): Promise<Response> => {
         email,
         nome: nome || email.split('@')[0],
         papel: role,
+        wedding_id: wedding_id ?? null,
         usado: false,
       })
       .select()

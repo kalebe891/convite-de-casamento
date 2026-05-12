@@ -192,13 +192,33 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log('[complete-user-invite] Role assigned successfully');
 
+    // 4b. Multi-tenant link: if invitation targets a specific wedding, link user to it
+    if (pendingUser.wedding_id) {
+      const { error: linkError } = await supabase
+        .from('user_weddings')
+        .upsert({
+          user_id: userId,
+          wedding_id: pendingUser.wedding_id,
+          role: pendingUser.papel,
+        }, { onConflict: 'user_id,wedding_id' });
+
+      if (linkError) {
+        console.error('[complete-user-invite] Error linking user to wedding');
+        return new Response(
+          JSON.stringify({ error: 'Erro ao vincular usuário ao evento' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      console.log('[complete-user-invite] User linked to wedding:', pendingUser.wedding_id);
+    }
+
     // Verify role was actually saved
     const { data: verifyRole, error: verifyError } = await supabase
       .from('user_roles')
       .select('role')
       .eq('user_id', userId)
-      .single();
-    
+      .maybeSingle();
+
     console.log('[complete-user-invite] Role verification:', verifyRole ? 'Success' : 'Failed');
     if (verifyError) {
       console.error('[complete-user-invite] Error verifying role');
