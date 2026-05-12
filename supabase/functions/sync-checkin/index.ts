@@ -19,7 +19,8 @@ const checkinItemSchema = z.object({
 );
 
 const syncCheckinSchema = z.object({
-  checks: z.array(checkinItemSchema),
+  wedding_id: z.string().uuid({ message: 'wedding_id é obrigatório' }),
+  checks: z.array(checkinItemSchema).min(1),
 });
 
 // Rate limiting map (in-memory, simple implementation)
@@ -30,58 +31,51 @@ function checkRateLimit(userId: string): boolean {
   const limit = rateLimitMap.get(userId);
 
   if (!limit || now > limit.resetAt) {
-    rateLimitMap.set(userId, { count: 1, resetAt: now + 60000 }); // 1 minute window
+    rateLimitMap.set(userId, { count: 1, resetAt: now + 60000 });
     return true;
   }
 
   if (limit.count >= 30) {
-    return false; // Exceeded 30 requests per minute
+    return false;
   }
 
   limit.count++;
   return true;
 }
 
-// Helper to get identifier for logging
 function getIdentifier(check: { guest_id?: string; guest_email?: string }): string {
   return check.guest_email || check.guest_id || 'unknown';
 }
 
 Deno.serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Get auth token
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      throw new Error('Missing authorization header');
+      throw new Error('Unauthorized');
     }
 
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      {
-        global: {
-          headers: { Authorization: authHeader },
-        },
-      }
+      { global: { headers: { Authorization: authHeader } } }
     );
 
-    // Verify user and role
-    const {
-      data: { user },
-      error: userError,
-    } = await supabaseClient.auth.getUser();
-
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
     if (userError || !user) {
       throw new Error('Unauthorized');
     }
 
-    // Check if user has a role and checkin permission dynamically
-    const { data: roleData } = await supabaseClient
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
+    // Role check (legacy permission flow, kept for backwards compat)
+    const { data: roleData } = await supabaseAdmin
       .from('user_roles')
       .select('role')
       .eq('user_id', user.id)
@@ -91,12 +85,7 @@ Deno.serve(async (req) => {
       throw new Error('Insufficient permissions');
     }
 
-    // Admin always has access; others need checkin permission
     if (roleData.role !== 'admin') {
-      const supabaseAdmin = createClient(
-        Deno.env.get('SUPABASE_URL') ?? '',
-        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-      );
       const { data: permData } = await supabaseAdmin
         .from('admin_permissions')
         .select('can_view, can_edit')
@@ -109,109 +98,97 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Rate limiting
     if (!checkRateLimit(user.id)) {
       return new Response(
         JSON.stringify({ error: 'Rate limit exceeded. Try again later.' }),
-        {
-          status: 429,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Parse and validate payload
     const body = await req.json();
     const validationResult = syncCheckinSchema.safeParse(body);
 
     if (!validationResult.success) {
       return new Response(
         JSON.stringify({ error: 'Invalid payload', details: validationResult.error.errors }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const { checks } = validationResult.data;
+    const { wedding_id: weddingId, checks } = validationResult.data;
 
-    // Use service role client for database operations
-    const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    // Multi-tenant access validation
+    const { data: hasAccess, error: accessErr } = await supabaseAdmin.rpc(
+      'user_has_wedding_access',
+      { _user_id: user.id, _wedding_id: weddingId }
     );
+
+    if (accessErr || !hasAccess) {
+      console.error('[sync-checkin] Access denied to wedding:', weddingId);
+      throw new Error('Insufficient permissions');
+    }
 
     const results: { successCount: number; failed: Array<{ identifier: string; reason: string }> } = {
       successCount: 0,
       failed: [],
     };
 
-    // Process each check-in
     for (const check of checks) {
       const identifier = getIdentifier(check);
-      
+
       try {
         let guest = null;
-        let guestError = null;
 
-        // Try to find guest by ID first if provided
+        // All guest lookups are scoped by wedding_id
         if (check.guest_id) {
           const result = await supabaseAdmin
             .from('guests')
-            .select('id, email, phone, status, checked_in_at')
+            .select('id, email, phone, status, checked_in_at, wedding_id')
             .eq('id', check.guest_id)
+            .eq('wedding_id', weddingId)
             .maybeSingle();
           guest = result.data;
-          guestError = result.error;
         }
-        
-        // If not found by ID and we have an identifier, try email or phone
+
         if (!guest && check.guest_email) {
-          // First try as email
           const emailResult = await supabaseAdmin
             .from('guests')
-            .select('id, email, phone, status, checked_in_at')
+            .select('id, email, phone, status, checked_in_at, wedding_id')
             .eq('email', check.guest_email)
+            .eq('wedding_id', weddingId)
             .maybeSingle();
-          
+
           if (emailResult.data) {
             guest = emailResult.data;
           } else {
-            // Try as phone
             const phoneResult = await supabaseAdmin
               .from('guests')
-              .select('id, email, phone, status, checked_in_at')
+              .select('id, email, phone, status, checked_in_at, wedding_id')
               .eq('phone', check.guest_email)
+              .eq('wedding_id', weddingId)
               .maybeSingle();
             guest = phoneResult.data;
-            guestError = phoneResult.error;
           }
         }
 
-        if (guestError || !guest) {
-          results.failed.push({
-            identifier,
-            reason: 'Guest not found',
-          });
+        if (!guest) {
+          results.failed.push({ identifier, reason: 'Guest not found' });
           continue;
         }
 
-        // Check if this is an undo operation
         const isUndo = check.checked_in_at === null;
         const guestIdentifierForLog = guest.email || guest.phone || identifier;
 
         if (isUndo) {
-          // Undo check-in: set checked_in_at to null, restore previous status
-          // Look up the original check-in log to find the status before check-in
-          let previousStatus = 'pending'; // fallback default
-          
+          let previousStatus = 'pending';
+
           const { data: logData } = await supabaseAdmin
             .from('admin_logs')
             .select('old_data')
             .eq('record_id', guest.id)
             .eq('action', 'checkin')
             .eq('table_name', 'guests')
+            .eq('wedding_id', weddingId)
             .order('created_at', { ascending: false })
             .limit(1)
             .maybeSingle();
@@ -223,32 +200,35 @@ Deno.serve(async (req) => {
           const { error: updateError } = await supabaseAdmin
             .from('guests')
             .update({ checked_in_at: null, status: previousStatus })
-            .eq('id', guest.id);
+            .eq('id', guest.id)
+            .eq('wedding_id', weddingId);
 
           if (updateError) {
             results.failed.push({ identifier, reason: updateError.message });
             continue;
           }
 
-          // Also update invitations
+          // Update invitations scoped by wedding
           if (guest.email) {
             await supabaseAdmin.from('invitations')
               .update({ checked_in_at: null })
-              .eq('guest_email', guest.email);
+              .eq('guest_email', guest.email)
+              .eq('wedding_id', weddingId);
           }
           if (guest.phone) {
             await supabaseAdmin.from('invitations')
               .update({ checked_in_at: null })
-              .eq('guest_phone', guest.phone);
+              .eq('guest_phone', guest.phone)
+              .eq('wedding_id', weddingId);
           }
 
-          // Log undo to admin_logs
           await supabaseAdmin.from('admin_logs').insert({
             user_id: user.id,
             user_email: user.email,
             action: 'undo_checkin',
             table_name: 'guests',
             record_id: guest.id,
+            wedding_id: weddingId,
             old_data: { checked_in_at: guest.checked_in_at, status: guest.status },
             new_data: { checked_in_at: null, status: previousStatus },
           });
@@ -257,16 +237,15 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        // Regular check-in: conflict resolution logic
+        // Regular check-in conflict logic
         const existingCheckin = guest.checked_in_at;
-        const incomingTimestamp = new Date(check.checked_in_at);
-        let conflictMetadata = check.metadata || {};
+        const incomingTimestamp = new Date(check.checked_in_at as string);
+        let conflictMetadata: Record<string, unknown> = check.metadata || {};
         let shouldUpdate = true;
 
         if (existingCheckin) {
           const existingTimestamp = new Date(existingCheckin);
-          
-          // Rule 1: Incoming is newer than existing - keep existing (first check-in wins)
+
           if (incomingTimestamp > existingTimestamp) {
             conflictMetadata = {
               ...conflictMetadata,
@@ -281,6 +260,7 @@ Deno.serve(async (req) => {
             await supabaseAdmin.from('checkin_logs').insert({
               guest_email: guestIdentifierForLog,
               guest_id: guest.id,
+              wedding_id: weddingId,
               checked_in_at: check.checked_in_at,
               performed_by: user.id,
               source: check.source,
@@ -291,7 +271,6 @@ Deno.serve(async (req) => {
             continue;
           }
 
-          // Rule 2: Incoming is older - overwrite with older timestamp
           if (incomingTimestamp < existingTimestamp) {
             conflictMetadata = {
               ...conflictMetadata,
@@ -304,7 +283,6 @@ Deno.serve(async (req) => {
             shouldUpdate = true;
           }
 
-          // Rule 3: Same timestamp - prioritize online source
           if (incomingTimestamp.getTime() === existingTimestamp.getTime()) {
             if (check.source === 'offline') {
               conflictMetadata = {
@@ -320,6 +298,7 @@ Deno.serve(async (req) => {
               await supabaseAdmin.from('checkin_logs').insert({
                 guest_email: guestIdentifierForLog,
                 guest_id: guest.id,
+                wedding_id: weddingId,
                 checked_in_at: check.checked_in_at,
                 performed_by: user.id,
                 source: check.source,
@@ -332,38 +311,36 @@ Deno.serve(async (req) => {
           }
         }
 
-        // Update guest check-in status if needed
         if (shouldUpdate) {
           const { error: updateError } = await supabaseAdmin
             .from('guests')
-            .update({
-              checked_in_at: check.checked_in_at,
-              status: 'confirmed',
-            })
-            .eq('id', guest.id);
+            .update({ checked_in_at: check.checked_in_at, status: 'confirmed' })
+            .eq('id', guest.id)
+            .eq('wedding_id', weddingId);
 
           if (updateError) {
             results.failed.push({ identifier, reason: updateError.message });
             continue;
           }
 
-          // Also update invitation if exists
           if (guest.email) {
             await supabaseAdmin.from('invitations')
               .update({ checked_in_at: check.checked_in_at, attending: true })
-              .eq('guest_email', guest.email);
+              .eq('guest_email', guest.email)
+              .eq('wedding_id', weddingId);
           }
           if (guest.phone) {
             await supabaseAdmin.from('invitations')
               .update({ checked_in_at: check.checked_in_at, attending: true })
-              .eq('guest_phone', guest.phone);
+              .eq('guest_phone', guest.phone)
+              .eq('wedding_id', weddingId);
           }
         }
 
-        // Log check-in to checkin_logs audit table
         const { error: logError } = await supabaseAdmin.from('checkin_logs').insert({
           guest_email: guestIdentifierForLog,
           guest_id: guest.id,
+          wedding_id: weddingId,
           checked_in_at: check.checked_in_at,
           performed_by: user.id,
           source: check.source,
@@ -374,13 +351,13 @@ Deno.serve(async (req) => {
           console.error('Failed to log check-in to checkin_logs:', logError);
         }
 
-        // Also log to admin_logs for unified audit trail
         const { error: adminLogError } = await supabaseAdmin.from('admin_logs').insert({
           user_id: user.id,
           user_email: user.email,
           action: 'checkin',
           table_name: 'guests',
           record_id: guest.id,
+          wedding_id: weddingId,
           old_data: { checked_in_at: existingCheckin || null, status: guest.status || 'pending' },
           new_data: { checked_in_at: check.checked_in_at, status: 'confirmed' },
         });
@@ -392,10 +369,7 @@ Deno.serve(async (req) => {
         results.successCount++;
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        results.failed.push({
-          identifier,
-          reason: errorMessage,
-        });
+        results.failed.push({ identifier, reason: errorMessage });
       }
     }
 
@@ -407,19 +381,15 @@ Deno.serve(async (req) => {
     console.error('sync-checkin error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     const isUnauthorized = errorMessage === 'Unauthorized' || errorMessage === 'Insufficient permissions';
-    
-    // Map error messages to safe generic responses
+
     let safeErrorMessage = 'Erro ao processar check-ins';
     if (isUnauthorized) {
       safeErrorMessage = 'Não autorizado';
     }
-    
+
     return new Response(
       JSON.stringify({ error: safeErrorMessage }),
-      {
-        status: isUnauthorized ? 403 : 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
+      { status: isUnauthorized ? 403 : 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });
