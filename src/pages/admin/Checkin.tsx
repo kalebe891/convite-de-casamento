@@ -223,7 +223,7 @@ const Checkin = () => {
 
   // Sync pending check-ins
   const syncCheckins = async () => {
-    if (!isOnline || !user) return;
+    if (!isOnline || !user || !weddingId) return;
 
     try {
       setSyncing(true);
@@ -237,7 +237,10 @@ const Checkin = () => {
         return;
       }
 
-      const checks = pending.map((item) => ({
+      // Only sync entries that belong to the active wedding
+      const scoped = pending.filter((p) => !p.wedding_id || p.wedding_id === weddingId);
+
+      const checks = scoped.map((item) => ({
         guest_id: item.guest_id,
         guest_email: item.guest_email,
         checked_in_at: item.checked_in_at,
@@ -246,12 +249,12 @@ const Checkin = () => {
       }));
 
       const { data, error } = await supabase.functions.invoke("sync-checkin", {
-        body: { checks },
+        body: { wedding_id: weddingId, checks },
       });
 
       if (error) throw error;
 
-      for (const item of pending) {
+      for (const item of scoped) {
         await removeFromOutbox(item.id);
       }
 
