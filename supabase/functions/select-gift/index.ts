@@ -48,13 +48,13 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Verificar se guest existe e não está arquivado
+    // Verificar se guest existe e não está arquivado (carrega wedding_id)
     const { data: guest, error: guestError } = await supabase
       .from('guests')
-      .select('id, name')
+      .select('id, name, wedding_id')
       .eq('id', guest_id)
       .is('archived_at', null)
-      .single();
+      .maybeSingle();
 
     if (guestError || !guest) {
       return new Response(
@@ -79,6 +79,28 @@ Deno.serve(async (req) => {
       return new Response(
         JSON.stringify({ success: true, cleared: true }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validar isolamento multi-tenant: guest e gift devem pertencer ao mesmo wedding
+    const { data: gift, error: giftError } = await supabase
+      .from('gift_items')
+      .select('id, wedding_id')
+      .eq('id', gift_id)
+      .maybeSingle();
+
+    if (giftError || !gift) {
+      return new Response(
+        JSON.stringify({ error: 'Presente não encontrado' }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (!guest.wedding_id || !gift.wedding_id || guest.wedding_id !== gift.wedding_id) {
+      console.warn('[select-gift] Tentativa de cruzamento entre eventos. guest:', guest.wedding_id, 'gift:', gift.wedding_id);
+      return new Response(
+        JSON.stringify({ error: 'Presente não pertence a este evento' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
