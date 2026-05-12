@@ -297,10 +297,16 @@ const Checkin = () => {
 
     const checked_in_at = new Date().toISOString();
 
+    if (!weddingId) {
+      toast({ title: "Erro", description: "Evento ativo não identificado", variant: "destructive" });
+      return;
+    }
+
     try {
       if (isOnline) {
         const { data, error } = await supabase.functions.invoke("sync-checkin", {
           body: {
+            wedding_id: weddingId,
             checks: [
               {
                 guest_id: guest.id,
@@ -331,6 +337,7 @@ const Checkin = () => {
           checked_in_at,
           performed_by: user.id,
           source: "offline",
+          wedding_id: weddingId,
         });
 
         await updateGuestCheckin(guest.id, checked_in_at);
@@ -370,6 +377,7 @@ const Checkin = () => {
       const guestIdentifier = guest.email || guest.phone;
       const { data, error } = await supabase.functions.invoke("sync-checkin", {
         body: {
+          wedding_id: weddingId,
           checks: [{
             guest_id: guest.id,
             guest_email: guestIdentifier,
