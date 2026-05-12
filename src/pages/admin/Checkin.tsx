@@ -125,9 +125,16 @@ const Checkin = () => {
       setLoading(true);
 
       if (isOnline) {
+        if (!weddingId) {
+          setGuests([]);
+          setFilteredGuests([]);
+          return;
+        }
+
         const { data, error } = await supabase
           .from("guests")
           .select("id, name, email, phone, status, checked_in_at")
+          .eq("wedding_id", weddingId)
           .is("archived_at", null)
           .order("name");
 
@@ -139,6 +146,7 @@ const Checkin = () => {
         const { data: giftsData } = await supabase
           .from("gift_items")
           .select("gift_name, selected_by_guest_id, is_purchased")
+          .eq("wedding_id", weddingId)
           .not("selected_by_guest_id", "is", null);
 
         const giftMap: Record<string, string> = {};
@@ -185,9 +193,11 @@ const Checkin = () => {
   // Fetch recent conflicts for badge/drawer
   const fetchRecentConflicts = async () => {
     try {
+      if (!weddingId) return;
       const { data, error } = await supabase
         .from("checkin_logs")
         .select("*")
+        .eq("wedding_id", weddingId)
         .not("metadata->>conflict", "is", null)
         .order("created_at", { ascending: false })
         .limit(20);
@@ -393,7 +403,8 @@ const Checkin = () => {
       const { error } = await supabase
         .from("gift_items")
         .update({ is_purchased: true })
-        .eq("selected_by_guest_id", guest.id);
+        .eq("selected_by_guest_id", guest.id)
+        .eq("wedding_id", weddingId!);
 
       if (error) throw error;
 
@@ -430,7 +441,8 @@ const Checkin = () => {
       const { error } = await supabase
         .from("gift_items")
         .update({ is_purchased: false })
-        .eq("selected_by_guest_id", guest.id);
+        .eq("selected_by_guest_id", guest.id)
+        .eq("wedding_id", weddingId!);
 
       if (error) throw error;
 
@@ -481,12 +493,12 @@ const Checkin = () => {
     }
   }, [isOnline]);
 
-  // Initial load
+  // Initial load — re-runs when active wedding changes
   useEffect(() => {
     fetchGuests();
     updatePendingCount();
     fetchRecentConflicts();
-  }, []);
+  }, [weddingId]);
 
   const getStatusBadge = (guest: Guest) => {
     if (guest.checked_in_at) {
