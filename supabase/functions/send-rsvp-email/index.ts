@@ -51,12 +51,16 @@ const handler = async (req: Request): Promise<Response> => {
 
     const { guest_id }: SendRSVPEmailRequest = await req.json();
 
-    // Get guest details
+    if (!guest_id || typeof guest_id !== "string") {
+      throw new Error("guest_id obrigatório");
+    }
+
+    // Get guest details (includes wedding_id — source of truth)
     const { data: guest, error: guestError } = await supabase
       .from("guests")
-      .select("*")
+      .select("id, name, email, phone, wedding_id")
       .eq("id", guest_id)
-      .single();
+      .maybeSingle();
 
     if (guestError || !guest) {
       throw new Error("Convidado não encontrado");
@@ -66,35 +70,49 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Convidado não possui e-mail cadastrado");
     }
 
-    // Get wedding details
-    const { data: weddingData } = await supabase
-      .from("wedding_details")
-      .select("id")
-      .single();
+    if (!guest.wedding_id) {
+      throw new Error("Convidado sem casamento vinculado");
+    }
 
-    if (!weddingData) {
+    // Multi-tenant access validation
+    const { data: hasAccess, error: accessErr } = await supabase.rpc(
+      "user_has_wedding_access",
+      { _user_id: user.id, _wedding_id: guest.wedding_id }
+    );
+    if (accessErr || !hasAccess) {
+      throw new Error("Permissão negada");
+    }
+
+    // Resolve wedding details by id (no global lookup)
+    const { data: weddingDetails } = await supabase
+      .from("wedding_details")
+      .select("id, invitation_message")
+      .eq("id", guest.wedding_id)
+      .maybeSingle();
+
+    if (!weddingDetails) {
       throw new Error("Detalhes do casamento não encontrados");
     }
 
-    // Check if invitation already exists for this guest
+    // Check if invitation already exists for this guest in this wedding
     let invitation;
     const { data: existingInvitation } = await supabase
       .from("invitations")
       .select("*")
-      .eq("guest_email", guest.email)
-      .eq("wedding_id", weddingData.id)
-      .single();
+      .eq("guest_id", guest.id)
+      .eq("wedding_id", guest.wedding_id)
+      .maybeSingle();
 
     if (existingInvitation) {
       invitation = existingInvitation;
     } else {
-      // Create new invitation with unique code
       const uniqueCode = crypto.randomUUID().replace(/-/g, "").substring(0, 12).toUpperCase();
-      
+
       const { data: newInvitation, error: invitationError } = await supabase
         .from("invitations")
         .insert({
-          wedding_id: weddingData.id,
+          wedding_id: guest.wedding_id,
+          guest_id: guest.id,
           guest_name: guest.name,
           guest_email: guest.email,
           guest_phone: guest.phone,
@@ -114,14 +132,8 @@ const handler = async (req: Request): Promise<Response> => {
     const origin = req.headers.get("origin") || "http://localhost:8080";
     const invitationLink = `${origin}/convite/${invitation.unique_code}`;
 
-    // Get invitation message template from wedding_details
-    const { data: weddingDetails } = await supabase
-      .from("wedding_details")
-      .select("invitation_message")
-      .single();
-
     const fallback = `{guest_name}, confirme sua presença:\n{invitation_link}`;
-    const rawTemplate = (weddingDetails as any)?.invitation_message?.trim() || fallback;
+    const rawTemplate = (weddingDetails.invitation_message as string | null)?.trim() || fallback;
     const messageText = rawTemplate
       .replace(/\{guest_name\}/g, guest.name)
       .replace(/\{invitation_link\}/g, invitationLink);
