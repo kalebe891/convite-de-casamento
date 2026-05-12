@@ -27,6 +27,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { StatusIndicator } from "@/components/admin/StatusIndicator";
+import { useWedding } from "@/contexts/WeddingContext";
 
 interface Guest {
   id: string;
@@ -79,6 +80,7 @@ const sortGuestsByPriority = (
 const Checkin = () => {
   const { toast } = useToast();
   const { user } = useAuth();
+  const { weddingId } = useWedding();
   const permissions = usePagePermissions("checkin");
   const isOnline = useOnlineStatus();
   const navigate = useNavigate();
