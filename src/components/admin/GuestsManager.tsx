@@ -42,7 +42,7 @@ interface GuestsManagerProps {
 }
 
 const GuestsManager = ({ permissions }: GuestsManagerProps) => {
-  const { weddingId } = useWedding();
+  const { weddingId, wedding } = useWedding();
   const [guests, setGuests] = useState<Guest[]>([]);
   const [guestGifts, setGuestGifts] = useState<Record<string, string>>({});
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -386,14 +386,7 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
 
       if (error) throw error;
 
-      // Fetch invitation message from wedding_details
-      const { data: weddingData } = await supabase
-        .from("wedding_details")
-        .select("invitation_message")
-        .single();
-
-      const invitationMessage = (weddingData as any)?.invitation_message;
-
+      const invitationMessage = wedding?.invitation_message;
       const link = data.link;
       const fallback = `{guest_name}, confirme sua presença:\n{invitation_link}`;
       const template = invitationMessage?.trim() || fallback;
@@ -443,15 +436,7 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
       if (error) throw error;
 
       const link = data.link;
-      
-      // Fetch invitation message from wedding_details
-      const { data: weddingData } = await supabase
-        .from("wedding_details")
-        .select("invitation_message")
-        .single();
-
-      const invitationMessage = (weddingData as any)?.invitation_message;
-      
+      const invitationMessage = wedding?.invitation_message;
 
 
       const fallback = `{guest_name}, confirme sua presença:\n{invitation_link}`;
