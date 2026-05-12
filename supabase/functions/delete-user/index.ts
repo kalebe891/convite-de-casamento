@@ -97,6 +97,15 @@ const handler = async (req: Request): Promise<Response> => {
       console.error('Error deleting user_roles:', rolesError);
     }
 
+    // 1b. Delete user_weddings (multi-tenant links)
+    const { error: linksError } = await supabaseAdmin
+      .from('user_weddings')
+      .delete()
+      .eq('user_id', userId);
+    if (linksError) {
+      console.error('Error deleting user_weddings:', linksError);
+    }
+
     // 2. Delete admin_logs referencing user
     const { error: logsError } = await supabaseAdmin
       .from('admin_logs')
