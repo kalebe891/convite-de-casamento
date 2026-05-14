@@ -21,30 +21,21 @@ interface BuffetSectionProps {
 }
 
 const BuffetSection = ({ weddingId }: BuffetSectionProps) => {
+  const { wedding } = useWedding();
   const [items, setItems] = useState<BuffetItem[] | null>(null);
-  const [showSection, setShowSection] = useState<boolean>(true);
+  const showSection = wedding?.show_buffet_section ?? true;
 
   useEffect(() => {
     if (!weddingId) {
       setItems([]);
       return;
     }
+    if (!showSection) {
+      setItems([]);
+      return;
+    }
 
     const fetchData = async () => {
-      const { data: weddingData } = await supabase
-        .from("wedding_details")
-        .select("show_buffet_section")
-        .eq("id", weddingId)
-        .single();
-
-      if (!weddingData?.show_buffet_section) {
-        setShowSection(false);
-        setItems([]);
-        return;
-      }
-
-      setShowSection(true);
-
       const { data } = await supabase
         .from("buffet_items")
         .select("*")
@@ -56,7 +47,7 @@ const BuffetSection = ({ weddingId }: BuffetSectionProps) => {
     };
 
     fetchData();
-  }, [weddingId]);
+  }, [weddingId, showSection]);
 
   if (items === null) {
     return (
