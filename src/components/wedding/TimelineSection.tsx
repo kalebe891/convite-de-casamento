@@ -19,27 +19,18 @@ interface TimelineSectionProps {
 }
 
 const TimelineSection = ({ weddingId }: TimelineSectionProps) => {
+  const { wedding } = useWedding();
   const [events, setEvents] = useState<TimelineEvent[] | null>(null);
-  const [showSection, setShowSection] = useState<boolean>(true);
+  const showSection = wedding?.show_timeline_section ?? true;
 
   useEffect(() => {
     if (!weddingId) return;
+    if (!showSection) {
+      setEvents([]);
+      return;
+    }
 
     const fetchData = async () => {
-      const { data: weddingData } = await supabase
-        .from("wedding_details")
-        .select("show_timeline_section")
-        .eq("id", weddingId)
-        .single();
-
-      if (!weddingData?.show_timeline_section) {
-        setShowSection(false);
-        setEvents([]);
-        return;
-      }
-
-      setShowSection(true);
-
       const { data } = await supabase
         .from("timeline_events")
         .select("*")
@@ -51,7 +42,7 @@ const TimelineSection = ({ weddingId }: TimelineSectionProps) => {
     };
 
     fetchData();
-  }, [weddingId]);
+  }, [weddingId, showSection]);
 
   if (events === null) {
     return (
