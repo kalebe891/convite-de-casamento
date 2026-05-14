@@ -13,15 +13,15 @@ import ConfirmedGuestsSection from "@/components/wedding/ConfirmedGuestsSection"
 import { Button } from "@/components/ui/button";
 import { LogIn } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
+import { useWedding } from "@/contexts/WeddingContext";
 
 const Index = () => {
   const navigate = useNavigate();
+  const { wedding, weddingId, loading, error } = useWedding();
 
   const [session, setSession] = useState(null);
-  const [weddingDetails, setWeddingDetails] = useState(null);
   const [events, setEvents] = useState(null);
   const [photos, setPhotos] = useState(null);
-  const [loadingData, setLoadingData] = useState(true);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -36,45 +36,45 @@ const Index = () => {
   }, []);
 
   useEffect(() => {
-    const fetchWeddingData = async () => {
-      try {
-        const { data: weddingData } = await supabase
-          .from("wedding_details")
-          .select("*")
-          .single();
+    if (!weddingId) return;
 
-        if (weddingData) {
-          setWeddingDetails(weddingData);
+    const fetchExtras = async () => {
+      const { data: eventsData } = await supabase
+        .from("events")
+        .select("*")
+        .eq("wedding_id", weddingId)
+        .order("event_date");
 
-          const { data: eventsData } = await supabase
-            .from("events")
-            .select("*")
-            .eq("wedding_id", weddingData.id)
-            .order("event_date");
+      const { data: photosData } = await supabase
+        .from("photos")
+        .select("*")
+        .eq("wedding_id", weddingId)
+        .order("display_order");
 
-          const { data: photosData } = await supabase
-            .from("photos")
-            .select("*")
-            .eq("wedding_id", weddingData.id)
-            .order("display_order");
-
-          setEvents(eventsData || null);
-          setPhotos(photosData || null);
-        }
-      } finally {
-        setLoadingData(false);
-      }
+      setEvents(eventsData || null);
+      setPhotos(photosData || null);
     };
 
-    fetchWeddingData();
-  }, []);
+    fetchExtras();
+  }, [weddingId]);
+
+  if (!loading && (error || !wedding)) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center px-4">
+          <h1 className="text-2xl font-serif text-foreground mb-2">Evento não encontrado</h1>
+          <p className="text-muted-foreground">Verifique o link e tente novamente.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
       <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <h1 className="text-2xl font-serif font-bold text-primary">
-            {weddingDetails ? `${weddingDetails.bride_name} & ${weddingDetails.groom_name}` : "Nosso Casamento"}
+            {wedding ? `${wedding.bride_name} & ${wedding.groom_name}` : "Nosso Casamento"}
           </h1>
           <div className="flex items-center gap-2">
             <ThemeToggle />
@@ -92,14 +92,14 @@ const Index = () => {
       </header>
 
       <main className="pt-20">
-        <HeroSection weddingDetails={weddingDetails} />
-        <StorySection weddingDetails={weddingDetails} />
+        <HeroSection weddingDetails={wedding} />
+        <StorySection weddingDetails={wedding} />
         <EventsSection events={events} />
-        <TimelineSection weddingId={weddingDetails?.id || null} />
-        <BuffetSection weddingId={weddingDetails?.id || null} />
-        <PlaylistSection weddingId={weddingDetails?.id || null} />
-        <GiftsSection weddingId={weddingDetails?.id || null} />
-        <ConfirmedGuestsSection weddingId={weddingDetails?.id || null} />
+        <TimelineSection weddingId={weddingId} />
+        <BuffetSection weddingId={weddingId} />
+        <PlaylistSection weddingId={weddingId} />
+        <GiftsSection weddingId={weddingId} />
+        <ConfirmedGuestsSection weddingId={weddingId} />
         <GallerySection photos={photos} />
       </main>
 
