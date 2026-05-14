@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { motion } from "framer-motion";
+import { useWedding } from "@/contexts/WeddingContext";
 
 interface GiftsSectionProps {
   weddingId: string | null;
