@@ -6,6 +6,7 @@ import { SkeletonText } from "@/components/ui/skeleton-text";
 import { SkeletonCard } from "@/components/ui/skeleton-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
+import { useWedding } from "@/contexts/WeddingContext";
 
 interface PlaylistSong {
   id: string;
