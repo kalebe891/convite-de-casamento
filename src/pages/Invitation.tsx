@@ -70,13 +70,16 @@ const Invitation = () => {
   const [savingGift, setSavingGift] = useState(false);
   const [hasExistingGift, setHasExistingGift] = useState(false);
 
-  // Fetch wedding data
+  // Fetch wedding data once invitation is resolved (uses invitation.wedding_id)
   useEffect(() => {
     const fetchWeddingData = async () => {
+      if (!invitationData?.wedding_id) return;
+
       const { data: weddingData } = await supabase
         .from("wedding_details")
         .select("*")
-        .single();
+        .eq("id", invitationData.wedding_id)
+        .maybeSingle();
 
       if (weddingData) {
         setWeddingDetails(weddingData);
@@ -92,7 +95,7 @@ const Invitation = () => {
     };
 
     fetchWeddingData();
-  }, []);
+  }, [invitationData?.wedding_id]);
 
   // Fetch invitation data
   useEffect(() => {

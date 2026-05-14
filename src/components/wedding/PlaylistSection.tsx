@@ -6,6 +6,7 @@ import { SkeletonText } from "@/components/ui/skeleton-text";
 import { SkeletonCard } from "@/components/ui/skeleton-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
+import { useWedding } from "@/contexts/WeddingContext";
 
 interface PlaylistSong {
   id: string;
@@ -21,30 +22,21 @@ interface PlaylistSectionProps {
 }
 
 const PlaylistSection = ({ weddingId }: PlaylistSectionProps) => {
+  const { wedding } = useWedding();
   const [songs, setSongs] = useState<PlaylistSong[] | null>(null);
-  const [showSection, setShowSection] = useState<boolean>(true);
+  const showSection = wedding?.show_playlist_section ?? true;
 
   useEffect(() => {
     if (!weddingId) {
       setSongs([]);
       return;
     }
+    if (!showSection) {
+      setSongs([]);
+      return;
+    }
 
     const fetchData = async () => {
-      const { data: weddingData } = await supabase
-        .from("wedding_details")
-        .select("show_playlist_section")
-        .eq("id", weddingId)
-        .single();
-
-      if (!weddingData?.show_playlist_section) {
-        setShowSection(false);
-        setSongs([]);
-        return;
-      }
-
-      setShowSection(true);
-
       const { data } = await supabase
         .from("playlist_songs")
         .select("*")
@@ -56,7 +48,7 @@ const PlaylistSection = ({ weddingId }: PlaylistSectionProps) => {
     };
 
     fetchData();
-  }, [weddingId]);
+  }, [weddingId, showSection]);
 
   if (songs === null) {
     return (

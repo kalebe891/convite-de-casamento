@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { motion } from "framer-motion";
+import { useWedding } from "@/contexts/WeddingContext";
 
 interface GiftsSectionProps {
   weddingId: string | null;
@@ -91,12 +92,14 @@ const GiftCard = ({ gift, index }: { gift: GiftItem; index: number }) => {
 };
 
 const GiftsSection = ({ weddingId }: GiftsSectionProps) => {
+  const { wedding } = useWedding();
   const [allGifts, setAllGifts] = useState<GiftItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showSection, setShowSection] = useState(true);
-  const [hideReserved, setHideReserved] = useState(false);
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE.desktop);
   const isMobile = useIsMobile();
+
+  const showSection = wedding?.show_gifts_section ?? true;
+  const hideReserved = wedding?.hide_reserved_gifts ?? false;
 
   useEffect(() => {
     const width = window.innerWidth;
@@ -118,17 +121,6 @@ const GiftsSection = ({ weddingId }: GiftsSectionProps) => {
     }
 
     const fetchData = async () => {
-      const { data: weddingData } = await supabase
-        .from("wedding_details")
-        .select("show_gifts_section, hide_reserved_gifts")
-        .eq("id", weddingId)
-        .single();
-
-      if (weddingData) {
-        setShowSection(weddingData.show_gifts_section ?? true);
-        setHideReserved(weddingData.hide_reserved_gifts ?? false);
-      }
-
       const { data, error } = await supabase
         .from("gift_items")
         .select("id, gift_name, description, link, is_purchased, is_public, selected_by_guest_id")
@@ -140,7 +132,7 @@ const GiftsSection = ({ weddingId }: GiftsSectionProps) => {
         console.error("Error fetching gifts:", error);
       } else {
         let filtered = data || [];
-        if (weddingData?.hide_reserved_gifts) {
+        if (hideReserved) {
           filtered = filtered.filter((g) => !g.selected_by_guest_id);
         }
         setAllGifts(filtered);
@@ -153,11 +145,10 @@ const GiftsSection = ({ weddingId }: GiftsSectionProps) => {
     const channel = supabase
       .channel("public-gifts")
       .on("postgres_changes", { event: "*", schema: "public", table: "gift_items", filter: `wedding_id=eq.${weddingId}` }, () => fetchData())
-      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "wedding_details", filter: `id=eq.${weddingId}` }, () => fetchData())
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, [weddingId]);
+  }, [weddingId, hideReserved]);
 
   if (!showSection) return null;
 
