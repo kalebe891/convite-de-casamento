@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { SkeletonText } from "@/components/ui/skeleton-text";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
+import { useWedding } from "@/contexts/WeddingContext";
 
 interface TimelineEvent {
   id: string;
