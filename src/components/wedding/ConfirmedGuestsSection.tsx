@@ -13,13 +13,15 @@ interface ConfirmedGuestsSectionProps {
 }
 
 const ConfirmedGuestsSection = ({ weddingId }: ConfirmedGuestsSectionProps) => {
+  const { wedding } = useWedding();
   const [confirmedGuests, setConfirmedGuests] = useState<any[] | null>(null);
   const [stats, setStats] = useState({ confirmed: 0, total: 0 });
-  const [settings, setSettings] = useState({
-    show_guest_list_public: false,
-    show_rsvp_status_public: false,
-  });
   const [loading, setLoading] = useState(true);
+
+  const settings = {
+    show_guest_list_public: wedding?.show_guest_list_public ?? false,
+    show_rsvp_status_public: wedding?.show_rsvp_status_public ?? false,
+  };
 
   useEffect(() => {
     if (!weddingId) {
@@ -28,22 +30,10 @@ const ConfirmedGuestsSection = ({ weddingId }: ConfirmedGuestsSectionProps) => {
     }
 
     const fetchConfirmedGuests = async () => {
-      const { data: weddingData } = await supabase
-        .from("wedding_details")
-        .select("show_guest_list_public, show_rsvp_status_public")
-        .eq("id", weddingId)
-        .single();
-
-      if (weddingData) {
-        setSettings({
-          show_guest_list_public: weddingData.show_guest_list_public || false,
-          show_rsvp_status_public: weddingData.show_rsvp_status_public || false,
-        });
-      }
-
       const { data: confirmedGuestsData } = await supabase
         .from("guests")
         .select("id, name, email, phone")
+        .eq("wedding_id", weddingId)
         .eq("status", "confirmed")
         .is("archived_at", null)
         .order("name");
@@ -51,6 +41,7 @@ const ConfirmedGuestsSection = ({ weddingId }: ConfirmedGuestsSectionProps) => {
       const { data: allGuestsData } = await supabase
         .from("guests")
         .select("id")
+        .eq("wedding_id", weddingId)
         .is("archived_at", null);
 
       const formattedGuests = (confirmedGuestsData || []).map(guest => ({
