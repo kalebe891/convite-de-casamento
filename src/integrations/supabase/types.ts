@@ -912,6 +912,15 @@ export type Database = {
         Args: { _menu_key: string; _permission_type: string; _user_id: string }
         Returns: boolean
       }
+      has_table_permission_for_wedding: {
+        Args: {
+          _menu_key: string
+          _permission_type: string
+          _user_id: string
+          _wedding_id: string
+        }
+        Returns: boolean
+      }
       unclaim_gift: { Args: { p_guest_id: string }; Returns: boolean }
       user_has_wedding_access: {
         Args: { _user_id: string; _wedding_id: string }
