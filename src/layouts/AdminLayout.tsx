@@ -76,7 +76,9 @@ const AdminLayout = () => {
                 <Heart className="w-6 h-6 text-primary" />
                 <div>
                   <h1 className="text-xl font-serif font-bold">Painel Administrativo</h1>
-                  <p className="text-xs text-muted-foreground">Beatriz & Diogo</p>
+                  <div className="mt-0.5">
+                    <EventSelector />
+                  </div>
                 </div>
               </div>
             </div>
