@@ -11,6 +11,7 @@ import { useRequireRole } from "@/hooks/useRequireRole";
 import { OfflineIndicator } from "@/components/admin/OfflineIndicator";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useAllRoles } from "@/hooks/useAllRoles";
+import EventSelector from "@/components/admin/EventSelector";
 
 const AdminLayout = () => {
   const navigate = useNavigate();
