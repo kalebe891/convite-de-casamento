@@ -9,8 +9,20 @@ import {
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
+import { isReservedSlug, isValidRouteEventType, urlToDb } from "@/lib/eventType";
 
-export type WeddingContextMode = "public" | "admin";
+export type WeddingContextMode = "public" | "admin" | "tenant-admin";
+
+export type WeddingError =
+  | "invalid_event_type"
+  | "reserved_slug"
+  | "not_found"
+  | "unauthenticated"
+  | "access_denied"
+  | "missing_slug"
+  | "no_wedding_access"
+  | "unexpected_error"
+  | string;
 
 export type WeddingDetails = Tables<"wedding_details">;
 export type UserWedding = Tables<"user_weddings"> & {
@@ -26,7 +38,7 @@ interface WeddingContextType {
   themeId: string | null;
   userWeddings: UserWedding[];
   loading: boolean;
-  error: string | null;
+  error: WeddingError | null;
   setCurrentWedding: (id: string) => void;
 }
 
@@ -38,54 +50,110 @@ interface ProviderProps {
 }
 
 export const WeddingProvider = ({ mode, children }: ProviderProps) => {
-  const params = useParams<{ slug?: string }>();
+  const params = useParams<{ slug?: string; eventType?: string }>();
   const routeSlug = params.slug ?? null;
+  const routeEventType = params.eventType ?? null;
 
   const [wedding, setWedding] = useState<WeddingDetails | null>(null);
   const [userWeddings, setUserWeddings] = useState<UserWedding[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<WeddingError | null>(null);
 
-  // ---- Public mode: resolve by slug from URL ----
+  // ---- Public / Tenant-Admin: resolve by slug + event_type ----
   useEffect(() => {
-    if (mode !== "public") return;
+    if (mode !== "public" && mode !== "tenant-admin") return;
     let cancelled = false;
 
     const run = async () => {
       setLoading(true);
       setError(null);
+      setWedding(null);
+      setActiveId(null);
 
       if (!routeSlug) {
         if (!cancelled) {
-          setWedding(null);
-          setActiveId(null);
           setError("missing_slug");
           setLoading(false);
         }
         return;
       }
 
+      if (!isValidRouteEventType(routeEventType)) {
+        if (!cancelled) {
+          setError("invalid_event_type");
+          setLoading(false);
+        }
+        return;
+      }
+
+      if (isReservedSlug(routeSlug)) {
+        if (!cancelled) {
+          setError("reserved_slug");
+          setLoading(false);
+        }
+        return;
+      }
+
+      const dbEventType = urlToDb(routeEventType)!;
+
       const { data, error: qErr } = await supabase
         .from("wedding_details")
         .select("*")
         .eq("slug", routeSlug)
+        .eq("event_type", dbEventType)
         .maybeSingle();
 
       if (cancelled) return;
 
       if (qErr) {
-        setError(qErr.message);
-        setWedding(null);
-        setActiveId(null);
-      } else if (!data) {
-        setError("not_found");
-        setWedding(null);
-        setActiveId(null);
-      } else {
-        setWedding(data);
-        setActiveId(data.id);
+        setError("unexpected_error");
+        setLoading(false);
+        return;
       }
+
+      if (!data) {
+        setError("not_found");
+        setLoading(false);
+        return;
+      }
+
+      // tenant-admin: validate auth + access
+      if (mode === "tenant-admin") {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
+        if (cancelled) return;
+
+        if (!user) {
+          setError("unauthenticated");
+          setLoading(false);
+          return;
+        }
+
+        const { data: hasAccess, error: accessErr } = await supabase.rpc(
+          "user_has_wedding_access",
+          { _user_id: user.id, _wedding_id: data.id }
+        );
+
+        if (cancelled) return;
+
+        if (accessErr) {
+          setError("unexpected_error");
+          setLoading(false);
+          return;
+        }
+
+        if (!hasAccess) {
+          setError("access_denied");
+          setLoading(false);
+          return;
+        }
+      }
+
+      setWedding(data);
+      setActiveId(data.id);
       setLoading(false);
     };
 
@@ -93,9 +161,9 @@ export const WeddingProvider = ({ mode, children }: ProviderProps) => {
     return () => {
       cancelled = true;
     };
-  }, [mode, routeSlug]);
+  }, [mode, routeSlug, routeEventType]);
 
-  // ---- Admin mode: resolve by logged-in user's user_weddings ----
+  // ---- Admin (Master) mode: resolve by logged-in user's weddings ----
   useEffect(() => {
     if (mode !== "admin") return;
     let cancelled = false;
@@ -113,13 +181,12 @@ export const WeddingProvider = ({ mode, children }: ProviderProps) => {
           setUserWeddings([]);
           setWedding(null);
           setActiveId(null);
-          setError("not_authenticated");
+          setError("unauthenticated");
           setLoading(false);
         }
         return;
       }
 
-      // get_user_wedding_ids returns SETOF uuid considering admin role.
       const { data: idsData, error: idsErr } = await supabase.rpc(
         "get_user_wedding_ids",
         { _user_id: user.id }
@@ -157,7 +224,6 @@ export const WeddingProvider = ({ mode, children }: ProviderProps) => {
         return;
       }
 
-      // Build link list (no role info available from RPC; placeholder rows)
       const links: UserWedding[] = (weddings ?? []).map((w) => ({
         id: w.id,
         user_id: user.id,
@@ -169,7 +235,6 @@ export const WeddingProvider = ({ mode, children }: ProviderProps) => {
 
       setUserWeddings(links);
 
-      // Auto-select: persisted choice if still valid, else first
       const stored =
         typeof window !== "undefined"
           ? window.localStorage.getItem("active_wedding_id")
