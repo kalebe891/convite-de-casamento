@@ -11,6 +11,10 @@ import AdminLayout from "./layouts/AdminLayout";
 import NotFound from "./pages/NotFound";
 import AccessDenied from "./pages/AccessDenied";
 import CriarSenha from "./pages/CriarSenha";
+import LandingHome from "./pages/LandingHome";
+import EventTypeLanding from "./pages/EventTypeLanding";
+import TenantPublicLayout from "./components/routing/TenantPublicLayout";
+import TenantAdminGuard from "./components/routing/TenantAdminGuard";
 import Usuarios from "./pages/admin/Usuarios";
 import Convidados from "./pages/admin/Convidados";
 import Detalhes from "./pages/admin/Detalhes";
@@ -26,6 +30,24 @@ import Eventos from "./pages/admin/Eventos";
 
 const queryClient = new QueryClient();
 
+const adminChildren = (
+  <>
+    <Route index element={<Detalhes />} />
+    <Route path="detalhes" element={<Detalhes />} />
+    <Route path="usuarios" element={<Usuarios />} />
+    <Route path="convidados" element={<Convidados />} />
+    <Route path="checkin" element={<Checkin />} />
+    <Route path="presentes" element={<Presentes />} />
+    <Route path="cronograma" element={<Cronograma />} />
+    <Route path="eventos" element={<Eventos />} />
+    <Route path="buffet" element={<Buffet />} />
+    <Route path="playlist" element={<Playlist />} />
+    <Route path="momentos" element={<Momentos />} />
+    <Route path="estatisticas" element={<Estatisticas />} />
+    <Route path="logs" element={<Logs />} />
+  </>
+);
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -33,19 +55,24 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Navigate to="/casamento/beatriz-e-diogo" replace />} />
-          <Route
-            path="/casamento/:slug"
-            element={
-              <WeddingProvider mode="public">
-                <Index />
-              </WeddingProvider>
-            }
-          />
-          <Route path="/convite/:invitation_code" element={<Invitation />} />
+          {/* ===== Rotas estáticas / institucionais ===== */}
+          <Route path="/" element={<LandingHome />} />
+          <Route path="/casamento" element={<EventTypeLanding />} />
+          <Route path="/aniversario" element={<EventTypeLanding />} />
+
+          {/* Atalhos para o Master Admin */}
+          <Route path="/casamento/admin" element={<Navigate to="/admin" replace />} />
+          <Route path="/aniversario/admin" element={<Navigate to="/admin" replace />} />
+
+          {/* Auth / utilitárias */}
           <Route path="/auth" element={<Auth />} />
           <Route path="/criar-senha" element={<CriarSenha />} />
           <Route path="/acesso-negado" element={<AccessDenied />} />
+
+          {/* Rota legada pública (mantida) */}
+          <Route path="/convite/:invitation_code" element={<Invitation />} />
+
+          {/* ===== Master Admin (proteção final fica para Fase 13C) ===== */}
           <Route
             path="/admin"
             element={
@@ -54,20 +81,37 @@ const App = () => (
               </WeddingProvider>
             }
           >
-            <Route index element={<Detalhes />} />
-            <Route path="detalhes" element={<Detalhes />} />
-            <Route path="usuarios" element={<Usuarios />} />
-            <Route path="convidados" element={<Convidados />} />
-            <Route path="checkin" element={<Checkin />} />
-            <Route path="presentes" element={<Presentes />} />
-            <Route path="cronograma" element={<Cronograma />} />
-            <Route path="eventos" element={<Eventos />} />
-            <Route path="buffet" element={<Buffet />} />
-            <Route path="playlist" element={<Playlist />} />
-            <Route path="momentos" element={<Momentos />} />
-            <Route path="estatisticas" element={<Estatisticas />} />
-            <Route path="logs" element={<Logs />} />
+            {adminChildren}
           </Route>
+
+          {/* ===== Tenant admin: /:eventType/:slug/admin/* ===== */}
+          <Route
+            path="/:eventType/:slug/admin"
+            element={
+              <WeddingProvider mode="tenant-admin">
+                <TenantAdminGuard>
+                  <AdminLayout />
+                </TenantAdminGuard>
+              </WeddingProvider>
+            }
+          >
+            {adminChildren}
+          </Route>
+
+          {/* ===== Tenant público: /:eventType/:slug ===== */}
+          <Route
+            path="/:eventType/:slug"
+            element={
+              <WeddingProvider mode="public">
+                <TenantPublicLayout />
+              </WeddingProvider>
+            }
+          >
+            <Route index element={<Index />} />
+            <Route path="convite" element={<Index />} />
+            <Route path="rsvp" element={<Index />} />
+          </Route>
+
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
