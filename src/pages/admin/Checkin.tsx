@@ -633,7 +633,7 @@ const Checkin = () => {
                       variant="ghost"
                       size="sm"
                       className="w-full text-muted-foreground"
-                      onClick={() => navigate("/admin/logs")}
+                      onClick={() => navigate(`${adminBasePath ?? "/admin"}/logs`)}
                     >
                       Ver todos os logs
                     </Button>
