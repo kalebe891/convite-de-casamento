@@ -73,13 +73,15 @@ const App = () => (
           {/* Rota legada pública (mantida) */}
           <Route path="/convite/:invitation_code" element={<Invitation />} />
 
-          {/* ===== Master Admin (proteção final fica para Fase 13C) ===== */}
+          {/* ===== Master Admin global (/admin) ===== */}
           <Route
             path="/admin"
             element={
-              <WeddingProvider mode="admin">
-                <AdminLayout />
-              </WeddingProvider>
+              <MasterAdminGuard>
+                <WeddingProvider mode="admin">
+                  <AdminLayout />
+                </WeddingProvider>
+              </MasterAdminGuard>
             }
           >
             {adminChildren}
