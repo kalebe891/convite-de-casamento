@@ -12,6 +12,8 @@ import { OfflineIndicator } from "@/components/admin/OfflineIndicator";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useAllRoles } from "@/hooks/useAllRoles";
 import EventSelector from "@/components/admin/EventSelector";
+import { useWedding } from "@/contexts/WeddingContext";
+import { buildTenantPublicUrl } from "@/lib/eventType";
 
 const AdminLayout = () => {
   const navigate = useNavigate();
@@ -19,7 +21,10 @@ const AdminLayout = () => {
   const { roles: allRoleKeys, loading: rolesLoading } = useAllRoles();
   const { user, role, loading } = useRequireRole(allRoleKeys.length > 0 ? allRoleKeys : ["admin"]);
   const { loading: permissionsLoading, initialized } = usePermissions();
+  const { wedding } = useWedding();
   const [userName, setUserName] = useState("");
+
+  const viewInviteUrl = buildTenantPublicUrl(wedding) ?? "/";
 
   useEffect(() => {
     if (user) {
@@ -91,7 +96,7 @@ const AdminLayout = () => {
                 </p>
               </div>
               <ThemeToggle />
-              <Button variant="outline" onClick={() => navigate("/")} size="sm">
+              <Button variant="outline" onClick={() => navigate(viewInviteUrl)} size="sm">
                 Ver Convite
               </Button>
               <Button variant="outline" onClick={handleLogout} size="sm" className="gap-2">

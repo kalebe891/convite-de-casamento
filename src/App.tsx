@@ -15,6 +15,7 @@ import LandingHome from "./pages/LandingHome";
 import EventTypeLanding from "./pages/EventTypeLanding";
 import TenantPublicLayout from "./components/routing/TenantPublicLayout";
 import TenantAdminGuard from "./components/routing/TenantAdminGuard";
+import MasterAdminGuard from "./components/routing/MasterAdminGuard";
 import Usuarios from "./pages/admin/Usuarios";
 import Convidados from "./pages/admin/Convidados";
 import Detalhes from "./pages/admin/Detalhes";
@@ -72,13 +73,15 @@ const App = () => (
           {/* Rota legada pública (mantida) */}
           <Route path="/convite/:invitation_code" element={<Invitation />} />
 
-          {/* ===== Master Admin (proteção final fica para Fase 13C) ===== */}
+          {/* ===== Master Admin global (/admin) ===== */}
           <Route
             path="/admin"
             element={
-              <WeddingProvider mode="admin">
-                <AdminLayout />
-              </WeddingProvider>
+              <MasterAdminGuard>
+                <WeddingProvider mode="admin">
+                  <AdminLayout />
+                </WeddingProvider>
+              </MasterAdminGuard>
             }
           >
             {adminChildren}

@@ -19,6 +19,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { logAdminAction } from "@/lib/adminLogger";
 import { usePagePermissions } from "@/hooks/usePagePermissions";
 import { useNavigate } from "react-router-dom";
+import { useAdminBasePath } from "@/hooks/useAdminBasePath";
 import {
   Sheet,
   SheetContent,
@@ -84,6 +85,7 @@ const Checkin = () => {
   const permissions = usePagePermissions("checkin");
   const isOnline = useOnlineStatus();
   const navigate = useNavigate();
+  const adminBasePath = useAdminBasePath();
   const [guests, setGuests] = useState<Guest[]>([]);
   const [guestGifts, setGuestGifts] = useState<Record<string, string>>({});
   const [filteredGuests, setFilteredGuests] = useState<Guest[]>([]);
@@ -631,7 +633,7 @@ const Checkin = () => {
                       variant="ghost"
                       size="sm"
                       className="w-full text-muted-foreground"
-                      onClick={() => navigate("/admin/logs")}
+                      onClick={() => navigate(`${adminBasePath ?? "/admin"}/logs`)}
                     >
                       Ver todos os logs
                     </Button>

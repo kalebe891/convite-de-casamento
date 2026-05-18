@@ -64,44 +64,34 @@ export const useRequireRole = (requiredRole: string | string[]) => {
         return;
       }
 
-      // Se está na rota genérica /admin, redirecionar para o primeiro menu permitido
+      // Se está na rota genérica /admin (Master Admin), redirecionar para primeiro menu permitido.
+      // Rotas tenant (/:eventType/:slug/admin) já têm index route, então não precisam redirect.
       if (location.pathname === "/admin" || location.pathname === "/admin/") {
         console.log('🔀 [useRequireRole] On /admin, finding first accessible menu');
-        const allMenus: { menuKey: MenuKey; url: string; adminOnly: boolean }[] = [
-          { menuKey: "detalhes", url: "/admin/detalhes", adminOnly: false },
-          { menuKey: "usuarios", url: "/admin/usuarios", adminOnly: true },
-          { menuKey: "eventos", url: "/admin/eventos", adminOnly: false },
-          { menuKey: "convidados", url: "/admin/convidados", adminOnly: false },
-          { menuKey: "checkin", url: "/admin/checkin", adminOnly: false },
-          { menuKey: "presentes", url: "/admin/presentes", adminOnly: false },
-          { menuKey: "cronograma", url: "/admin/cronograma", adminOnly: false },
-          { menuKey: "buffet", url: "/admin/buffet", adminOnly: false },
-          { menuKey: "playlist", url: "/admin/playlist", adminOnly: false },
-          { menuKey: "momentos", url: "/admin/momentos", adminOnly: false },
-          { menuKey: "estatisticas", url: "/admin/estatisticas", adminOnly: false },
-          { menuKey: "logs", url: "/admin/logs", adminOnly: false },
+        const allMenus: { menuKey: MenuKey; path: string; adminOnly: boolean }[] = [
+          { menuKey: "detalhes", path: "detalhes", adminOnly: false },
+          { menuKey: "usuarios", path: "usuarios", adminOnly: true },
+          { menuKey: "eventos", path: "eventos", adminOnly: false },
+          { menuKey: "convidados", path: "convidados", adminOnly: false },
+          { menuKey: "checkin", path: "checkin", adminOnly: false },
+          { menuKey: "presentes", path: "presentes", adminOnly: false },
+          { menuKey: "cronograma", path: "cronograma", adminOnly: false },
+          { menuKey: "buffet", path: "buffet", adminOnly: false },
+          { menuKey: "playlist", path: "playlist", adminOnly: false },
+          { menuKey: "momentos", path: "momentos", adminOnly: false },
+          { menuKey: "estatisticas", path: "estatisticas", adminOnly: false },
+          { menuKey: "logs", path: "logs", adminOnly: false },
         ];
 
-        // Encontrar o primeiro menu que o usuário tem permissão
         const firstAllowedMenu = allMenus.find((menu) => {
-          console.log(`🔍 [useRequireRole] Checking menu: ${menu.menuKey}`);
-          // Se é adminOnly e não é admin, pular
-          if (menu.adminOnly && role !== "admin") {
-            console.log(`  ⏭️ Admin-only menu, skipping`);
-            return false;
-          }
-          // Verificar permissão de visualização
-          const hasAccess = hasPermission(menu.menuKey, "view");
-          console.log(`  ${hasAccess ? '✅' : '❌'} Access: ${hasAccess}`);
-          return hasAccess;
+          if (menu.adminOnly && role !== "admin") return false;
+          return hasPermission(menu.menuKey, "view");
         });
 
         if (firstAllowedMenu) {
-          console.log('✅ [useRequireRole] First accessible menu found:', firstAllowedMenu.url);
-          navigate(firstAllowedMenu.url, { replace: true });
+          navigate(`/admin/${firstAllowedMenu.path}`, { replace: true });
           setHasRedirected(true);
         } else {
-          console.log('❌ [useRequireRole] No accessible menu found, redirecting to /acesso-negado');
           navigate("/acesso-negado", { replace: true });
           setHasRedirected(true);
         }

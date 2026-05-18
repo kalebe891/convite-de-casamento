@@ -35,7 +35,7 @@ function formatEventName(w: {
 }
 
 export default function EventSelector() {
-  const { wedding, weddingId, userWeddings, loading, error, setCurrentWedding } =
+  const { wedding, weddingId, userWeddings, loading, error, setCurrentWedding, mode } =
     useWedding();
 
   if (loading) {
@@ -50,8 +50,9 @@ export default function EventSelector() {
     );
   }
 
-  // Single event: just show indicator
-  if (userWeddings.length <= 1) {
+  // Tenant Admin: troca de evento exige mudar URL — mostrar apenas label estático.
+  // Master Admin com 1 evento: mesmo comportamento.
+  if (mode === "tenant-admin" || userWeddings.length <= 1) {
     const w = wedding ?? userWeddings[0]?.wedding ?? null;
     if (!w) {
       return (
