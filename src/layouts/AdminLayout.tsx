@@ -21,7 +21,10 @@ const AdminLayout = () => {
   const { roles: allRoleKeys, loading: rolesLoading } = useAllRoles();
   const { user, role, loading } = useRequireRole(allRoleKeys.length > 0 ? allRoleKeys : ["admin"]);
   const { loading: permissionsLoading, initialized } = usePermissions();
+  const { wedding } = useWedding();
   const [userName, setUserName] = useState("");
+
+  const viewInviteUrl = buildTenantPublicUrl(wedding) ?? "/";
 
   useEffect(() => {
     if (user) {
