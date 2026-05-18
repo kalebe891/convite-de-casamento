@@ -85,6 +85,7 @@ const Checkin = () => {
   const permissions = usePagePermissions("checkin");
   const isOnline = useOnlineStatus();
   const navigate = useNavigate();
+  const adminBasePath = useAdminBasePath();
   const [guests, setGuests] = useState<Guest[]>([]);
   const [guestGifts, setGuestGifts] = useState<Record<string, string>>({});
   const [filteredGuests, setFilteredGuests] = useState<Guest[]>([]);
