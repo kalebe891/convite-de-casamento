@@ -15,6 +15,7 @@ import LandingHome from "./pages/LandingHome";
 import EventTypeLanding from "./pages/EventTypeLanding";
 import TenantPublicLayout from "./components/routing/TenantPublicLayout";
 import TenantAdminGuard from "./components/routing/TenantAdminGuard";
+import MasterAdminGuard from "./components/routing/MasterAdminGuard";
 import Usuarios from "./pages/admin/Usuarios";
 import Convidados from "./pages/admin/Convidados";
 import Detalhes from "./pages/admin/Detalhes";
