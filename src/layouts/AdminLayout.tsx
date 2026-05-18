@@ -96,7 +96,7 @@ const AdminLayout = () => {
                 </p>
               </div>
               <ThemeToggle />
-              <Button variant="outline" onClick={() => navigate("/")} size="sm">
+              <Button variant="outline" onClick={() => navigate(viewInviteUrl)} size="sm">
                 Ver Convite
               </Button>
               <Button variant="outline" onClick={handleLogout} size="sm" className="gap-2">
