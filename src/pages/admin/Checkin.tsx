@@ -19,6 +19,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { logAdminAction } from "@/lib/adminLogger";
 import { usePagePermissions } from "@/hooks/usePagePermissions";
 import { useNavigate } from "react-router-dom";
+import { useAdminBasePath } from "@/hooks/useAdminBasePath";
 import {
   Sheet,
   SheetContent,
