@@ -12,6 +12,8 @@ import { OfflineIndicator } from "@/components/admin/OfflineIndicator";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useAllRoles } from "@/hooks/useAllRoles";
 import EventSelector from "@/components/admin/EventSelector";
+import { useWedding } from "@/contexts/WeddingContext";
+import { buildTenantPublicUrl } from "@/lib/eventType";
 
 const AdminLayout = () => {
   const navigate = useNavigate();
