@@ -35,7 +35,7 @@ function formatEventName(w: {
 }
 
 export default function EventSelector() {
-  const { wedding, weddingId, userWeddings, loading, error, setCurrentWedding } =
+  const { wedding, weddingId, userWeddings, loading, error, setCurrentWedding, mode } =
     useWedding();
 
   if (loading) {
