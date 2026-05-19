@@ -38,6 +38,17 @@ export default function EventSelector() {
   const { wedding, weddingId, userWeddings, loading, error, setCurrentWedding, mode } =
     useWedding();
 
+  // Master Admin: indicador estático "Master Admin" (não depende de evento ativo)
+  if (mode === "admin") {
+    return (
+      <div className="flex items-center gap-2 text-xs">
+        <CalendarDays className="w-4 h-4 text-muted-foreground" />
+        <span className="font-medium">Master Admin</span>
+        <span className="text-muted-foreground hidden sm:inline">— todos os eventos</span>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <p className="text-xs text-muted-foreground">Carregando evento...</p>
