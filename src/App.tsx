@@ -28,12 +28,31 @@ import Estatisticas from "./pages/admin/Estatisticas";
 import Checkin from "./pages/admin/Checkin";
 import Logs from "./pages/admin/Logs";
 import Eventos from "./pages/admin/Eventos";
+import MasterDashboard from "./pages/admin/MasterDashboard";
 
 const queryClient = new QueryClient();
 
-const adminChildren = (
+const tenantAdminChildren = (
   <>
     <Route index element={<Detalhes />} />
+    <Route path="detalhes" element={<Detalhes />} />
+    <Route path="usuarios" element={<Usuarios />} />
+    <Route path="convidados" element={<Convidados />} />
+    <Route path="checkin" element={<Checkin />} />
+    <Route path="presentes" element={<Presentes />} />
+    <Route path="cronograma" element={<Cronograma />} />
+    <Route path="eventos" element={<Eventos />} />
+    <Route path="buffet" element={<Buffet />} />
+    <Route path="playlist" element={<Playlist />} />
+    <Route path="momentos" element={<Momentos />} />
+    <Route path="estatisticas" element={<Estatisticas />} />
+    <Route path="logs" element={<Logs />} />
+  </>
+);
+
+const masterAdminChildren = (
+  <>
+    <Route index element={<MasterDashboard />} />
     <Route path="detalhes" element={<Detalhes />} />
     <Route path="usuarios" element={<Usuarios />} />
     <Route path="convidados" element={<Convidados />} />
