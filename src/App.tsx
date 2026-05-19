@@ -103,7 +103,7 @@ const App = () => (
               </MasterAdminGuard>
             }
           >
-            {adminChildren}
+            {masterAdminChildren}
           </Route>
 
           {/* ===== Tenant admin: /:eventType/:slug/admin/* ===== */}
@@ -117,7 +117,7 @@ const App = () => (
               </WeddingProvider>
             }
           >
-            {adminChildren}
+            {tenantAdminChildren}
           </Route>
 
           {/* ===== Tenant público: /:eventType/:slug ===== */}
