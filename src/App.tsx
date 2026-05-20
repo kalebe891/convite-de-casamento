@@ -86,9 +86,7 @@ const App = () => (
             path="/admin"
             element={
               <MasterAdminGuard>
-                <WeddingProvider mode="admin">
-                  <AdminLayout />
-                </WeddingProvider>
+                <MasterAdminLayout />
               </MasterAdminGuard>
             }
           >
