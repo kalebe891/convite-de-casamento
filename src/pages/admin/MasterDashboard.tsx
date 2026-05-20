@@ -190,7 +190,7 @@ export default function MasterDashboard() {
             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
             Atualizar
           </Button>
-          <Button onClick={handleCreate} disabled className="gap-2" title="Disponível na próxima fase">
+          <Button onClick={handleCreate} className="gap-2">
             <Plus className="w-4 h-4" />
             Criar Novo Convite
           </Button>
