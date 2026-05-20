@@ -166,12 +166,7 @@ export default function MasterDashboard() {
     return sorted;
   }, [weddings, search, typeFilter, sortBy]);
 
-  const handleCreate = () => {
-    toast({
-      title: "Em breve",
-      description: "Criação de novo convite estará disponível na próxima fase.",
-    });
-  };
+  const handleCreate = () => setCreateOpen(true);
 
   const summary = useMemo(() => {
     const total = weddings.length;
