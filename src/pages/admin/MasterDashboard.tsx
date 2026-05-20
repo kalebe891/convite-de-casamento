@@ -15,6 +15,7 @@ import {
 import { toast } from "@/hooks/use-toast";
 import { buildTenantAdminUrl } from "@/lib/eventType";
 import { CalendarDays, Plus, Users, Gift, Images, Mail, ArrowRight, Search, RefreshCw, PartyPopper, Heart, CalendarCheck } from "lucide-react";
+import CreateEventDialog from "@/components/admin/CreateEventDialog";
 
 type Wedding = {
   id: string;
