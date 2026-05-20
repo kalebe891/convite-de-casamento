@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Invitation from "./pages/Invitation";
 import Auth from "./pages/Auth";
 import AdminLayout from "./layouts/AdminLayout";
+import MasterAdminLayout from "./layouts/MasterAdminLayout";
 import NotFound from "./pages/NotFound";
 import AccessDenied from "./pages/AccessDenied";
 import CriarSenha from "./pages/CriarSenha";
