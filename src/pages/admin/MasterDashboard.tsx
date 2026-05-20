@@ -60,6 +60,25 @@ function formatDate(d: string | null | undefined) {
   }
 }
 
+type EventStatus = "future" | "soon" | "past";
+function getEventStatus(date: string | null | undefined): EventStatus | null {
+  if (!date) return null;
+  const d = new Date(date).getTime();
+  if (Number.isNaN(d)) return null;
+  const now = Date.now();
+  const diffDays = (d - now) / (1000 * 60 * 60 * 24);
+  if (diffDays < 0) return "past";
+  if (diffDays <= 30) return "soon";
+  return "future";
+}
+
+function statusLabel(s: EventStatus | null) {
+  if (s === "future") return { label: "Futuro", variant: "secondary" as const };
+  if (s === "soon") return { label: "Em breve", variant: "default" as const };
+  if (s === "past") return { label: "Realizado", variant: "outline" as const };
+  return null;
+}
+
 export default function MasterDashboard() {
   const navigate = useNavigate();
   const [weddings, setWeddings] = useState<Wedding[]>([]);
