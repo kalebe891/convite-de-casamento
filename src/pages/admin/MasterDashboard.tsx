@@ -272,7 +272,7 @@ export default function MasterDashboard() {
                 : "Nenhum evento encontrado com os filtros atuais."}
             </p>
             {weddings.length === 0 && (
-              <Button onClick={handleCreate} disabled className="gap-2">
+              <Button onClick={handleCreate} className="gap-2">
                 <Plus className="w-4 h-4" />
                 Criar Novo Convite
               </Button>
