@@ -349,6 +349,8 @@ export default function MasterDashboard() {
           })}
         </div>
       )}
+
+      <CreateEventDialog open={createOpen} onOpenChange={setCreateOpen} onCreated={load} />
     </div>
   );
 }
