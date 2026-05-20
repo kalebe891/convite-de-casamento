@@ -15,6 +15,7 @@ import {
 import { toast } from "@/hooks/use-toast";
 import { buildTenantAdminUrl } from "@/lib/eventType";
 import { CalendarDays, Plus, Users, Gift, Images, Mail, ArrowRight, Search, RefreshCw, PartyPopper, Heart, CalendarCheck } from "lucide-react";
+import CreateEventDialog from "@/components/admin/CreateEventDialog";
 
 type Wedding = {
   id: string;
@@ -88,6 +89,7 @@ export default function MasterDashboard() {
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("created_desc");
+  const [createOpen, setCreateOpen] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -164,12 +166,7 @@ export default function MasterDashboard() {
     return sorted;
   }, [weddings, search, typeFilter, sortBy]);
 
-  const handleCreate = () => {
-    toast({
-      title: "Em breve",
-      description: "Criação de novo convite estará disponível na próxima fase.",
-    });
-  };
+  const handleCreate = () => setCreateOpen(true);
 
   const summary = useMemo(() => {
     const total = weddings.length;
@@ -193,7 +190,7 @@ export default function MasterDashboard() {
             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
             Atualizar
           </Button>
-          <Button onClick={handleCreate} disabled className="gap-2" title="Disponível na próxima fase">
+          <Button onClick={handleCreate} className="gap-2">
             <Plus className="w-4 h-4" />
             Criar Novo Convite
           </Button>
@@ -275,7 +272,7 @@ export default function MasterDashboard() {
                 : "Nenhum evento encontrado com os filtros atuais."}
             </p>
             {weddings.length === 0 && (
-              <Button onClick={handleCreate} disabled className="gap-2">
+              <Button onClick={handleCreate} className="gap-2">
                 <Plus className="w-4 h-4" />
                 Criar Novo Convite
               </Button>
@@ -352,6 +349,8 @@ export default function MasterDashboard() {
           })}
         </div>
       )}
+
+      <CreateEventDialog open={createOpen} onOpenChange={setCreateOpen} onCreated={load} />
     </div>
   );
 }
