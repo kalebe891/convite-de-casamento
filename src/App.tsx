@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Invitation from "./pages/Invitation";
 import Auth from "./pages/Auth";
 import AdminLayout from "./layouts/AdminLayout";
+import MasterAdminLayout from "./layouts/MasterAdminLayout";
 import NotFound from "./pages/NotFound";
 import AccessDenied from "./pages/AccessDenied";
 import CriarSenha from "./pages/CriarSenha";
@@ -53,18 +54,6 @@ const tenantAdminChildren = (
 const masterAdminChildren = (
   <>
     <Route index element={<MasterDashboard />} />
-    <Route path="detalhes" element={<Detalhes />} />
-    <Route path="usuarios" element={<Usuarios />} />
-    <Route path="convidados" element={<Convidados />} />
-    <Route path="checkin" element={<Checkin />} />
-    <Route path="presentes" element={<Presentes />} />
-    <Route path="cronograma" element={<Cronograma />} />
-    <Route path="eventos" element={<Eventos />} />
-    <Route path="buffet" element={<Buffet />} />
-    <Route path="playlist" element={<Playlist />} />
-    <Route path="momentos" element={<Momentos />} />
-    <Route path="estatisticas" element={<Estatisticas />} />
-    <Route path="logs" element={<Logs />} />
   </>
 );
 
@@ -97,9 +86,7 @@ const App = () => (
             path="/admin"
             element={
               <MasterAdminGuard>
-                <WeddingProvider mode="admin">
-                  <AdminLayout />
-                </WeddingProvider>
+                <MasterAdminLayout />
               </MasterAdminGuard>
             }
           >

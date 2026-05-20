@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 import { buildTenantAdminUrl } from "@/lib/eventType";
-import { CalendarDays, Plus, Users, Gift, Images, Mail, ArrowRight, Search } from "lucide-react";
+import { CalendarDays, Plus, Users, Gift, Images, Mail, ArrowRight, Search, RefreshCw, PartyPopper, Heart, CalendarCheck } from "lucide-react";
 
 type Wedding = {
   id: string;
@@ -58,6 +58,25 @@ function formatDate(d: string | null | undefined) {
   } catch {
     return d;
   }
+}
+
+type EventStatus = "future" | "soon" | "past";
+function getEventStatus(date: string | null | undefined): EventStatus | null {
+  if (!date) return null;
+  const d = new Date(date).getTime();
+  if (Number.isNaN(d)) return null;
+  const now = Date.now();
+  const diffDays = (d - now) / (1000 * 60 * 60 * 24);
+  if (diffDays < 0) return "past";
+  if (diffDays <= 30) return "soon";
+  return "future";
+}
+
+function statusLabel(s: EventStatus | null) {
+  if (s === "future") return { label: "Futuro", variant: "secondary" as const };
+  if (s === "soon") return { label: "Em breve", variant: "default" as const };
+  if (s === "past") return { label: "Realizado", variant: "outline" as const };
+  return null;
 }
 
 export default function MasterDashboard() {
@@ -152,19 +171,55 @@ export default function MasterDashboard() {
     });
   };
 
+  const summary = useMemo(() => {
+    const total = weddings.length;
+    const weddingCount = weddings.filter((w) => w.event_type === "wedding").length;
+    const birthdayCount = weddings.filter((w) => w.event_type === "birthday").length;
+    const guests = Object.values(counts).reduce((s, c) => s + (c?.guests ?? 0), 0);
+    return { total, weddingCount, birthdayCount, guests };
+  }, [weddings, counts]);
+
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h2 className="text-2xl font-serif font-bold">Master Admin</h2>
+          <h2 className="text-2xl font-serif font-bold">Dashboard</h2>
           <p className="text-sm text-muted-foreground">
-            Gerencie todos os eventos da plataforma.
+            Gerencie todos os convites e eventos da plataforma.
           </p>
         </div>
-        <Button onClick={handleCreate} disabled className="gap-2" title="Disponível na próxima fase">
-          <Plus className="w-4 h-4" />
-          Criar Novo Convite
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={load} disabled={loading} className="gap-2">
+            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+            Atualizar
+          </Button>
+          <Button onClick={handleCreate} disabled className="gap-2" title="Disponível na próxima fase">
+            <Plus className="w-4 h-4" />
+            Criar Novo Convite
+          </Button>
+        </div>
+      </div>
+
+      {/* Summary cards */}
+      <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
+        {[
+          { label: "Total de eventos", value: summary.total, icon: CalendarCheck },
+          { label: "Casamentos", value: summary.weddingCount, icon: Heart },
+          { label: "Aniversários", value: summary.birthdayCount, icon: PartyPopper },
+          { label: "Convidados", value: summary.guests, icon: Users },
+        ].map((s) => (
+          <Card key={s.label}>
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-md bg-primary/10 flex items-center justify-center">
+                <s.icon className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">{s.label}</p>
+                <p className="text-2xl font-semibold leading-tight">{s.value}</p>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       <Card>
@@ -232,12 +287,16 @@ export default function MasterDashboard() {
           {filtered.map((w) => {
             const url = buildTenantAdminUrl(w);
             const c = counts[w.id];
+            const status = statusLabel(getEventStatus(w.wedding_date));
             return (
               <Card key={w.id} className="flex flex-col">
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between gap-2">
                     <CardTitle className="text-lg font-serif">{formatNames(w)}</CardTitle>
-                    <Badge variant="secondary">{eventTypeLabel(w.event_type)}</Badge>
+                    <div className="flex flex-col items-end gap-1">
+                      <Badge variant="secondary">{eventTypeLabel(w.event_type)}</Badge>
+                      {status && <Badge variant={status.variant}>{status.label}</Badge>}
+                    </div>
                   </div>
                   <p className="text-xs text-muted-foreground font-mono">/{w.slug}</p>
                 </CardHeader>
