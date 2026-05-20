@@ -287,12 +287,16 @@ export default function MasterDashboard() {
           {filtered.map((w) => {
             const url = buildTenantAdminUrl(w);
             const c = counts[w.id];
+            const status = statusLabel(getEventStatus(w.wedding_date));
             return (
               <Card key={w.id} className="flex flex-col">
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between gap-2">
                     <CardTitle className="text-lg font-serif">{formatNames(w)}</CardTitle>
-                    <Badge variant="secondary">{eventTypeLabel(w.event_type)}</Badge>
+                    <div className="flex flex-col items-end gap-1">
+                      <Badge variant="secondary">{eventTypeLabel(w.event_type)}</Badge>
+                      {status && <Badge variant={status.variant}>{status.label}</Badge>}
+                    </div>
                   </div>
                   <p className="text-xs text-muted-foreground font-mono">/{w.slug}</p>
                 </CardHeader>
