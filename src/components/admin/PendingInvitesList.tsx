@@ -15,6 +15,7 @@ import {
 import { Copy, Mail, MessageCircle, RefreshCw, Clock, CheckCircle, XCircle, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useWedding } from "@/contexts/WeddingContext";
 
 interface PendingInvite {
   id: string;
@@ -37,25 +38,32 @@ const PendingInvitesList = ({ refreshTrigger }: PendingInvitesListProps) => {
   const [resendingId, setResendingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const { toast } = useToast();
+  const { mode, weddingId } = useWedding();
 
   const fetchInvites = async () => {
     try {
-      // Buscar convites pendentes
-      const { data: pendingData, error: pendingError } = await supabase
+      let query = supabase
         .from("pending_users")
         .select("*")
         .order("created_at", { ascending: false });
 
+      if (mode === "tenant-admin") {
+        if (!weddingId) {
+          setInvites([]);
+          return;
+        }
+        query = query.eq("wedding_id", weddingId);
+      }
+
+      const { data: pendingData, error: pendingError } = await query;
       if (pendingError) throw pendingError;
 
-      // Buscar emails de usuários já cadastrados
       const { data: profilesData, error: profilesError } = await supabase
         .from("profiles")
         .select("email");
 
       if (profilesError) throw profilesError;
 
-      // Filtrar convites de usuários que já existem
       const existingEmails = new Set(
         profilesData?.map(p => p.email?.toLowerCase()).filter(Boolean) || []
       );
@@ -79,7 +87,8 @@ const PendingInvitesList = ({ refreshTrigger }: PendingInvitesListProps) => {
 
   useEffect(() => {
     fetchInvites();
-  }, [refreshTrigger]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refreshTrigger, weddingId, mode]);
 
   const getInviteLink = (token: string) => {
     return `${window.location.origin}/criar-senha?t=${token}`;

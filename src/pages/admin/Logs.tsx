@@ -8,6 +8,7 @@ import { ScrollText, Plus, Pencil, Trash2, ChevronLeft, ChevronRight } from "luc
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useAuth } from "@/hooks/useAuth";
+import { useWedding } from "@/contexts/WeddingContext";
 
 interface AdminLog {
   id: string;
