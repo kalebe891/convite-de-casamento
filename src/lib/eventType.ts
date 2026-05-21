@@ -54,6 +54,8 @@ export function isReservedSlug(slug: string | null | undefined): boolean {
 interface WeddingLike {
   slug?: string | null;
   event_type?: string | null;
+  bride_name?: string | null;
+  groom_name?: string | null;
 }
 
 export function buildTenantPublicUrl(wedding: WeddingLike | null | undefined): string | null {
@@ -65,4 +67,29 @@ export function buildTenantPublicUrl(wedding: WeddingLike | null | undefined): s
 export function buildTenantAdminUrl(wedding: WeddingLike | null | undefined): string | null {
   const base = buildTenantPublicUrl(wedding);
   return base ? `${base}/admin` : null;
+}
+
+/** True when a stored name is missing or a placeholder like "A definir". */
+export function isPlaceholderName(name: string | null | undefined): boolean {
+  if (!name) return true;
+  const trimmed = name.trim();
+  if (!trimmed) return true;
+  return trimmed.toLowerCase() === "a definir";
+}
+
+/**
+ * Public display title. Hides placeholder names. Birthdays show only primary.
+ */
+export function formatEventTitle(
+  wedding: WeddingLike | null | undefined,
+  fallback = "Evento"
+): string {
+  if (!wedding) return fallback;
+  const primary = isPlaceholderName(wedding.bride_name) ? "" : wedding.bride_name!.trim();
+  const secondary = isPlaceholderName(wedding.groom_name) ? "" : wedding.groom_name!.trim();
+  if (wedding.event_type === "wedding") {
+    if (primary && secondary) return `${primary} & ${secondary}`;
+    return primary || secondary || fallback;
+  }
+  return primary || secondary || fallback;
 }

@@ -6,6 +6,7 @@ import { Heart } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SkeletonText } from "@/components/ui/skeleton-text";
 import CountdownTimer from "@/components/wedding/CountdownTimer";
+import { formatEventTitle } from "@/lib/eventType";
 
 interface HeroSectionProps {
   weddingDetails: any;
@@ -26,7 +27,7 @@ const HeroSection = ({ weddingDetails }: HeroSectionProps) => {
           .select("photo_url")
           .eq("wedding_id", weddingDetails.id)
           .eq("is_main", true)
-          .single(),
+          .maybeSingle(),
         supabase
           .from("timeline_events")
           .select("time")
@@ -52,7 +53,7 @@ const HeroSection = ({ weddingDetails }: HeroSectionProps) => {
     <>
       <Heart className="w-16 h-16 mx-auto mb-6 text-primary animate-scale-in" />
       <h1 className="text-6xl md:text-8xl font-serif font-bold mb-4 text-foreground">
-        {weddingDetails.bride_name} & {weddingDetails.groom_name}
+        {formatEventTitle(weddingDetails, "Nosso Evento")}
       </h1>
       <div className="h-px w-32 mx-auto bg-primary my-6"></div>
       <p className="text-2xl md:text-3xl text-muted-foreground mb-8">

@@ -14,10 +14,13 @@ import { Button } from "@/components/ui/button";
 import { LogIn } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 import { useWedding } from "@/contexts/WeddingContext";
+import { buildTenantAdminUrl, formatEventTitle } from "@/lib/eventType";
 
 const Index = () => {
   const navigate = useNavigate();
   const { wedding, weddingId, loading, error } = useWedding();
+  const tenantAdminUrl = buildTenantAdminUrl(wedding);
+  const title = formatEventTitle(wedding, "Nosso Evento");
 
   const [session, setSession] = useState(null);
   const [events, setEvents] = useState(null);
@@ -74,14 +77,20 @@ const Index = () => {
       <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <h1 className="text-2xl font-serif font-bold text-primary">
-            {wedding ? `${wedding.bride_name} & ${wedding.groom_name}` : "Nosso Casamento"}
+            {title}
           </h1>
           <div className="flex items-center gap-2">
             <ThemeToggle />
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => navigate(session ? "/admin" : "/auth")}
+              onClick={() => {
+                if (session) {
+                  navigate(tenantAdminUrl ?? "/admin");
+                } else {
+                  navigate("/auth");
+                }
+              }}
               className="gap-2"
             >
               <LogIn className="w-4 h-4" />
