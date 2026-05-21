@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import RoleProfilesDialog from "./RoleProfilesDialog";
 import RolePermissionsPopover from "./RolePermissionsPopover";
+import { useWedding } from "@/contexts/WeddingContext";
 
 interface UserProfile {
   id: string;
@@ -69,6 +70,7 @@ interface UsersListProps {
 
 const UsersList = ({ refreshKey, roleProfiles, onRoleProfilesChange, permissions }: UsersListProps) => {
   const { toast } = useToast();
+  const { mode, weddingId } = useWedding();
   const [users, setUsers] = useState<UserWithRole[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -80,23 +82,43 @@ const UsersList = ({ refreshKey, roleProfiles, onRoleProfilesChange, permissions
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      
-      // Fetch all profiles
-      const { data: profiles, error: profilesError } = await supabase
+
+      // In tenant-admin scope users by user_weddings filtered by weddingId.
+      let allowedUserIds: string[] | null = null;
+      if (mode === "tenant-admin") {
+        if (!weddingId) {
+          setUsers([]);
+          return;
+        }
+        const { data: links, error: linksError } = await supabase
+          .from("user_weddings")
+          .select("user_id")
+          .eq("wedding_id", weddingId);
+        if (linksError) throw linksError;
+        allowedUserIds = Array.from(new Set((links || []).map((l) => l.user_id)));
+        if (allowedUserIds.length === 0) {
+          setUsers([]);
+          return;
+        }
+      }
+
+      let profilesQuery = supabase
         .from("profiles")
         .select("*")
         .order("created_at", { ascending: false });
-
+      if (allowedUserIds) {
+        profilesQuery = profilesQuery.in("id", allowedUserIds);
+      }
+      const { data: profiles, error: profilesError } = await profilesQuery;
       if (profilesError) throw profilesError;
 
-      // Fetch all user roles
-      const { data: userRoles, error: rolesError } = await supabase
-        .from("user_roles")
-        .select("*");
-
+      let rolesQuery = supabase.from("user_roles").select("*");
+      if (allowedUserIds) {
+        rolesQuery = rolesQuery.in("user_id", allowedUserIds);
+      }
+      const { data: userRoles, error: rolesError } = await rolesQuery;
       if (rolesError) throw rolesError;
 
-      // Combine profiles with roles
       const usersWithRoles = (profiles || []).map((profile) => ({
         ...profile,
         roles: (userRoles || [])
@@ -119,7 +141,8 @@ const UsersList = ({ refreshKey, roleProfiles, onRoleProfilesChange, permissions
 
   useEffect(() => {
     fetchUsers();
-  }, [refreshKey]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refreshKey, weddingId, mode]);
 
   const handleRoleChange = async (userId: string, newRole: string) => {
     try {

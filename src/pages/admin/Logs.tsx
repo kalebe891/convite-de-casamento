@@ -8,6 +8,7 @@ import { ScrollText, Plus, Pencil, Trash2, ChevronLeft, ChevronRight } from "luc
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useAuth } from "@/hooks/useAuth";
+import { useWedding } from "@/contexts/WeddingContext";
 
 interface AdminLog {
   id: string;
@@ -76,19 +77,30 @@ const Logs = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const { session } = useAuth();
+  const { weddingId, mode } = useWedding();
 
   const totalPages = Math.ceil(totalCount / LOGS_PER_PAGE);
 
   useEffect(() => {
     fetchLogs();
-  }, [currentPage]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, weddingId, mode]);
 
   const fetchLogs = async () => {
     setLoading(true);
     try {
-      const { count, error: countError } = await supabase
-        .from("admin_logs")
-        .select("*", { count: "exact", head: true });
+      if (mode === "tenant-admin" && !weddingId) {
+        setLogs([]);
+        setTotalCount(0);
+        return;
+      }
+
+      const applyFilter = <T,>(q: T): T =>
+        (mode === "tenant-admin" ? (q as any).eq("wedding_id", weddingId) : q) as T;
+
+      const { count, error: countError } = await applyFilter(
+        supabase.from("admin_logs").select("*", { count: "exact", head: true })
+      );
 
       if (countError) throw countError;
       setTotalCount(count || 0);
@@ -96,11 +108,13 @@ const Logs = () => {
       const from = (currentPage - 1) * LOGS_PER_PAGE;
       const to = from + LOGS_PER_PAGE - 1;
 
-      const { data, error } = await supabase
-        .from("admin_logs")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .range(from, to);
+      const { data, error } = await applyFilter(
+        supabase
+          .from("admin_logs")
+          .select("*")
+          .order("created_at", { ascending: false })
+          .range(from, to)
+      );
 
       if (error) throw error;
       setLogs(data || []);
@@ -110,6 +124,7 @@ const Logs = () => {
       setLoading(false);
     }
   };
+
 
   const goToPage = (page: number) => {
     if (page >= 1 && page <= totalPages) {

@@ -6,6 +6,7 @@ import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { logAdminAction } from "@/lib/adminLogger";
+import { useWedding } from "@/contexts/WeddingContext";
 
 interface WeddingSettingsFormProps {
   permissions: {
@@ -19,43 +20,46 @@ interface WeddingSettingsFormProps {
 
 const WeddingSettingsForm = ({ permissions }: WeddingSettingsFormProps) => {
   const { toast } = useToast();
+  const { weddingId } = useWedding();
   const [loading, setLoading] = useState(false);
-  const [weddingId, setWeddingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     show_guest_list_public: false,
     show_rsvp_status_public: false,
   });
 
   useEffect(() => {
+    const fetchWeddingDetails = async () => {
+      if (!weddingId) return;
+      const { data } = await supabase
+        .from("wedding_details")
+        .select("show_guest_list_public, show_rsvp_status_public")
+        .eq("id", weddingId)
+        .maybeSingle();
+
+      if (data) {
+        setFormData({
+          show_guest_list_public: data.show_guest_list_public || false,
+          show_rsvp_status_public: data.show_rsvp_status_public || false,
+        });
+      }
+    };
     fetchWeddingDetails();
-  }, []);
-
-  const fetchWeddingDetails = async () => {
-    const { data, error } = await supabase
-      .from("wedding_details")
-      .select("*")
-      .single();
-
-    if (data) {
-      setWeddingId(data.id);
-      setFormData({
-        show_guest_list_public: data.show_guest_list_public || false,
-        show_rsvp_status_public: data.show_rsvp_status_public || false,
-      });
-    }
-  };
+  }, [weddingId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!weddingId) {
+      toast({ title: "Evento não identificado", variant: "destructive" });
+      return;
+    }
     setLoading(true);
 
     try {
-      // Get current values for logging
       const { data: currentData } = await supabase
         .from("wedding_details")
         .select("show_guest_list_public, show_rsvp_status_public")
         .eq("id", weddingId)
-        .single();
+        .maybeSingle();
 
       const { error } = await supabase
         .from("wedding_details")
@@ -64,32 +68,23 @@ const WeddingSettingsForm = ({ permissions }: WeddingSettingsFormProps) => {
 
       if (error) throw error;
 
-      // Log the toggle changes
-      if (weddingId) {
-        await logAdminAction({
-          action: "update",
-          tableName: "wedding_details",
-          recordId: weddingId,
-          oldData: currentData,
-          newData: formData,
-          affectedName: "Configurações",
-        });
-      }
+      await logAdminAction({
+        action: "update",
+        tableName: "wedding_details",
+        recordId: weddingId,
+        oldData: currentData,
+        newData: formData,
+        affectedName: "Configurações",
+      });
 
-      toast({
-        title: "Sucesso!",
-        description: "Configurações atualizadas.",
-      });
+      toast({ title: "Sucesso!", description: "Configurações atualizadas." });
     } catch (error: any) {
-      toast({
-        title: "Erro",
-        description: error.message,
-        variant: "destructive",
-      });
+      toast({ title: "Erro", description: error.message, variant: "destructive" });
     } finally {
       setLoading(false);
     }
   };
+
 
   return (
     <Card>
