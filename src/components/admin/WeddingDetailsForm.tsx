@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { useWedding } from "@/contexts/WeddingContext";
 
 interface WeddingDetailsFormProps {
   permissions: {
@@ -17,46 +18,77 @@ interface WeddingDetailsFormProps {
   };
 }
 
+const EMPTY_FORM = {
+  brideName: "",
+  groomName: "",
+  weddingDate: "",
+  venueName: "",
+  story: "",
+  coupleMessage: "",
+  invitationMessage: "",
+};
+
 const WeddingDetailsForm = ({ permissions }: WeddingDetailsFormProps) => {
   const { toast } = useToast();
+  const { weddingId, loading: weddingLoading } = useWedding();
   const [loading, setLoading] = useState(false);
-  const [weddingId, setWeddingId] = useState<string | null>(null);
-  const [formData, setFormData] = useState({
-    brideName: "Beatriz de Oliveira",
-    groomName: "Diogo Martins",
-    weddingDate: "2026-04-18",
-    venueName: "Espaço Verde Eventos",
-    story: "",
-    coupleMessage: "",
-    invitationMessage: "",
-  });
+  const [fetching, setFetching] = useState(true);
+  const [notFound, setNotFound] = useState(false);
+  const [formData, setFormData] = useState(EMPTY_FORM);
 
   useEffect(() => {
     const fetchWeddingDetails = async () => {
-      const { data } = await supabase
+      if (!weddingId) {
+        setFetching(false);
+        return;
+      }
+      setFetching(true);
+      setNotFound(false);
+
+      const { data, error } = await supabase
         .from("wedding_details")
         .select("*")
-        .single();
+        .eq("id", weddingId)
+        .maybeSingle();
 
-      if (data) {
-        setWeddingId(data.id);
-        setFormData({
-          brideName: data.bride_name || "",
-          groomName: data.groom_name || "",
-          weddingDate: data.wedding_date || "",
-          venueName: data.venue_name || "",
-          story: data.story || "",
-          coupleMessage: data.couple_message || "",
-          invitationMessage: (data as any).invitation_message || "",
-        });
+      if (error) {
+        toast({ title: "Erro", description: "Falha ao carregar detalhes.", variant: "destructive" });
+        setFetching(false);
+        return;
       }
+
+      if (!data) {
+        setNotFound(true);
+        setFormData(EMPTY_FORM);
+        setFetching(false);
+        return;
+      }
+
+      setFormData({
+        brideName: data.bride_name || "",
+        groomName: data.groom_name || "",
+        weddingDate: data.wedding_date || "",
+        venueName: data.venue_name || "",
+        story: data.story || "",
+        coupleMessage: data.couple_message || "",
+        invitationMessage: (data as any).invitation_message || "",
+      });
+      setFetching(false);
     };
 
     fetchWeddingDetails();
-  }, []);
+  }, [weddingId, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!weddingId) {
+      toast({
+        title: "Evento não identificado",
+        description: "Não foi possível identificar o evento atual.",
+        variant: "destructive",
+      });
+      return;
+    }
     setLoading(true);
 
     try {
@@ -70,32 +102,18 @@ const WeddingDetailsForm = ({ permissions }: WeddingDetailsFormProps) => {
         invitation_message: formData.invitationMessage,
       };
 
-      if (weddingId) {
-        const { error } = await supabase
-          .from("wedding_details")
-          .update(weddingData)
-          .eq("id", weddingId);
+      const { error } = await supabase
+        .from("wedding_details")
+        .update(weddingData)
+        .eq("id", weddingId);
 
-        if (error) throw error;
-      } else {
-        const { data, error } = await supabase
-          .from("wedding_details")
-          .insert(weddingData)
-          .select()
-          .single();
+      if (error) throw error;
 
-        if (error) throw error;
-        if (data) setWeddingId(data.id);
-      }
-
-      toast({
-        title: "Sucesso!",
-        description: "Detalhes do casamento salvos com sucesso.",
-      });
-    } catch (error) {
+      toast({ title: "Sucesso!", description: "Detalhes salvos com sucesso." });
+    } catch (error: any) {
       toast({
         title: "Erro",
-        description: "Falha ao salvar detalhes do casamento.",
+        description: error?.message || "Falha ao salvar detalhes.",
         variant: "destructive",
       });
     } finally {
@@ -103,14 +121,28 @@ const WeddingDetailsForm = ({ permissions }: WeddingDetailsFormProps) => {
     }
   };
 
+  if (weddingLoading || fetching) {
+    return (
+      <Card className="max-w-3xl mx-auto shadow-elegant">
+        <CardContent className="py-12 text-center text-muted-foreground">
+          Carregando detalhes...
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!weddingId || notFound) {
+    return (
+      <Card className="max-w-3xl mx-auto shadow-elegant">
+        <CardContent className="py-12 text-center text-muted-foreground">
+          Não foi possível carregar os detalhes deste evento.
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="max-w-3xl mx-auto shadow-elegant">
-      {/* 
-      <CardHeader>
-        <CardTitle className="text-3xl font-serif">Detalhes do Casamento</CardTitle>
-        <CardDescription>Gerencie as informações a serem exibidas na tela incial</CardDescription>}
-      </CardHeader>
-      */}
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid md:grid-cols-2 gap-4">
