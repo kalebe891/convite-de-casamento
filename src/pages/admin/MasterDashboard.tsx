@@ -273,6 +273,7 @@ export default function MasterDashboard() {
               <SelectItem value="slug">Slug</SelectItem>
             </SelectContent>
           </Select>
+          <TenantViewToggle value={viewMode} onChange={setViewMode} />
         </CardContent>
       </Card>
 
