@@ -95,6 +95,23 @@ export default function MasterDashboard() {
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("created_desc");
   const [createOpen, setCreateOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Wedding | null>(null);
+  const [viewMode, setViewMode] = useState<TenantViewMode>(() => {
+    try {
+      const v = localStorage.getItem(VIEW_STORAGE_KEY);
+      return v === "list" ? "list" : "cards";
+    } catch {
+      return "cards";
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(VIEW_STORAGE_KEY, viewMode);
+    } catch {
+      /* ignore */
+    }
+  }, [viewMode]);
 
   const load = async () => {
     setLoading(true);
