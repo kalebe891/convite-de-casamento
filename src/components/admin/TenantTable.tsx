@@ -14,7 +14,7 @@ type Wedding = {
   id: string;
   slug: string | null;
   event_type: string | null;
-  theme_id?: string | null;
+  theme_id: string | null;
   bride_name: string | null;
   groom_name: string | null;
   wedding_date: string;
