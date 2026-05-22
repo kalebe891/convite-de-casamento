@@ -302,6 +302,18 @@ export default function MasterDashboard() {
             )}
           </CardContent>
         </Card>
+      ) : viewMode === "list" ? (
+        <TenantTable
+          weddings={filtered}
+          counts={counts}
+          formatNames={formatNames}
+          formatDate={formatDate}
+          eventTypeLabel={eventTypeLabel}
+          statusFor={(d) => statusLabel(getEventStatus(d))}
+          buildUrl={(w) => buildTenantAdminUrl(w)}
+          onAccess={(url) => navigate(url)}
+          onDelete={(w) => setDeleteTarget(w)}
+        />
       ) : (
         <div className="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
           {filtered.map((w) => {
@@ -357,15 +369,25 @@ export default function MasterDashboard() {
                     </div>
                   </div>
 
-                  <Button
-                    className="w-full gap-2"
-                    variant="outline"
-                    disabled={!url}
-                    onClick={() => url && navigate(url)}
-                  >
-                    Acessar painel
-                    <ArrowRight className="w-4 h-4" />
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      className="flex-1 gap-2"
+                      variant="outline"
+                      disabled={!url}
+                      onClick={() => url && navigate(url)}
+                    >
+                      Acessar painel
+                      <ArrowRight className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      title="Excluir evento"
+                      onClick={() => setDeleteTarget(w)}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             );
@@ -374,6 +396,11 @@ export default function MasterDashboard() {
       )}
 
       <CreateEventDialog open={createOpen} onOpenChange={setCreateOpen} onCreated={load} />
+      <DeleteTenantDialog
+        tenant={deleteTarget}
+        open={!!deleteTarget}
+        onOpenChange={(v) => !v && setDeleteTarget(null)}
+      />
     </div>
   );
 }
