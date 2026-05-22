@@ -102,8 +102,8 @@ export default function DeleteTenantDialog({ tenant, open, onOpenChange }: Props
       let errCode: string | null = null;
       if (error) {
         try {
-          // @ts-expect-error context is available on FunctionsHttpError
-          const ctx = error?.context;
+          const ctx = (error as { context?: { json?: () => Promise<any> } })
+            ?.context;
           if (ctx && typeof ctx.json === "function") {
             const body = await ctx.json();
             errMsg = body?.error ?? null;
