@@ -14,8 +14,13 @@ import {
 } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 import { buildTenantAdminUrl } from "@/lib/eventType";
-import { CalendarDays, Plus, Users, Gift, Images, Mail, ArrowRight, Search, RefreshCw, PartyPopper, Heart, CalendarCheck } from "lucide-react";
+import { CalendarDays, Plus, Users, Gift, Images, Mail, ArrowRight, Search, RefreshCw, PartyPopper, Heart, CalendarCheck, Trash2 } from "lucide-react";
 import CreateEventDialog from "@/components/admin/CreateEventDialog";
+import DeleteTenantDialog from "@/components/admin/DeleteTenantDialog";
+import TenantViewToggle, { type TenantViewMode } from "@/components/admin/TenantViewToggle";
+import TenantTable from "@/components/admin/TenantTable";
+
+const VIEW_STORAGE_KEY = "master_tenant_view";
 
 type Wedding = {
   id: string;
