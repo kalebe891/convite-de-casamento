@@ -400,6 +400,7 @@ export default function MasterDashboard() {
         tenant={deleteTarget}
         open={!!deleteTarget}
         onOpenChange={(v) => !v && setDeleteTarget(null)}
+        onDeleted={load}
       />
     </div>
   );
