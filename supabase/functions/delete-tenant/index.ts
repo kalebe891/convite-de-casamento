@@ -1,7 +1,13 @@
 // Edge Function: delete-tenant
-// Etapa 16A — DRY-RUN obrigatório.
-// Esta função NÃO deleta wedding_details nem arquivos do Storage.
-// Apenas valida JWT, role global admin, Master PIN e audita impacto.
+// Etapa 16B — exclusão real ativada.
+// Regras:
+// - dry_run obrigatório no payload (true|false).
+// - Em dry_run=true: apenas audita impacto (16A).
+// - Em dry_run=false: limpa Storage (com paginação + chunks) e executa
+//   DELETE EXCLUSIVAMENTE em wedding_details por id. Demais tabelas dependem
+//   de ON DELETE CASCADE / SET NULL configurados no PostgreSQL.
+// - Nunca deletar tabelas filhas manualmente.
+// - Erros de FK (PostgreSQL 23503) viram REFERENTIAL_INTEGRITY_ERROR.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -27,7 +33,6 @@ function successResponse(body: Record<string, unknown> = {}) {
   return jsonResponse({ success: true, ...body }, 200);
 }
 
-// Tables that have a wedding_id column and support simple count(exact) audit.
 const COUNT_TABLES = [
   "user_weddings",
   "guests",
@@ -45,23 +50,73 @@ const COUNT_TABLES = [
   "pending_users",
 ] as const;
 
+const STORAGE_BUCKET = "wedding-photos";
+const STORAGE_CHUNK_SIZE = 100;
+const PHOTOS_PAGE_SIZE = 1000;
+
+/**
+ * Converte uma photo_url (pública ou path interno) em path interno do bucket.
+ * Retorna null se não conseguir derivar com segurança.
+ */
+function extractStoragePath(photoUrl: string, bucket: string): string | null {
+  if (!photoUrl || typeof photoUrl !== "string") return null;
+  const trimmed = photoUrl.trim();
+  if (!trimmed) return null;
+
+  // URL pública padrão: .../storage/v1/object/public/<bucket>/<path>
+  const publicMarker = `/storage/v1/object/public/${bucket}/`;
+  const idx = trimmed.indexOf(publicMarker);
+  if (idx >= 0) {
+    const path = trimmed.substring(idx + publicMarker.length).split("?")[0];
+    return sanitizePath(path);
+  }
+
+  // Caso já seja um path relativo (sem http)
+  if (!/^https?:\/\//i.test(trimmed)) {
+    // remove prefixo de bucket eventual
+    const stripped = trimmed.replace(new RegExp(`^/?${bucket}/`), "");
+    return sanitizePath(stripped);
+  }
+
+  return null;
+}
+
+function sanitizePath(path: string): string | null {
+  if (!path) return null;
+  const clean = path.replace(/^\/+/, "").trim();
+  if (!clean) return null;
+  if (clean === "/" || clean === ".") return null;
+  // bloquear traversal
+  if (clean.includes("..")) return null;
+  return clean;
+}
+
+function isNotFoundError(err: { message?: string; statusCode?: string | number } | null) {
+  if (!err) return false;
+  const msg = (err.message ?? "").toLowerCase();
+  const code = String(err.statusCode ?? "");
+  return (
+    msg.includes("not found") ||
+    msg.includes("object not found") ||
+    msg.includes("does not exist") ||
+    code === "404"
+  );
+}
+
 Deno.serve(async (req) => {
-  // 1. CORS preflight
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
-
-  // 2. Method
   if (req.method !== "POST") {
     return errorResponse("Método não permitido", 405, "METHOD_NOT_ALLOWED");
   }
 
   try {
-    // 3. Body — safe read
+    // ---- body ----
     let payload: unknown;
     try {
       payload = await req.json();
-    } catch (_e) {
+    } catch {
       return errorResponse("Payload inválido", 400, "BAD_JSON");
     }
     if (!payload || typeof payload !== "object") {
@@ -76,12 +131,12 @@ Deno.serve(async (req) => {
       wedding_id.trim().length === 0 ||
       typeof password_confirm !== "string" ||
       password_confirm.length === 0 ||
-      (dry_run !== undefined && typeof dry_run !== "boolean")
+      typeof dry_run !== "boolean" // 16B: dry_run agora é OBRIGATÓRIO
     ) {
       return errorResponse("Payload inválido", 400, "BAD_REQUEST");
     }
 
-    // 4. Auth header
+    // ---- auth ----
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return errorResponse("Usuário não autenticado", 401, "UNAUTHENTICATED");
@@ -91,11 +146,9 @@ Deno.serve(async (req) => {
     const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
     const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    // 5. User-scoped client to validate JWT
     const userClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       global: { headers: { Authorization: authHeader } },
     });
-
     const token = authHeader.replace("Bearer ", "");
     const { data: claimsData, error: claimsError } =
       await userClient.auth.getClaims(token);
@@ -104,12 +157,11 @@ Deno.serve(async (req) => {
     }
     const userId = claimsData.claims.sub as string;
 
-    // 6. Service-role client (for role check + audit, bypassing RLS safely)
     const serviceClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
       auth: { persistSession: false, autoRefreshToken: false },
     });
 
-    // 7. Validate global admin role
+    // ---- role check ----
     const { data: roleRows, error: roleError } = await serviceClient
       .from("user_roles")
       .select("role")
@@ -131,17 +183,13 @@ Deno.serve(async (req) => {
       );
     }
 
-    // 8. Validate Master PIN (env secret, with dev fallback)
+    // ---- master pin ----
     const masterPin = Deno.env.get("MASTER_DELETE_PIN") || "admin123";
     if (password_confirm !== masterPin) {
-      return errorResponse(
-        "PIN de segurança incorreto",
-        401,
-        "INVALID_PIN"
-      );
+      return errorResponse("PIN de segurança incorreto", 401, "INVALID_PIN");
     }
 
-    // 9. Find tenant
+    // ---- tenant lookup ----
     const { data: tenant, error: tenantError } = await serviceClient
       .from("wedding_details")
       .select(
@@ -150,17 +198,13 @@ Deno.serve(async (req) => {
       .eq("id", wedding_id)
       .maybeSingle();
     if (tenantError) {
-      return errorResponse(
-        "Erro ao buscar evento",
-        500,
-        "TENANT_LOOKUP_FAILED"
-      );
+      return errorResponse("Erro ao buscar evento", 500, "TENANT_LOOKUP_FAILED");
     }
     if (!tenant) {
       return errorResponse("Evento não encontrado", 404, "TENANT_NOT_FOUND");
     }
 
-    // 10. Audit impact — count(exact) + head:true (no rows transferred)
+    // ---- impact audit (sempre) ----
     const impact: Record<string, number | string> = {};
     for (const table of COUNT_TABLES) {
       try {
@@ -168,70 +212,139 @@ Deno.serve(async (req) => {
           .from(table)
           .select("id", { count: "exact", head: true })
           .eq("wedding_id", wedding_id);
-        if (error) {
-          impact[table] = `error: ${error.code ?? "unknown"}`;
-        } else {
-          impact[table] = count ?? 0;
-        }
+        impact[table] = error ? `error: ${error.code ?? "unknown"}` : count ?? 0;
       } catch {
         impact[table] = "error";
       }
     }
 
-    // 11. Photos pagination rehearsal (collect photo_url, no removal)
-    let storage_paths_detected = 0;
+    // ---- coleta de paths do Storage (paginada) ----
+    const storagePaths: string[] = [];
     let photos_pages_processed = 0;
-    try {
+    {
       let from = 0;
-      const pageSize = 1000;
       while (true) {
         const { data, error } = await serviceClient
           .from("photos")
           .select("photo_url")
           .eq("wedding_id", wedding_id)
-          .range(from, from + pageSize - 1);
-        if (error) break;
+          .range(from, from + PHOTOS_PAGE_SIZE - 1);
+        if (error) {
+          return errorResponse(
+            "Falha ao coletar arquivos do Storage.",
+            500,
+            "STORAGE_COLLECT_FAILED"
+          );
+        }
         if (!data || data.length === 0) break;
         photos_pages_processed += 1;
-        storage_paths_detected += data.filter(
-          (p) => typeof p.photo_url === "string" && p.photo_url.length > 0
-        ).length;
-        if (data.length < pageSize) break;
-        from += pageSize;
+        for (const row of data) {
+          const path = extractStoragePath(
+            (row as { photo_url?: string }).photo_url ?? "",
+            STORAGE_BUCKET
+          );
+          if (path) storagePaths.push(path);
+        }
+        if (data.length < PHOTOS_PAGE_SIZE) break;
+        from += PHOTOS_PAGE_SIZE;
       }
-    } catch {
-      // non-fatal during dry-run
     }
 
-    // 12. DRY-RUN — never delete in Etapa 16A
+    // ---- DRY RUN ----
+    if (dry_run === true) {
+      return successResponse({
+        dry_run: true,
+        wedding_id,
+        tenant_found: true,
+        tenant,
+        impact: {
+          ...impact,
+          storage_paths_detected: storagePaths.length,
+          photos_pages_processed,
+        },
+        notes: [
+          "dry_run=true: nenhuma exclusão executada.",
+          "Storage não removido. wedding_details não removido.",
+        ],
+      });
+    }
+
+    // ============================================================
+    // EXCLUSÃO REAL (dry_run === false)
+    // ============================================================
+
+    // ---- Storage: remover em chunks sequenciais ----
+    let files_removed = 0;
+    let files_not_found = 0;
+    let chunks_processed = 0;
+    const uniquePaths = Array.from(new Set(storagePaths)).filter(Boolean);
+
+    for (let i = 0; i < uniquePaths.length; i += STORAGE_CHUNK_SIZE) {
+      const chunk = uniquePaths.slice(i, i + STORAGE_CHUNK_SIZE);
+      if (chunk.length === 0) continue;
+      const { data, error } = await serviceClient.storage
+        .from(STORAGE_BUCKET)
+        .remove(chunk);
+
+      if (error) {
+        if (isNotFoundError(error)) {
+          files_not_found += chunk.length;
+          chunks_processed += 1;
+          continue;
+        }
+        return errorResponse(
+          "Falha ao remover arquivos do Storage. O evento não foi excluído.",
+          500,
+          "STORAGE_DELETE_FAILED"
+        );
+      }
+
+      chunks_processed += 1;
+      // data é lista dos arquivos removidos com sucesso (pode incluir "not found" sem erro)
+      const removedNow = Array.isArray(data) ? data.length : chunk.length;
+      files_removed += removedNow;
+      if (removedNow < chunk.length) {
+        files_not_found += chunk.length - removedNow;
+      }
+    }
+
+    // ---- DELETE final exclusivamente em wedding_details ----
+    const { error: deleteError } = await serviceClient
+      .from("wedding_details")
+      .delete()
+      .eq("id", wedding_id);
+
+    if (deleteError) {
+      if ((deleteError as { code?: string }).code === "23503") {
+        return errorResponse(
+          "Erro de integridade referencial. Verifique as constraints de Cascade no banco de dados.",
+          500,
+          "REFERENTIAL_INTEGRITY_ERROR"
+        );
+      }
+      return errorResponse(
+        "Não foi possível excluir o evento.",
+        500,
+        "TENANT_DELETE_FAILED"
+      );
+    }
+
     return successResponse({
-      dry_run: true,
-      requested_dry_run: dry_run ?? null,
+      dry_run: false,
       wedding_id,
-      tenant_found: true,
-      tenant: {
-        id: tenant.id,
-        slug: tenant.slug,
-        event_type: tenant.event_type,
-        bride_name: tenant.bride_name,
-        groom_name: tenant.groom_name,
-        wedding_date: tenant.wedding_date,
-        created_at: tenant.created_at,
+      tenant_deleted: true,
+      storage: {
+        bucket: STORAGE_BUCKET,
+        total_paths_collected: uniquePaths.length,
+        chunks_processed,
+        files_removed,
+        files_not_found,
       },
-      impact: {
-        ...impact,
-        storage_paths_detected,
-        photos_pages_processed,
-      },
-      notes: [
-        "Etapa 16A: validação e auditoria apenas.",
-        "Nenhum registro de wedding_details foi removido.",
-        "Nenhum arquivo de Storage foi removido.",
-      ],
+      impact,
     });
-  } catch (_e) {
+  } catch {
     return errorResponse(
-      "Erro inesperado ao auditar exclusão",
+      "Erro inesperado ao excluir evento",
       500,
       "INTERNAL_ERROR"
     );
