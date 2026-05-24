@@ -184,7 +184,14 @@ Deno.serve(async (req) => {
     }
 
     // ---- master pin ----
-    const masterPin = Deno.env.get("MASTER_DELETE_PIN") || "admin123";
+    const masterPin = Deno.env.get("MASTER_DELETE_PIN");
+    if (!masterPin || masterPin.trim().length === 0) {
+      return errorResponse(
+        "PIN mestre de exclusão não configurado.",
+        500,
+        "MISSING_MASTER_DELETE_PIN"
+      );
+    }
     if (password_confirm !== masterPin) {
       return errorResponse("PIN de segurança incorreto", 401, "INVALID_PIN");
     }
