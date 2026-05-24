@@ -73,6 +73,8 @@ function mapErrorMessage(code: string | null): string {
       return "Evento não encontrado.";
     case "REFERENTIAL_INTEGRITY_ERROR":
       return "Erro de integridade referencial. Verifique as constraints de Cascade no banco de dados.";
+    case "MISSING_MASTER_DELETE_PIN":
+      return "PIN mestre de exclusão não configurado. Configure o secret MASTER_DELETE_PIN antes de excluir eventos.";
     case "STORAGE_DELETE_FAILED":
       return "Falha ao remover arquivos do Storage. O evento não foi excluído.";
     case "STORAGE_COLLECT_FAILED":
