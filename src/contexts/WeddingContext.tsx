@@ -311,6 +311,7 @@ export const WeddingProvider = ({ mode, children }: ProviderProps) => {
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useWedding = (): WeddingContextType => {
   const ctx = useContext(WeddingContext);
   if (!ctx) {
@@ -319,6 +320,7 @@ export const useWedding = (): WeddingContextType => {
   return ctx;
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useOptionalWedding = (): WeddingContextType | undefined => {
   return useContext(WeddingContext);
 };
