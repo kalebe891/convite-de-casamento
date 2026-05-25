@@ -118,6 +118,8 @@ export const WeddingProvider = ({ mode, children }: ProviderProps) => {
         return;
       }
 
+      let currentUserWedding: UserWedding | null = null;
+
       // tenant-admin: validate auth + access
       if (mode === "tenant-admin") {
         const {
@@ -150,8 +152,28 @@ export const WeddingProvider = ({ mode, children }: ProviderProps) => {
           setLoading(false);
           return;
         }
+
+        const { data: userWeddingLink, error: linkErr } = await supabase
+          .from("user_weddings")
+          .select("*")
+          .eq("user_id", user.id)
+          .eq("wedding_id", data.id)
+          .maybeSingle();
+
+        if (cancelled) return;
+
+        if (linkErr) {
+          setError("unexpected_error");
+          setLoading(false);
+          return;
+        }
+
+        currentUserWedding = userWeddingLink
+          ? { ...userWeddingLink, wedding: data }
+          : null;
       }
 
+      setUserWeddings(currentUserWedding ? [currentUserWedding] : []);
       setWedding(data);
       setActiveId(data.id);
       setLoading(false);
@@ -293,4 +315,8 @@ export const useWedding = (): WeddingContextType => {
     throw new Error("useWedding must be used inside <WeddingProvider>");
   }
   return ctx;
+};
+
+export const useOptionalWedding = (): WeddingContextType | undefined => {
+  return useContext(WeddingContext);
 };
