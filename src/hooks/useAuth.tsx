@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User, Session } from "@supabase/supabase-js";
+import { useOptionalWedding } from "@/contexts/WeddingContext";
 
 export type UserRole = string | null;
 
@@ -13,10 +14,20 @@ interface AuthState {
 }
 
 export const useAuth = (): AuthState => {
+  const weddingContext = useOptionalWedding();
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [role, setRole] = useState<UserRole>(null);
   const [loading, setLoading] = useState(true);
+
+  const tenantRole =
+    weddingContext?.mode === "tenant-admin" && weddingContext.weddingId
+      ? weddingContext.userWeddings.find(
+          (link) => link.user_id === user?.id && link.wedding_id === weddingContext.weddingId
+        )?.role ?? null
+      : null;
+
+  const effectiveRole = tenantRole ?? role;
 
   useEffect(() => {
     // Set up auth state listener FIRST
@@ -58,14 +69,14 @@ export const useAuth = (): AuthState => {
       const { data, error } = await supabase
         .from("user_roles")
         .select("role")
-        .eq("user_id", userId)
-        .maybeSingle();
+        .eq("user_id", userId);
 
       if (error) {
         console.error("❌ [useAuth] Error fetching user role:", error);
         setRole(null);
       } else {
-        const userRole = data?.role ?? null;
+        const roles = (data || []).map((item) => item.role as string);
+        const userRole = roles.includes("admin") ? "admin" : roles[0] ?? null;
         console.log('✅ [useAuth] Role fetched:', userRole);
         setRole(userRole);
       }
@@ -80,8 +91,8 @@ export const useAuth = (): AuthState => {
   return {
     user,
     session,
-    role,
-    loading,
-    isAdmin: role === "admin",
+    role: effectiveRole,
+    loading: loading || (weddingContext?.mode === "tenant-admin" && weddingContext.loading),
+    isAdmin: effectiveRole === "admin",
   };
 };
