@@ -92,7 +92,9 @@ export const useAuth = (): AuthState => {
     user,
     session,
     role: effectiveRole,
-    loading: loading || (weddingContext?.mode === "tenant-admin" && weddingContext.loading),
+    loading:
+      loading ||
+      Boolean(weddingContext?.mode === "tenant-admin" && weddingContext.loading),
     isAdmin: effectiveRole === "admin",
   };
 };
