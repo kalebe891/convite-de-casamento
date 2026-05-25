@@ -118,6 +118,8 @@ export const WeddingProvider = ({ mode, children }: ProviderProps) => {
         return;
       }
 
+      let currentUserWedding: UserWedding | null = null;
+
       // tenant-admin: validate auth + access
       if (mode === "tenant-admin") {
         const {
@@ -150,8 +152,28 @@ export const WeddingProvider = ({ mode, children }: ProviderProps) => {
           setLoading(false);
           return;
         }
+
+        const { data: userWeddingLink, error: linkErr } = await supabase
+          .from("user_weddings")
+          .select("*")
+          .eq("user_id", user.id)
+          .eq("wedding_id", data.id)
+          .maybeSingle();
+
+        if (cancelled) return;
+
+        if (linkErr) {
+          setError("unexpected_error");
+          setLoading(false);
+          return;
+        }
+
+        currentUserWedding = userWeddingLink
+          ? { ...userWeddingLink, wedding: data }
+          : null;
       }
 
+      setUserWeddings(currentUserWedding ? [currentUserWedding] : []);
       setWedding(data);
       setActiveId(data.id);
       setLoading(false);
@@ -200,7 +222,9 @@ export const WeddingProvider = ({ mode, children }: ProviderProps) => {
       }
 
       const ids = (idsData ?? [])
-        .map((row: any) => (typeof row === "string" ? row : row.get_user_wedding_ids))
+        .map((row: string | { get_user_wedding_ids?: string }) =>
+          typeof row === "string" ? row : row.get_user_wedding_ids
+        )
         .filter(Boolean);
 
       if (ids.length === 0) {
@@ -287,10 +311,16 @@ export const WeddingProvider = ({ mode, children }: ProviderProps) => {
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useWedding = (): WeddingContextType => {
   const ctx = useContext(WeddingContext);
   if (!ctx) {
     throw new Error("useWedding must be used inside <WeddingProvider>");
   }
   return ctx;
+};
+
+// eslint-disable-next-line react-refresh/only-export-components
+export const useOptionalWedding = (): WeddingContextType | undefined => {
+  return useContext(WeddingContext);
 };
