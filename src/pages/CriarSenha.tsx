@@ -150,14 +150,17 @@ const CriarSenha = () => {
       if (data?.error) throw new Error(data.error);
 
       console.log('✅ [CriarSenha] Account created successfully');
+      const tenant = (data as any)?.tenant as { slug: string | null; event_type: string | null } | null;
+      const weddingId = (data as any)?.wedding_id as string | null;
+
       toast({
         title: "Conta criada com sucesso!",
-        description: "Fazendo login...",
+        description: "Finalizando seu acesso...",
       });
 
       // Sign in with the new credentials
       console.log('🔐 [CriarSenha] Signing in with new credentials');
-      const { error: signInError } = await supabase.auth.signInWithPassword({
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
@@ -167,16 +170,34 @@ const CriarSenha = () => {
         throw signInError;
       }
 
-      console.log('✅ [CriarSenha] Sign in successful, redirecting to /admin');
+      // Determine destination
+      let destination = "/admin";
+      if (tenant?.slug && tenant?.event_type) {
+        const urlType = tenant.event_type === "birthday" ? "aniversario" : "casamento";
+        destination = `/${urlType}/${tenant.slug}/admin`;
+      }
+
+      // Race-condition guard: poll user_weddings until the link is visible
+      // to this session before letting TenantAdminGuard evaluate access.
+      const userId = signInData?.user?.id;
+      if (userId && weddingId) {
+        for (let i = 0; i < 10; i++) {
+          const { data: hasAccess } = await supabase.rpc("user_has_wedding_access", {
+            _user_id: userId,
+            _wedding_id: weddingId,
+          });
+          if (hasAccess) break;
+          await new Promise((r) => setTimeout(r, 300));
+        }
+      }
+
+      console.log('✅ [CriarSenha] Redirecting to', destination);
       toast({
         title: "Bem-vindo!",
-        description: "Redirecionando para o painel administrativo...",
+        description: "Preparando seu painel...",
       });
 
-      // Redirect to admin
-      setTimeout(() => {
-        navigate("/admin", { replace: true });
-      }, 1000);
+      navigate(destination, { replace: true });
 
     } catch (error: any) {
       console.error("Error completing invitation:", error);
