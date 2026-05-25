@@ -193,6 +193,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.log('[complete-user-invite] Role assigned successfully');
 
     // 4b. Multi-tenant link: if invitation targets a specific wedding, link user to it
+    let tenantInfo: { slug: string | null; event_type: string | null } | null = null;
     if (pendingUser.wedding_id) {
       const { error: linkError } = await supabase
         .from('user_weddings')
@@ -210,6 +211,14 @@ const handler = async (req: Request): Promise<Response> => {
         );
       }
       console.log('[complete-user-invite] User linked to wedding:', pendingUser.wedding_id);
+
+      // Verify link is persisted and fetch tenant info for redirect
+      const { data: tenant } = await supabase
+        .from('wedding_details')
+        .select('slug,event_type')
+        .eq('id', pendingUser.wedding_id)
+        .maybeSingle();
+      if (tenant) tenantInfo = { slug: tenant.slug, event_type: tenant.event_type };
     }
 
     // Verify role was actually saved
