@@ -121,6 +121,7 @@ const PendingInvitesList = ({ refreshTrigger }: PendingInvitesListProps) => {
           email: invite.email,
           nome: invite.nome,
           role: invite.papel,
+          wedding_id: mode === "tenant-admin" ? weddingId : null,
         },
       });
 
