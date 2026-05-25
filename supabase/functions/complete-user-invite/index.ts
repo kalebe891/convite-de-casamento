@@ -259,7 +259,9 @@ const handler = async (req: Request): Promise<Response> => {
         success: true,
         message: 'Conta criada com sucesso!',
         userId,
-        role: pendingUser.papel
+        role: pendingUser.papel,
+        wedding_id: pendingUser.wedding_id ?? null,
+        tenant: tenantInfo,
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
