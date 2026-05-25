@@ -42,6 +42,11 @@ interface UserProfile {
   created_at: string | null;
 }
 
+interface UserWeddingLink {
+  user_id: string;
+  role: string;
+}
+
 interface UserRole {
   role: string;
 }
@@ -83,19 +88,25 @@ const UsersList = ({ refreshKey, roleProfiles, onRoleProfilesChange, permissions
     try {
       setLoading(true);
 
-      // In tenant-admin scope users by user_weddings filtered by weddingId.
       let allowedUserIds: string[] | null = null;
+      let tenantLinksByUserId = new Map<string, UserWeddingLink>();
+
       if (mode === "tenant-admin") {
         if (!weddingId) {
           setUsers([]);
           return;
         }
+
         const { data: links, error: linksError } = await supabase
           .from("user_weddings")
-          .select("user_id")
+          .select("user_id, role")
           .eq("wedding_id", weddingId);
+
         if (linksError) throw linksError;
-        allowedUserIds = Array.from(new Set((links || []).map((l) => l.user_id)));
+
+        allowedUserIds = Array.from(new Set((links || []).map((link) => link.user_id)));
+        tenantLinksByUserId = new Map((links || []).map((link) => [link.user_id, link as UserWeddingLink]));
+
         if (allowedUserIds.length === 0) {
           setUsers([]);
           return;
@@ -112,19 +123,33 @@ const UsersList = ({ refreshKey, roleProfiles, onRoleProfilesChange, permissions
       const { data: profiles, error: profilesError } = await profilesQuery;
       if (profilesError) throw profilesError;
 
-      let rolesQuery = supabase.from("user_roles").select("*");
-      if (allowedUserIds) {
-        rolesQuery = rolesQuery.in("user_id", allowedUserIds);
-      }
-      const { data: userRoles, error: rolesError } = await rolesQuery;
-      if (rolesError) throw rolesError;
-
       const usersWithRoles = (profiles || []).map((profile) => ({
         ...profile,
-        roles: (userRoles || [])
-          .filter((role) => role.user_id === profile.id)
-          .map((role) => ({ role: role.role as string })),
+        roles: mode === "tenant-admin"
+          ? tenantLinksByUserId.has(profile.id)
+            ? [{ role: tenantLinksByUserId.get(profile.id)!.role }]
+            : []
+          : [],
       }));
+
+      if (mode !== "tenant-admin") {
+        let rolesQuery = supabase.from("user_roles").select("*");
+        if (allowedUserIds) {
+          rolesQuery = rolesQuery.in("user_id", allowedUserIds);
+        }
+        const { data: userRoles, error: rolesError } = await rolesQuery;
+        if (rolesError) throw rolesError;
+
+        setUsers(
+          (profiles || []).map((profile) => ({
+            ...profile,
+            roles: (userRoles || [])
+              .filter((role) => role.user_id === profile.id)
+              .map((role) => ({ role: role.role as string })),
+          }))
+        );
+        return;
+      }
 
       setUsers(usersWithRoles);
     } catch (error: any) {
@@ -258,6 +283,7 @@ const UsersList = ({ refreshKey, roleProfiles, onRoleProfilesChange, permissions
           email,
           nome: name,
           role: user.roles[0].role,
+          wedding_id: mode === "tenant-admin" ? weddingId : null,
         },
       });
 
