@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Loader2, Copy, Mail, MessageCircle } from "lucide-react";
 import UsersList from "./UsersList";
 import PendingInvitesList from "./PendingInvitesList";
+import { useWedding } from "@/contexts/WeddingContext";
 
 interface PagePermissions {
   canView: boolean;
@@ -27,6 +28,7 @@ interface UsersManagerProps {
 
 const UsersManager = ({ roleProfiles, onRoleProfilesChange, permissions }: UsersManagerProps) => {
   const { toast } = useToast();
+  const { mode, weddingId } = useWedding();
   const [email, setEmail] = useState("");
   const [nome, setNome] = useState("");
   const [role, setRole] = useState<string>("couple");
@@ -46,6 +48,15 @@ const UsersManager = ({ roleProfiles, onRoleProfilesChange, permissions }: Users
       return;
     }
 
+    if (mode === "tenant-admin" && !weddingId) {
+      toast({
+        title: "Evento não identificado",
+        description: "Não foi possível identificar o tenant atual para criar o convite.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
     setMagicLink("");
 
@@ -55,6 +66,7 @@ const UsersManager = ({ roleProfiles, onRoleProfilesChange, permissions }: Users
           email: email.trim(),
           nome: nome.trim() || null,
           role,
+          wedding_id: mode === "tenant-admin" ? weddingId : null,
         },
       });
 
