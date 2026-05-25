@@ -222,7 +222,9 @@ export const WeddingProvider = ({ mode, children }: ProviderProps) => {
       }
 
       const ids = (idsData ?? [])
-        .map((row: any) => (typeof row === "string" ? row : row.get_user_wedding_ids))
+        .map((row: string | { get_user_wedding_ids?: string }) =>
+          typeof row === "string" ? row : row.get_user_wedding_ids
+        )
         .filter(Boolean);
 
       if (ids.length === 0) {
