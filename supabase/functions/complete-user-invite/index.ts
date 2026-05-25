@@ -193,7 +193,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.log('[complete-user-invite] Role assigned successfully');
 
     // 4b. Multi-tenant link: if invitation targets a specific wedding, link user to it
-    let tenantInfo: { slug: string | null; event_type: string | null } | null = null;
+    let tenantInfo: { id: string; slug: string | null; event_type: string | null } | null = null;
     if (pendingUser.wedding_id) {
       const { error: linkError } = await supabase
         .from('user_weddings')
@@ -213,12 +213,27 @@ const handler = async (req: Request): Promise<Response> => {
       console.log('[complete-user-invite] User linked to wedding:', pendingUser.wedding_id);
 
       // Verify link is persisted and fetch tenant info for redirect
+      const { data: persistedLink, error: persistedLinkError } = await supabase
+        .from('user_weddings')
+        .select('user_id, wedding_id, role')
+        .eq('user_id', userId)
+        .eq('wedding_id', pendingUser.wedding_id)
+        .maybeSingle();
+
+      if (persistedLinkError || !persistedLink) {
+        console.error('[complete-user-invite] User-wedding link verification failed');
+        return new Response(
+          JSON.stringify({ error: 'Erro ao validar vínculo do usuário com o evento' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
       const { data: tenant } = await supabase
         .from('wedding_details')
-        .select('slug,event_type')
+        .select('id,slug,event_type')
         .eq('id', pendingUser.wedding_id)
         .maybeSingle();
-      if (tenant) tenantInfo = { slug: tenant.slug, event_type: tenant.event_type };
+      if (tenant) tenantInfo = { id: tenant.id, slug: tenant.slug, event_type: tenant.event_type };
     }
 
     // Verify role was actually saved
@@ -260,7 +275,7 @@ const handler = async (req: Request): Promise<Response> => {
         message: 'Conta criada com sucesso!',
         userId,
         role: pendingUser.papel,
-        wedding_id: pendingUser.wedding_id ?? null,
+        wedding_id: tenantInfo?.id ?? pendingUser.wedding_id ?? null,
         tenant: tenantInfo,
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
