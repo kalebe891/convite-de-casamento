@@ -176,8 +176,12 @@ export const WeddingProvider = ({ mode, children }: ProviderProps) => {
       setUserWeddings(currentUserWedding ? [currentUserWedding] : []);
       setWedding(data);
       setActiveId(data.id);
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem("active_wedding_id", data.id);
+      }
       setLoading(false);
     };
+
 
     run();
     return () => {

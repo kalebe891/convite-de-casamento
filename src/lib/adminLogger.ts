@@ -7,7 +7,19 @@ interface LogParams {
   oldData?: any;
   newData?: any;
   affectedName?: string;
+  /** Optional explicit wedding id. Falls back to the active tenant stored in localStorage. */
+  weddingId?: string | null;
 }
+
+const resolveWeddingId = (explicit?: string | null): string | null => {
+  if (explicit) return explicit;
+  if (typeof window === "undefined") return null;
+  try {
+    return window.localStorage.getItem("active_wedding_id");
+  } catch {
+    return null;
+  }
+};
 
 export const logAdminAction = async ({
   action,
@@ -16,11 +28,13 @@ export const logAdminAction = async ({
   oldData,
   newData,
   affectedName,
+  weddingId,
 }: LogParams) => {
   try {
     const { data: { user } } = await supabase.auth.getUser();
-    
     if (!user) return;
+
+    const wid = resolveWeddingId(weddingId);
 
     await supabase.from("admin_logs").insert({
       user_id: user.id,
@@ -31,6 +45,7 @@ export const logAdminAction = async ({
       old_data: oldData || null,
       new_data: newData || null,
       affected_name: affectedName || null,
+      wedding_id: wid,
     });
   } catch (error) {
     console.error("Error logging admin action:", error);

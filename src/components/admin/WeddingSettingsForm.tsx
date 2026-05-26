@@ -108,7 +108,7 @@ const WeddingSettingsForm = ({ permissions }: WeddingSettingsFormProps) => {
                 id="show_guest_list_public"
                 checked={formData.show_guest_list_public}
                 onCheckedChange={(checked) => setFormData({ ...formData, show_guest_list_public: checked })}
-                disabled={!permissions.canPublish}
+                disabled={!permissions.canEdit}
               />
             </div>
 
@@ -123,8 +123,9 @@ const WeddingSettingsForm = ({ permissions }: WeddingSettingsFormProps) => {
                 id="show_rsvp_status_public"
                 checked={formData.show_rsvp_status_public}
                 onCheckedChange={(checked) => setFormData({ ...formData, show_rsvp_status_public: checked })}
-                disabled={!permissions.canPublish}
+                disabled={!permissions.canEdit}
               />
+
             </div>
           </div>
 

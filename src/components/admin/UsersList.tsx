@@ -34,6 +34,8 @@ import {
 import RoleProfilesDialog from "./RoleProfilesDialog";
 import RolePermissionsPopover from "./RolePermissionsPopover";
 import { useWedding } from "@/contexts/WeddingContext";
+import { logAdminAction } from "@/lib/adminLogger";
+
 
 interface UserProfile {
   id: string;
@@ -171,20 +173,60 @@ const UsersList = ({ refreshKey, roleProfiles, onRoleProfilesChange, permissions
 
   const handleRoleChange = async (userId: string, newRole: string) => {
     try {
-      // Remove existing roles
-      const { error: deleteError } = await supabase
-        .from("user_roles")
-        .delete()
-        .eq("user_id", userId);
+      const targetUser = users.find((u) => u.id === userId);
+      const previousRole = targetUser?.roles[0]?.role ?? null;
+      const affectedName = targetUser?.full_name || targetUser?.email || userId;
 
-      if (deleteError) throw deleteError;
+      if (mode === "tenant-admin") {
+        if (!weddingId) {
+          throw new Error("Evento não identificado para alterar papel.");
+        }
+        if (newRole === "admin") {
+          throw new Error("Não é permitido promover usuários a Admin global pelo painel do evento.");
+        }
 
-      // Add new role - cast to any to bypass TypeScript enum restriction
-      const { error: insertError } = await supabase
-        .from("user_roles")
-        .insert({ user_id: userId, role: newRole as any });
+        const { data: updated, error: updateError } = await supabase
+          .from("user_weddings")
+          .update({ role: newRole })
+          .eq("user_id", userId)
+          .eq("wedding_id", weddingId)
+          .select("id");
 
-      if (insertError) throw insertError;
+        if (updateError) throw updateError;
+        if (!updated || updated.length === 0) {
+          throw new Error("Nenhum vínculo encontrado para este usuário neste evento.");
+        }
+
+        await logAdminAction({
+          action: "update",
+          tableName: "user_weddings",
+          recordId: userId,
+          oldData: { role: previousRole },
+          newData: { role: newRole },
+          affectedName,
+          weddingId,
+        });
+      } else {
+        const { error: deleteError } = await supabase
+          .from("user_roles")
+          .delete()
+          .eq("user_id", userId);
+        if (deleteError) throw deleteError;
+
+        const { error: insertError } = await supabase
+          .from("user_roles")
+          .insert({ user_id: userId, role: newRole as any });
+        if (insertError) throw insertError;
+
+        await logAdminAction({
+          action: "update",
+          tableName: "user_roles",
+          recordId: userId,
+          oldData: { role: previousRole },
+          newData: { role: newRole },
+          affectedName,
+        });
+      }
 
       toast({
         title: "Papel atualizado!",
@@ -201,6 +243,7 @@ const UsersList = ({ refreshKey, roleProfiles, onRoleProfilesChange, permissions
       });
     }
   };
+
 
   const handleDeleteUser = async () => {
     if (!deleteUserId) return;
