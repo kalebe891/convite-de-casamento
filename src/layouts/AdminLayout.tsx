@@ -33,7 +33,7 @@ const AdminLayout = () => {
         .from('profiles')
         .select('full_name')
         .eq('id', user.id)
-        .single()
+        .maybeSingle()
         .then(({ data }) => {
           if (data?.full_name) {
             setUserName(data.full_name);
@@ -55,11 +55,6 @@ const AdminLayout = () => {
 
   // CRITICAL: Wait for both auth AND permissions to load
   if (loading || permissionsLoading || !initialized || rolesLoading) {
-    console.log('⏳ [AdminLayout] Waiting for full initialization:', {
-      authLoading: loading,
-      permissionsLoading,
-      permInit: initialized
-    });
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <p className="text-muted-foreground">Carregando permissões...</p>

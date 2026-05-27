@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Trash2, Plus, Pencil, X } from "lucide-react";
 import { timelineEventSchema } from "@/lib/validationSchemas";
@@ -235,6 +235,7 @@ const TimelineManager = ({ permissions }: TimelineManagerProps) => {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Editar Evento</DialogTitle>
+            <DialogDescription className="sr-only">Edite os dados deste evento do cronograma.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>

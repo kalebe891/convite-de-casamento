@@ -65,7 +65,6 @@ export const useAuth = (): AuthState => {
 
   const fetchUserRole = async (userId: string) => {
     try {
-      console.log('🔍 [useAuth] Fetching role for user:', userId);
       const { data, error } = await supabase
         .from("user_roles")
         .select("role")
@@ -77,7 +76,6 @@ export const useAuth = (): AuthState => {
       } else {
         const roles = (data || []).map((item) => item.role as string);
         const userRole = roles.includes("admin") ? "admin" : roles[0] ?? null;
-        console.log('✅ [useAuth] Role fetched:', userRole);
         setRole(userRole);
       }
     } catch (error) {

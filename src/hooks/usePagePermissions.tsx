@@ -5,6 +5,7 @@ import { MenuKey } from "@/lib/permissions";
 import { useEffect } from "react";
 import { useAdminBasePath } from "./useAdminBasePath";
 import { useOptionalWedding } from "@/contexts/WeddingContext";
+import { devLog } from "@/lib/devLog";
 
 const TENANT_MENU_ORDER: MenuKey[] = [
   "detalhes",
@@ -33,33 +34,25 @@ export const usePagePermissions = (menuKey: MenuKey) => {
   const weddingContext = useOptionalWedding();
 
   useEffect(() => {
-    console.log(`🔍 [usePagePermissions] Checking access to page: ${menuKey}`, { loading, role });
-    
-    // CRITICAL: Wait for permissions to be fully initialized
     if (loading || !initialized || adminBasePath === null) {
-      console.log(`⏳ [usePagePermissions] Still loading permissions for ${menuKey}`);
       return;
     }
 
-    // Now check if user has view permission for this page
     const canAccess = hasPermission(menuKey, "view");
-    console.log(`🔍 [usePagePermissions] Permission check result for ${menuKey}:`, canAccess);
-    
+
     if (!canAccess) {
       if (weddingContext?.mode === "tenant-admin") {
         const firstAllowedMenu = TENANT_MENU_ORDER.find((item) => hasPermission(item, "view"));
 
         if (firstAllowedMenu && firstAllowedMenu !== menuKey) {
-          console.log(`🔀 [usePagePermissions] Redirecting tenant user to first allowed page: ${firstAllowedMenu}`);
+          devLog(`🔀 [usePagePermissions] Redirecting tenant user to first allowed page: ${firstAllowedMenu}`);
           navigate(`${adminBasePath}/${firstAllowedMenu}`, { replace: true });
           return;
         }
       }
 
-      console.log(`❌ [usePagePermissions] No view permission for ${menuKey}, redirecting to /acesso-negado`);
+      devLog(`❌ [usePagePermissions] No view permission for ${menuKey}, redirecting to /acesso-negado`);
       navigate("/acesso-negado", { replace: true });
-    } else {
-      console.log(`✅ [usePagePermissions] Access granted to ${menuKey}`);
     }
   }, [menuKey, hasPermission, loading, initialized, navigate, role, adminBasePath, weddingContext?.mode]);
 

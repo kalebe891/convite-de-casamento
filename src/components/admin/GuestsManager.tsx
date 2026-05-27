@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Mail, MessageSquare, Trash2, Copy, ExternalLink, RefreshCw, Pencil, ArrowUpDown, ArrowUp, ArrowDown, Gift } from "lucide-react";
@@ -535,6 +535,7 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>Adicionar Convidado</DialogTitle>
+                  <DialogDescription className="sr-only">Cadastre um novo convidado na lista.</DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 mt-4">
                   <div>
@@ -683,6 +684,7 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Editar Convidado</DialogTitle>
+            <DialogDescription className="sr-only">Atualize os dados deste convidado.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 mt-4">
             <div>
@@ -742,6 +744,7 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Enviar Convite via WhatsApp</DialogTitle>
+            <DialogDescription className="sr-only">Revise e envie a mensagem de convite pelo WhatsApp.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 mt-4">
             <div>
