@@ -39,7 +39,7 @@ const CriarSenha = () => {
           .from('pending_users')
           .select('email, nome, papel, expires_at, usado')
           .eq('token', token)
-          .single();
+          .maybeSingle();
 
         if (error || !data) {
           toast({
@@ -149,7 +149,7 @@ const CriarSenha = () => {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
 
-      console.log('✅ [CriarSenha] Account created successfully');
+      
       const tenant = (data as any)?.tenant as { slug: string | null; event_type: string | null } | null;
       const weddingId = (data as any)?.wedding_id as string | null;
 
@@ -159,7 +159,7 @@ const CriarSenha = () => {
       });
 
       // Sign in with the new credentials
-      console.log('🔐 [CriarSenha] Signing in with new credentials');
+      
       const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -191,7 +191,7 @@ const CriarSenha = () => {
         }
       }
 
-      console.log('✅ [CriarSenha] Redirecting to', destination);
+      
       toast({
         title: "Bem-vindo!",
         description: "Preparando seu painel...",

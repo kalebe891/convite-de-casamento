@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { Permission, MenuKey } from "@/lib/permissions";
+import { devLog } from "@/lib/devLog";
 
 interface PermissionsState {
   permissions: Permission[];
@@ -17,21 +18,18 @@ export const usePermissions = (): PermissionsState => {
   const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
-    console.log('🔍 [usePermissions] Effect triggered:', { role, authLoading, initialized });
-    
-    // Wait for auth to load
+    devLog('🔍 [usePermissions] Effect triggered:', { role, authLoading, initialized });
+
     if (authLoading) {
-      console.log('⏳ [usePermissions] Waiting for auth to load');
+      devLog('⏳ [usePermissions] Waiting for auth to load');
       return;
     }
-    
-    // If we have a role, fetch permissions
+
     if (role) {
-      console.log('🔍 [usePermissions] Role found, fetching permissions:', role);
+      devLog('🔍 [usePermissions] Role found, fetching permissions:', role);
       fetchPermissions();
     } else {
-      // No role after auth loaded
-      console.log('⚠️ [usePermissions] No role after auth loaded');
+      devLog('⚠️ [usePermissions] No role after auth loaded');
       setLoading(false);
       setPermissions([]);
       setInitialized(true);
@@ -40,15 +38,14 @@ export const usePermissions = (): PermissionsState => {
 
   const fetchPermissions = async () => {
     if (!role) {
-      console.log('⚠️ [usePermissions] No role provided, skipping fetch');
+      devLog('⚠️ [usePermissions] No role provided, skipping fetch');
       setLoading(false);
       setInitialized(true);
       return;
     }
 
     try {
-      console.log('🔍 [usePermissions] Fetching permissions for role:', role);
-      // Fetch permissions based on user's role
+      devLog('🔍 [usePermissions] Fetching permissions for role:', role);
       const { data, error } = await supabase
         .from("admin_permissions")
         .select("*")
@@ -59,8 +56,8 @@ export const usePermissions = (): PermissionsState => {
         setPermissions([]);
       } else {
         const perms = (data || []) as Permission[];
-        console.log('✅ [usePermissions] Permissions fetched:', perms.length, 'items');
-        console.log('📋 [usePermissions] Permission details:', perms.map(p => `${p.menu_key}:${p.can_view}`).join(', '));
+        devLog('✅ [usePermissions] Permissions fetched:', perms.length, 'items');
+        devLog('📋 [usePermissions] Permission details:', perms.map(p => `${p.menu_key}:${p.can_view}`).join(', '));
         setPermissions(perms);
       }
     } catch (error) {
@@ -76,27 +73,20 @@ export const usePermissions = (): PermissionsState => {
     menuKey: MenuKey,
     type: "view" | "add" | "edit" | "delete" | "publish"
   ): boolean => {
-    // Admins always have all permissions
     if (role === "admin") {
-      console.log(`✅ [hasPermission] Admin has full access to ${menuKey}.${type}`);
       return true;
     }
 
-    // CRITICAL: Return false if not initialized yet
     if (!initialized || loading || !role) {
-      console.log(`⏳ [hasPermission] Not initialized yet for ${menuKey}.${type}:`, { initialized, loading, role });
       return false;
     }
 
     const permission = permissions.find((p) => p.menu_key === menuKey);
     if (!permission) {
-      console.log(`❌ [hasPermission] No permission entry found for ${menuKey}`);
       return false;
     }
 
-    const hasAccess = permission[`can_${type}`] || false;
-    console.log(`${hasAccess ? '✅' : '❌'} [hasPermission] ${menuKey}.${type} = ${hasAccess}`);
-    return hasAccess;
+    return permission[`can_${type}`] || false;
   };
 
   return {

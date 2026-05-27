@@ -27,7 +27,7 @@ const MasterAdminLayout = () => {
       .from("profiles")
       .select("full_name")
       .eq("id", user.id)
-      .single()
+      .maybeSingle()
       .then(({ data }) => {
         setUserName(data?.full_name || user.email?.split("@")[0] || "Admin");
       });
