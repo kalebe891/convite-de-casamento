@@ -100,16 +100,30 @@ const InvitationsManager = () => {
       }
 
       const uniqueCode = generateUniqueCode();
-      const { error } = await supabase.from("invitations").insert({
+      const invitationPayload = {
         wedding_id: weddingId,
         guest_id: guestId,
         guest_name: validationResult.data.guestName.trim(),
         guest_email: email || null,
         guest_phone: phone || null,
         unique_code: uniqueCode,
-      });
+      };
+      const { data: insertedInvitation, error } = await supabase
+        .from("invitations")
+        .insert(invitationPayload)
+        .select("id")
+        .single();
 
       if (error) throw error;
+
+      await logAdminAction({
+        action: "insert",
+        tableName: "invitations",
+        recordId: insertedInvitation?.id,
+        newData: invitationPayload,
+        affectedName: invitationPayload.guest_name,
+        weddingId,
+      });
 
       toast({
         title: "Convite criado!",
