@@ -229,6 +229,7 @@ Deno.serve(async (req) => {
             table_name: 'guests',
             record_id: guest.id,
             wedding_id: weddingId,
+            affected_name: guest.name ?? null,
             old_data: { checked_in_at: guest.checked_in_at, status: guest.status },
             new_data: { checked_in_at: null, status: previousStatus },
           });
