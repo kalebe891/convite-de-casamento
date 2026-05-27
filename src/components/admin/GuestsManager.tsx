@@ -198,18 +198,33 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
       return;
     }
 
-    const { error } = await supabase.from("guests").insert({
+    const guestPayload = {
       name: validationResult.data.name.trim(),
       phone: validationResult.data.phone?.trim() || null,
       email: validationResult.data.email?.trim() || null,
       status: "pending",
       wedding_id: weddingId,
-    });
+    };
+
+    const { data: insertedGuest, error } = await supabase
+      .from("guests")
+      .insert(guestPayload)
+      .select("id")
+      .single();
 
     if (error) {
       console.error("Error adding guest:", error);
       toast.error(getSafeErrorMessage(error));
     } else {
+      await logAdminAction({
+        action: "insert",
+        tableName: "guests",
+        recordId: insertedGuest?.id,
+        newData: guestPayload,
+        affectedName: guestPayload.name,
+        weddingId,
+      });
+
       toast.success("Convidado adicionado com sucesso!");
       setNewGuest({ name: "", phone: "", email: "" });
       setIsAddOpen(false);
