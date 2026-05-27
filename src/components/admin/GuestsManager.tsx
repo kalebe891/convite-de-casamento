@@ -301,24 +301,19 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
       console.error("Error updating guest:", error);
       toast.error(getSafeErrorMessage(error));
     } else {
-      // Log the update
-      const { data: userData } = await supabase.auth.getUser();
-      if (userData.user) {
-        await supabase.from("admin_logs").insert({
-          user_id: userData.user.id,
-          user_email: userData.user.email || null,
-          action: "update",
-          table_name: "guests",
-          record_id: editGuest.id,
-          old_data: oldGuest as any,
-          new_data: {
-            name: validationResult.data.name.trim(),
-            phone: validationResult.data.phone?.trim() || null,
-            email: validationResult.data.email?.trim() || null,
-          } as any,
-          affected_name: validationResult.data.name.trim(),
-        });
-      }
+      await logAdminAction({
+        action: "update",
+        tableName: "guests",
+        recordId: editGuest.id,
+        oldData: oldGuest as any,
+        newData: {
+          name: validationResult.data.name.trim(),
+          phone: validationResult.data.phone?.trim() || null,
+          email: validationResult.data.email?.trim() || null,
+        },
+        affectedName: validationResult.data.name.trim(),
+        weddingId,
+      });
 
       toast.success("Convidado atualizado com sucesso!");
       setEditGuest({ id: "", name: "", phone: "", email: "" });
