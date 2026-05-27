@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -76,6 +77,9 @@ const GuestMessagesDialog = () => {
           <DialogTitle className="text-2xl font-serif">
             Mensagens dos Convidados
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            Mensagens enviadas pelos convidados ao confirmar presença.
+          </DialogDescription>
         </DialogHeader>
         <ScrollArea className="h-[60vh] pr-4">
           {loading ? (
