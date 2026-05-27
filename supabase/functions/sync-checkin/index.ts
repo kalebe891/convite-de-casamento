@@ -143,7 +143,7 @@ Deno.serve(async (req) => {
         if (check.guest_id) {
           const result = await supabaseAdmin
             .from('guests')
-            .select('id, email, phone, status, checked_in_at, wedding_id')
+            .select('id, name, email, phone, status, checked_in_at, wedding_id')
             .eq('id', check.guest_id)
             .eq('wedding_id', weddingId)
             .maybeSingle();
@@ -153,7 +153,7 @@ Deno.serve(async (req) => {
         if (!guest && check.guest_email) {
           const emailResult = await supabaseAdmin
             .from('guests')
-            .select('id, email, phone, status, checked_in_at, wedding_id')
+            .select('id, name, email, phone, status, checked_in_at, wedding_id')
             .eq('email', check.guest_email)
             .eq('wedding_id', weddingId)
             .maybeSingle();
@@ -163,7 +163,7 @@ Deno.serve(async (req) => {
           } else {
             const phoneResult = await supabaseAdmin
               .from('guests')
-              .select('id, email, phone, status, checked_in_at, wedding_id')
+              .select('id, name, email, phone, status, checked_in_at, wedding_id')
               .eq('phone', check.guest_email)
               .eq('wedding_id', weddingId)
               .maybeSingle();
@@ -229,6 +229,7 @@ Deno.serve(async (req) => {
             table_name: 'guests',
             record_id: guest.id,
             wedding_id: weddingId,
+            affected_name: guest.name ?? null,
             old_data: { checked_in_at: guest.checked_in_at, status: guest.status },
             new_data: { checked_in_at: null, status: previousStatus },
           });
@@ -358,6 +359,7 @@ Deno.serve(async (req) => {
           table_name: 'guests',
           record_id: guest.id,
           wedding_id: weddingId,
+          affected_name: guest.name ?? null,
           old_data: { checked_in_at: existingCheckin || null, status: guest.status || 'pending' },
           new_data: { checked_in_at: check.checked_in_at, status: 'confirmed' },
         });
