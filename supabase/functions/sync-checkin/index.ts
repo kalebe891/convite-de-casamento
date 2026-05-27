@@ -359,6 +359,7 @@ Deno.serve(async (req) => {
           table_name: 'guests',
           record_id: guest.id,
           wedding_id: weddingId,
+          affected_name: guest.name ?? null,
           old_data: { checked_in_at: existingCheckin || null, status: guest.status || 'pending' },
           new_data: { checked_in_at: check.checked_in_at, status: 'confirmed' },
         });
