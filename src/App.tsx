@@ -13,6 +13,7 @@ import NotFound from "./pages/NotFound";
 import AccessDenied from "./pages/AccessDenied";
 import CriarSenha from "./pages/CriarSenha";
 import LandingHome from "./pages/LandingHome";
+import WeddingLanding from "./pages/WeddingLanding";
 import EventTypeLanding from "./pages/EventTypeLanding";
 import TenantPublicLayout from "./components/routing/TenantPublicLayout";
 import TenantAdminGuard from "./components/routing/TenantAdminGuard";
@@ -66,7 +67,7 @@ const App = () => (
         <Routes>
           {/* ===== Rotas estáticas / institucionais ===== */}
           <Route path="/" element={<LandingHome />} />
-          <Route path="/casamento" element={<EventTypeLanding />} />
+          <Route path="/casamento" element={<WeddingLanding />} />
           <Route path="/aniversario" element={<EventTypeLanding />} />
 
           {/* Atalhos para o Master Admin */}
