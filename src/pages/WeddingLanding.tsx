@@ -147,7 +147,7 @@ const WeddingLanding = () => {
       </section>
 
       {/* PROPOSTA DE VALOR */}
-      <section className="container mx-auto px-4 py-20 md:py-28">
+      <section className="container mx-auto px-4 py-16 sm:py-20 md:py-28">
         <div className="mx-auto max-w-3xl text-center">
           <p className="text-xs uppercase tracking-[0.2em] text-primary">Para noivos</p>
           <h2 className="mt-3 font-serif text-3xl font-semibold leading-tight md:text-5xl">
@@ -161,29 +161,29 @@ const WeddingLanding = () => {
       </section>
 
       {/* RECURSOS EDITORIAIS */}
-      <section id="recursos" className="border-y border-border/40 bg-muted/30 py-20 md:py-28">
+      <section id="recursos" className="border-y border-border/40 bg-muted/30 py-16 sm:py-20 md:py-28">
         <div className="container mx-auto px-4">
-          <div className="mb-14 max-w-2xl">
+          <div className="mb-10 max-w-2xl sm:mb-14">
             <p className="text-xs uppercase tracking-[0.2em] text-primary">Recursos</p>
-            <h2 className="mt-3 font-serif text-3xl font-semibold md:text-4xl">
+            <h2 className="mt-3 font-serif text-3xl font-semibold leading-tight md:text-4xl">
               Pensado para casamentos elegantes
             </h2>
           </div>
 
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="mx-auto grid max-w-6xl gap-5 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
             {features.map(({ n, Icon, title, text }) => (
               <article
                 key={n}
-                className="group relative rounded-2xl border border-border/60 bg-card p-7 transition-all hover:-translate-y-1 hover:border-primary/40 hover:shadow-elegant"
+                className="group relative rounded-2xl border border-border/60 bg-card p-6 transition-all duration-300 hover:-translate-y-1 hover:border-primary/50 hover:shadow-elegant sm:p-7"
               >
                 <div className="flex items-start justify-between">
-                  <span className="grid h-11 w-11 place-items-center rounded-xl bg-primary/10 text-primary">
+                  <span className="grid h-11 w-11 place-items-center rounded-xl bg-primary/10 text-primary transition-colors group-hover:bg-primary/15">
                     <Icon className="h-5 w-5" />
                   </span>
                   <span className="font-serif text-2xl italic text-primary/40">{n}</span>
                 </div>
                 <h3 className="mt-6 font-serif text-xl font-semibold">{title}</h3>
-                <p className="mt-2 text-sm text-muted-foreground">{text}</p>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{text}</p>
               </article>
             ))}
           </div>
@@ -191,11 +191,11 @@ const WeddingLanding = () => {
       </section>
 
       {/* EXPERIÊNCIA DO CONVITE */}
-      <section className="container mx-auto px-4 py-20 md:py-28">
-        <div className="grid gap-12 md:grid-cols-2 md:items-center">
+      <section className="container mx-auto px-4 py-16 sm:py-20 md:py-28">
+        <div className="grid gap-10 md:grid-cols-2 md:items-center md:gap-12">
           <div className="order-2 md:order-1">
             <p className="text-xs uppercase tracking-[0.2em] text-primary">A experiência</p>
-            <h2 className="mt-3 font-serif text-3xl font-semibold md:text-4xl">
+            <h2 className="mt-3 font-serif text-3xl font-semibold leading-tight md:text-4xl">
               Um convite que respira como uma página de revista.
             </h2>
             <p className="mt-4 text-muted-foreground">
@@ -205,10 +205,10 @@ const WeddingLanding = () => {
             <ul className="mt-6 space-y-3">
               {experience.map((item) => (
                 <li key={item} className="flex items-start gap-3 text-sm">
-                  <span className="mt-1 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-primary/15 text-primary">
+                  <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-primary/15 text-primary">
                     <Sparkles className="h-3 w-3" />
                   </span>
-                  <span className="text-muted-foreground">{item}</span>
+                  <span className="leading-relaxed text-muted-foreground">{item}</span>
                 </li>
               ))}
             </ul>
@@ -221,7 +221,7 @@ const WeddingLanding = () => {
           </div>
 
           <div className="order-1 md:order-2">
-            <div className="relative mx-auto w-full max-w-md">
+            <div className="relative mx-auto w-full max-w-sm md:max-w-md">
               <div className="absolute inset-0 rotate-2 rounded-3xl bg-accent/40" aria-hidden />
               <div className="relative space-y-4 rounded-3xl border border-border/60 bg-card p-6 shadow-elegant">
                 <div className="rounded-xl bg-muted/40 p-4">
@@ -254,20 +254,20 @@ const WeddingLanding = () => {
       </section>
 
       {/* COMO FUNCIONA */}
-      <section className="border-t border-border/40 bg-muted/30 py-20 md:py-28">
+      <section className="border-t border-border/40 bg-muted/30 py-16 sm:py-20 md:py-28">
         <div className="container mx-auto px-4">
-          <div className="mx-auto mb-14 max-w-2xl text-center">
+          <div className="mx-auto mb-10 max-w-2xl text-center sm:mb-14">
             <p className="text-xs uppercase tracking-[0.2em] text-primary">Como funciona</p>
-            <h2 className="mt-3 font-serif text-3xl font-semibold md:text-4xl">
+            <h2 className="mt-3 font-serif text-3xl font-semibold leading-tight md:text-4xl">
               Do convite ao brinde, sem complicação
             </h2>
           </div>
-          <div className="grid gap-6 md:grid-cols-3">
+          <div className="mx-auto grid max-w-5xl gap-5 sm:gap-6 md:grid-cols-3">
             {steps.map(({ n, title, text }) => (
-              <div key={n} className="rounded-2xl border border-border/60 bg-card p-8">
+              <div key={n} className="rounded-2xl border border-border/60 bg-card p-7 transition-colors hover:border-primary/40 sm:p-8">
                 <span className="font-serif text-4xl italic text-primary">{n}</span>
                 <h3 className="mt-4 font-serif text-xl font-semibold">{title}</h3>
-                <p className="mt-2 text-sm text-muted-foreground">{text}</p>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{text}</p>
               </div>
             ))}
           </div>
@@ -275,25 +275,25 @@ const WeddingLanding = () => {
       </section>
 
       {/* CTA FINAL */}
-      <section className="container mx-auto px-4 py-20 md:py-28">
-        <div className="relative overflow-hidden rounded-3xl border border-primary/30 bg-gradient-elegant p-10 text-center md:p-16">
+      <section className="container mx-auto px-4 py-16 sm:py-20 md:py-28">
+        <div className="relative overflow-hidden rounded-3xl border border-primary/30 bg-gradient-elegant p-8 text-center sm:p-10 md:p-16">
           <div className="pointer-events-none absolute -top-20 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-primary/20 blur-3xl" aria-hidden />
           <p className="relative text-xs uppercase tracking-[0.3em] text-primary">Vamos começar</p>
-          <h2 className="relative mt-3 font-serif text-3xl font-semibold md:text-5xl">
+          <h2 className="relative mt-3 font-serif text-3xl font-semibold leading-tight md:text-5xl">
             O convite de casamento dos seus sonhos começa aqui.
           </h2>
           <p className="relative mx-auto mt-4 max-w-xl text-muted-foreground">
             Solicite o seu acesso e crie um convite digital memorável em poucos minutos.
           </p>
-          <div className="relative mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <div className="relative mt-8 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
             <Link to="/auth">
-              <Button size="lg" className="group">
+              <Button size="lg" className="group w-full sm:w-auto">
                 Solicitar convite
                 <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Button>
             </Link>
             <Link to="/">
-              <Button size="lg" variant="outline">Voltar para a Home</Button>
+              <Button size="lg" variant="outline" className="w-full sm:w-auto">Voltar para a Home</Button>
             </Link>
           </div>
         </div>
