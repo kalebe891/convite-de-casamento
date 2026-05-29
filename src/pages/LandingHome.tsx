@@ -73,28 +73,28 @@ const LandingHome = () => {
           className="pointer-events-none absolute -top-32 left-1/2 h-[480px] w-[480px] -translate-x-1/2 rounded-full bg-primary/20 blur-3xl"
           aria-hidden
         />
-        <div className="container relative mx-auto px-4 py-24 md:py-32">
+        <div className="container relative mx-auto px-4 py-20 sm:py-24 md:py-32">
           <div className="mx-auto max-w-3xl text-center">
             <span className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-card/60 px-4 py-1.5 text-xs font-medium tracking-wide text-primary backdrop-blur">
               <Sparkles className="h-3.5 w-3.5" />
               Plataforma premium de convites digitais
             </span>
-            <h1 className="mt-6 font-serif text-4xl font-semibold leading-tight tracking-tight text-foreground md:text-6xl">
+            <h1 className="mt-6 font-serif text-[2.5rem] font-semibold leading-[1.08] tracking-tight text-foreground sm:text-5xl md:text-6xl">
               Convites digitais com a sofisticação que o seu evento merece.
             </h1>
-            <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
+            <p className="mx-auto mt-5 max-w-2xl text-base text-muted-foreground sm:mt-6 sm:text-lg">
               Uma experiência completa para criar convites, confirmar presenças, organizar presentes e gerenciar
               todos os detalhes do seu evento em um só lugar.
             </p>
-            <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <Link to="/casamento">
-                <Button size="lg" className="group">
+            <div className="mt-8 flex flex-col items-stretch justify-center gap-3 sm:mt-10 sm:flex-row sm:items-center">
+              <Link to="/casamento" className="sm:w-auto">
+                <Button size="lg" className="group w-full sm:w-auto">
                   Convite de casamento
                   <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </Button>
               </Link>
-              <Link to="/aniversario">
-                <Button size="lg" variant="outline">
+              <Link to="/aniversario" className="sm:w-auto">
+                <Button size="lg" variant="outline" className="w-full sm:w-auto">
                   Convite de aniversário
                 </Button>
               </Link>
