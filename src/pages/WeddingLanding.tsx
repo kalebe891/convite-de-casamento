@@ -84,37 +84,37 @@ const WeddingLanding = () => {
           aria-hidden
         />
 
-        <div className="container relative mx-auto grid gap-12 px-4 py-20 md:grid-cols-12 md:py-28 md:items-center">
+        <div className="container relative mx-auto grid gap-12 px-4 py-16 sm:py-20 md:grid-cols-12 md:items-center md:gap-8 md:py-28">
           <div className="md:col-span-7">
             <span className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-card/70 px-4 py-1.5 text-xs font-medium tracking-wide text-primary backdrop-blur">
               <Heart className="h-3.5 w-3.5" />
               Convite de casamento
             </span>
-            <h1 className="mt-6 font-serif text-4xl font-semibold leading-[1.05] tracking-tight md:text-6xl">
+            <h1 className="mt-6 font-serif text-[2.5rem] font-semibold leading-[1.05] tracking-tight sm:text-5xl md:text-6xl">
               Um convite à altura
               <br />
               do <em className="font-serif italic text-primary">amor de vocês</em>.
             </h1>
-            <p className="mt-6 max-w-xl text-lg text-muted-foreground">
+            <p className="mt-5 max-w-xl text-base text-muted-foreground sm:mt-6 sm:text-lg">
               Uma plataforma editorial e elegante para criar o convite, organizar os convidados, receber confirmações e
               viver o grande dia com tranquilidade.
             </p>
-            <div className="mt-10 flex flex-col gap-3 sm:flex-row">
+            <div className="mt-8 flex flex-col items-stretch gap-3 sm:mt-10 sm:flex-row sm:items-center">
               <Link to="/auth">
-                <Button size="lg" className="group">
+                <Button size="lg" className="group w-full sm:w-auto">
                   Criar nosso convite
                   <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </Button>
               </Link>
               <a href="#recursos">
-                <Button size="lg" variant="outline">Ver recursos</Button>
+                <Button size="lg" variant="outline" className="w-full sm:w-auto">Ver recursos</Button>
               </a>
             </div>
           </div>
 
           {/* mockup card */}
           <div className="md:col-span-5">
-            <div className="relative mx-auto w-full max-w-sm">
+            <div className="relative mx-auto w-full max-w-xs sm:max-w-sm">
               <div className="absolute inset-0 -rotate-3 rounded-3xl bg-primary/10" aria-hidden />
               <div className="relative rounded-3xl border border-border/60 bg-card p-8 shadow-elegant">
                 <p className="text-center text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
