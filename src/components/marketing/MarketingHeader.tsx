@@ -5,7 +5,7 @@ import { Sparkles } from "lucide-react";
 
 const MarketingHeader = () => {
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/80 backdrop-blur-md">
+    <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/85 backdrop-blur-md supports-[backdrop-filter]:bg-background/70">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <Link to="/" className="flex items-center gap-2">
           <span className="grid h-9 w-9 place-items-center rounded-full bg-primary/15 text-primary">
