@@ -27,7 +27,7 @@ const EventTypeLanding = () => {
   const { title, subtitle, Icon } = CONTENT[eventType];
 
   return (
-    <div className="min-h-screen bg-gradient-elegant flex flex-col">
+    <div className="marketing-theme min-h-screen bg-gradient-elegant flex flex-col">
       <header className="container mx-auto px-4 py-6 flex justify-between items-center">
         <Link to="/" className="text-2xl font-serif font-bold text-primary">
           Convites
