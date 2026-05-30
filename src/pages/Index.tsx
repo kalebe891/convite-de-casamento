@@ -73,7 +73,7 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-background">
+    <div className="tenant-public min-h-screen overflow-x-hidden bg-background">
       <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
         <div className="container mx-auto flex min-w-0 items-center justify-between gap-3 px-4 py-4">
           <h1 className="min-w-0 truncate font-serif text-xl font-bold text-primary sm:text-2xl">
