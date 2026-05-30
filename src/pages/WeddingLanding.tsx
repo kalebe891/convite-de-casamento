@@ -69,7 +69,7 @@ const steps = [
 
 const WeddingLanding = () => {
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="marketing-theme min-h-screen bg-background text-foreground">
       <MarketingHeader />
 
       {/* HERO EDITORIAL */}

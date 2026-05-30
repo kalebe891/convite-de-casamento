@@ -63,7 +63,7 @@ const steps = [
 
 const LandingHome = () => {
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="marketing-theme min-h-screen bg-background text-foreground">
       <MarketingHeader />
 
       {/* HERO */}
