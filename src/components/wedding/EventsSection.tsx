@@ -23,7 +23,7 @@ const EventsSection = ({ events }: EventsSectionProps) => {
           <div className="text-center mb-16">
             <SkeletonText variant="heading" className="mx-auto max-w-md" />
           </div>
-          <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+          <div className="mx-auto grid max-w-5xl grid-cols-1 gap-8 md:grid-cols-2">
             {Array.from({ length: 2 }).map((_, i) => (
               <SkeletonCard key={i} lines={3} />
             ))}
@@ -48,18 +48,19 @@ const EventsSection = ({ events }: EventsSectionProps) => {
           Detalhes da Celebração
         </motion.h2>
         
-        <div className={`grid gap-8 max-w-5xl mx-auto ${events.length === 1 ? 'flex justify-center' : 'md:grid-cols-2'}`}>
+        <div className={`mx-auto grid max-w-5xl grid-cols-1 gap-8 ${events.length === 1 ? '' : 'md:grid-cols-2'}`}>
           {events.map((event, index) => (
             <motion.div
               key={index}
+              className="min-w-0"
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
             >
-              <Card className="shadow-soft hover:shadow-elegant transition-shadow duration-300 h-full">
+              <Card className="h-full min-w-0 shadow-soft transition-shadow duration-300 hover:shadow-elegant">
                 <CardHeader>
-                  <CardTitle className="text-3xl font-serif text-primary">
+                  <CardTitle className="break-words font-serif text-2xl text-primary sm:text-3xl">
                     {event.event_name}
                   </CardTitle>
                   <CardDescription className="text-lg">
@@ -81,8 +82,8 @@ const EventsSection = ({ events }: EventsSectionProps) => {
                   </div>
                   <div className="flex items-start gap-3">
                     <MapPin className="w-5 h-5 text-primary mt-1" />
-                    <div>
-                      <p className="font-medium">{event.location}</p>
+                    <div className="min-w-0">
+                      <p className="break-words font-medium">{event.location}</p>
                       {event.address && <p className="text-sm text-muted-foreground mt-1">{event.address}</p>}
                       {event.maps_url && (
                         <a 
