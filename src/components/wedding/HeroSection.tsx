@@ -51,8 +51,8 @@ const HeroSection = ({ weddingDetails }: HeroSectionProps) => {
 
   const renderContent = () => (
     <>
-      <Heart className="w-16 h-16 mx-auto mb-6 text-primary animate-scale-in" />
-      <h1 className="text-6xl md:text-8xl font-serif font-bold mb-4 text-foreground">
+      <Heart className="mx-auto mb-6 h-12 w-12 text-primary animate-scale-in sm:h-16 sm:w-16" />
+      <h1 className="mx-auto mb-4 max-w-full break-words font-serif text-5xl font-bold leading-tight text-foreground sm:text-6xl md:text-8xl">
         {formatEventTitle(weddingDetails, "Nosso Evento")}
       </h1>
       <div className="h-px w-32 mx-auto bg-primary my-6"></div>
@@ -74,7 +74,7 @@ const HeroSection = ({ weddingDetails }: HeroSectionProps) => {
   if (!weddingDetails) {
     return (
       <section className="relative h-screen flex items-center justify-center overflow-hidden bg-muted/30">
-        <div className="relative z-10 text-center px-4 space-y-6 max-w-4xl mx-auto">
+        <div className="relative z-10 mx-auto max-w-4xl space-y-6 px-4 text-center">
           <Skeleton className="w-16 h-16 mx-auto rounded-full" />
           <SkeletonText variant="heading" className="mx-auto" />
           <Skeleton className="h-px w-32 mx-auto" />
@@ -88,7 +88,7 @@ const HeroSection = ({ weddingDetails }: HeroSectionProps) => {
   if (!mainPhoto) {
     return (
       <section className="relative h-screen flex items-center justify-center overflow-hidden bg-muted/30">
-        <div className="relative z-10 text-center px-4 animate-fade-in-up">
+        <div className="relative z-10 w-full max-w-4xl px-4 text-center animate-fade-in-up">
           {renderContent()}
         </div>
       </section>
@@ -113,7 +113,7 @@ const HeroSection = ({ weddingDetails }: HeroSectionProps) => {
         onLoad={() => setImageLoaded(true)}
       />
 
-      <div className="relative z-10 text-center px-4 animate-fade-in-up">
+      <div className="relative z-10 w-full max-w-4xl px-4 text-center animate-fade-in-up">
         {renderContent()}
       </div>
 
