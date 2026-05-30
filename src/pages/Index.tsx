@@ -73,13 +73,13 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="tenant-public min-h-screen overflow-x-hidden bg-background">
       <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-serif font-bold text-primary">
+        <div className="container mx-auto flex min-w-0 items-center justify-between gap-3 px-4 py-4">
+          <h1 className="min-w-0 truncate font-serif text-xl font-bold text-primary sm:text-2xl">
             {title}
           </h1>
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2">
             <ThemeToggle />
             <Button
               variant="ghost"
@@ -100,7 +100,7 @@ const Index = () => {
         </div>
       </header>
 
-      <main className="pt-20">
+        <main className="overflow-x-hidden pt-20">
         <HeroSection weddingDetails={wedding} />
         <StorySection weddingDetails={wedding} />
         <EventsSection events={events} />
