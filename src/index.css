@@ -153,6 +153,25 @@ All colors MUST be HSL.
   body {
     @apply bg-background text-foreground;
   }
+
+  .tenant-public {
+    overflow-x: clip;
+  }
+
+  .tenant-public .container {
+    width: 100%;
+    max-width: min(100%, 1400px);
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .tenant-public section,
+  .tenant-public main,
+  .tenant-public header,
+  .tenant-public footer {
+    max-width: 100%;
+    overflow-x: clip;
+  }
 }
 
 /* Hide Lovable badge */
