@@ -13,7 +13,12 @@ if ('serviceWorker' in navigator && window.location.pathname.startsWith('/admin'
 }
 
 createRoot(document.getElementById("root")!).render(
-  <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+  <ThemeProvider
+    attribute="class"
+    defaultTheme="light"
+    enableSystem
+    themes={["light", "brown", "dark"]}
+  >
     <App />
   </ThemeProvider>
 );
