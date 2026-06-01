@@ -4,7 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { WeddingProvider } from "./contexts/WeddingContext";
-import Index from "./pages/Index";
+import ThemeRenderer from "./themes/ThemeRenderer";
 import Invitation from "./pages/Invitation";
 import Auth from "./pages/Auth";
 import AdminLayout from "./layouts/AdminLayout";
@@ -117,9 +117,9 @@ const App = () => (
               </WeddingProvider>
             }
           >
-            <Route index element={<Index />} />
-            <Route path="convite" element={<Index />} />
-            <Route path="rsvp" element={<Index />} />
+            <Route index element={<ThemeRenderer />} />
+            <Route path="convite" element={<ThemeRenderer />} />
+            <Route path="rsvp" element={<ThemeRenderer />} />
           </Route>
 
           <Route path="*" element={<NotFound />} />
