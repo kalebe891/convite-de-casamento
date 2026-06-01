@@ -141,7 +141,97 @@ All colors MUST be HSL.
     --gradient-elegant: linear-gradient(180deg, hsl(225 17% 7%), hsl(222 19% 11%));
     --shadow-elegant: 0 10px 40px -10px hsl(0 0% 0% / 0.55);
     --shadow-soft: 0 4px 20px -4px hsl(0 0% 0% / 0.4);
+  /* ============================================================
+     Tenant theme — EDITORIAL (Etapa 20.3)
+     Paleta sofisticada / minimalista / tipográfica.
+     Escopo: somente onde [data-theme="editorial"] estiver presente
+     (injetado pelo ThemeRenderer no tenant público).
+     ============================================================ */
+  [data-theme="editorial"] {
+    --background: 0 0% 98%;            /* #FAFAFA */
+    --foreground: 0 0% 10%;            /* #1A1A1A */
+
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 10%;
+
+    --primary: 0 0% 10%;               /* #1A1A1A */
+    --primary-foreground: 0 0% 98%;
+
+    --secondary: 0 0% 94%;
+    --secondary-foreground: 0 0% 10%;
+
+    --muted: 0 0% 95%;
+    --muted-foreground: 0 0% 38%;
+
+    --accent: 0 0% 92%;
+    --accent-foreground: 0 0% 10%;
+
+    --border: 0 0% 85%;
+    --input: 0 0% 85%;
+    --ring: 0 0% 10%;
+
+    --gradient-hero: linear-gradient(180deg, hsl(0 0% 98% / 0), hsl(0 0% 10% / 0.08));
+    --gradient-elegant: linear-gradient(180deg, hsl(0 0% 98%), hsl(0 0% 94%));
+    --shadow-elegant: 0 10px 40px -10px hsl(0 0% 0% / 0.12);
+    --shadow-soft: 0 4px 20px -4px hsl(0 0% 0% / 0.08);
+
+    --font-serif: 'Cormorant Garamond', serif;
+    --font-sans: 'DM Sans', sans-serif;
   }
+
+  .dark [data-theme="editorial"],
+  [data-theme="editorial"].dark {
+    --background: 0 0% 5%;             /* #0D0D0D */
+    --foreground: 0 0% 96%;
+
+    --card: 0 0% 8%;
+    --card-foreground: 0 0% 96%;
+
+    --popover: 0 0% 8%;
+    --popover-foreground: 0 0% 96%;
+
+    --primary: 43 74% 71%;             /* #F0D78C */
+    --primary-foreground: 0 0% 5%;
+
+    --secondary: 0 0% 12%;
+    --secondary-foreground: 0 0% 96%;
+
+    --muted: 0 0% 12%;
+    --muted-foreground: 0 0% 68%;
+
+    --accent: 0 0% 16%;
+    --accent-foreground: 0 0% 96%;
+
+    --border: 0 0% 22%;
+    --input: 0 0% 22%;
+    --ring: 43 74% 71%;
+
+    --gradient-hero: linear-gradient(180deg, hsl(0 0% 5% / 0), hsl(0 0% 5% / 0.85));
+    --gradient-elegant: linear-gradient(180deg, hsl(0 0% 5%), hsl(0 0% 8%));
+    --shadow-elegant: 0 10px 40px -10px hsl(0 0% 0% / 0.65);
+    --shadow-soft: 0 4px 20px -4px hsl(0 0% 0% / 0.45);
+  }
+
+  [data-theme="editorial"] .font-serif,
+  [data-theme="editorial"] h1,
+  [data-theme="editorial"] h2,
+  [data-theme="editorial"] h3 {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+  }
+
+  [data-theme="editorial"] body,
+  [data-theme="editorial"] p,
+  [data-theme="editorial"] .font-sans {
+    font-family: 'DM Sans', sans-serif;
+  }
+
+}
+
 
   /* ============================================================
      Marketing / Institutional theme — BROWN (Warm Rose / Champagne)
