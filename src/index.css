@@ -141,6 +141,8 @@ All colors MUST be HSL.
     --gradient-elegant: linear-gradient(180deg, hsl(225 17% 7%), hsl(222 19% 11%));
     --shadow-elegant: 0 10px 40px -10px hsl(0 0% 0% / 0.55);
     --shadow-soft: 0 4px 20px -4px hsl(0 0% 0% / 0.4);
+  }
+
   /* ============================================================
      Tenant theme — EDITORIAL (Etapa 20.3)
      Paleta sofisticada / minimalista / tipográfica.
