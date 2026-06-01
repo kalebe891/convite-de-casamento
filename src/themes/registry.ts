@@ -1,17 +1,16 @@
 /**
- * Theme Registry — Etapa 20.1
+ * Theme Registry — Etapas 20.1 / 20.3
  *
- * Camada arquitetural invisível para suportar múltiplos temas futuramente
- * no tenant público. Nesta etapa apenas o tema "legacy" está registrado,
- * mapeando 1:1 para a implementação atual (nenhuma mudança visual).
- *
- * Não toca em banco, RLS, Edge Functions ou WeddingContext.
+ * Camada arquitetural para suportar múltiplos temas no tenant público.
+ * - "legacy"    : implementação original (intocada).
+ * - "editorial" : variante editorial (Hero estrutural + tokens CSS).
  */
 
 import type { ComponentType } from "react";
 import Index from "@/pages/Index";
+import IndexEditorial from "./editorial/IndexEditorial";
 
-export type TenantThemeId = "legacy";
+export type TenantThemeId = "legacy" | "editorial";
 
 export interface TenantThemeDefinition {
   id: TenantThemeId;
@@ -26,8 +25,15 @@ const LEGACY_THEME: TenantThemeDefinition = {
   Renderer: Index,
 };
 
+const EDITORIAL_THEME: TenantThemeDefinition = {
+  id: "editorial",
+  label: "Editorial",
+  Renderer: IndexEditorial,
+};
+
 export const themeRegistry: Record<TenantThemeId, TenantThemeDefinition> = {
   legacy: LEGACY_THEME,
+  editorial: EDITORIAL_THEME,
 };
 
 export const DEFAULT_THEME_ID: TenantThemeId = "legacy";

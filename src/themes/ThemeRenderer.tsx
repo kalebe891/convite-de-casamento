@@ -1,9 +1,9 @@
 /**
- * ThemeRenderer — Etapa 20.1
+ * ThemeRenderer — Etapas 20.1 / 20.3
  *
  * Injeta `data-theme` no tenant público e delega a renderização ao componente
- * registrado no themeRegistry. Hoje só existe "legacy", então o output é
- * pixel-idêntico à implementação anterior.
+ * registrado no themeRegistry. Permite override temporário via querystring
+ * (`?theme=editorial`) para preview sem migração de banco.
  */
 
 import { useOptionalWedding } from "@/contexts/WeddingContext";
@@ -11,7 +11,12 @@ import { getThemeDefinition, resolveThemeId } from "./registry";
 
 const ThemeRenderer = () => {
   const wedding = useOptionalWedding();
-  const themeId = resolveThemeId(wedding?.themeId);
+  const queryOverride =
+    typeof window !== "undefined"
+      ? new URLSearchParams(window.location.search).get("theme")
+      : null;
+
+  const themeId = resolveThemeId(queryOverride ?? wedding?.themeId);
   const { Renderer } = getThemeDefinition(themeId);
 
   return (
