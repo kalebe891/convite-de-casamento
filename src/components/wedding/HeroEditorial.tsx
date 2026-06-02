@@ -39,35 +39,43 @@ const HeroEditorial = () => {
     { locale: ptBR }
   );
 
+  // Quando há foto, o conteúdo fica sobre overlay escuro → forçar texto claro
+  // independente do modo (light/dark). Sem foto, segue tokens do tema.
+  const hasPhoto = !!mainPhoto;
+  const textBase = hasPhoto ? "text-white" : "text-foreground";
+  const accent = hasPhoto ? "text-white/85" : "text-foreground/80";
+  const accentSoft = hasPhoto ? "text-white/70" : "text-foreground/65";
+  const divider = hasPhoto ? "bg-white/60" : "bg-primary/70";
+
   return (
     <section className="relative h-screen w-full flex items-center justify-center overflow-hidden bg-background">
-      {mainPhoto && (
+      {hasPhoto && (
         <div
           className="absolute inset-0 bg-cover bg-center animate-fade-in"
           style={{ backgroundImage: `url(${mainPhoto})` }}
           aria-hidden
         >
           <div className="absolute inset-0 bg-black/55" />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/70" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/80" />
         </div>
       )}
 
       <div className="relative z-10 w-full max-w-6xl px-6 text-center animate-fade-in-up">
-        <p className="font-sans text-xs sm:text-sm uppercase tracking-[0.45em] text-primary/90 mb-8">
+        <p className={`font-sans text-[10px] sm:text-sm uppercase tracking-[0.3em] sm:tracking-[0.45em] mb-6 sm:mb-8 ${accent}`}>
           Save the date
         </p>
 
         <h1
-          className="font-serif font-light tracking-tight text-foreground break-words leading-[0.95] text-[clamp(3.5rem,12vw,10rem)]"
+          className={`font-serif font-light tracking-tight break-words leading-[0.95] text-[clamp(2.75rem,11vw,10rem)] ${textBase}`}
           style={{ fontFamily: "'Cormorant Garamond', serif" }}
         >
           {title}
         </h1>
 
-        <div className="mx-auto my-8 h-px w-24 bg-primary/70" />
+        <div className={`mx-auto my-6 sm:my-8 h-px w-20 sm:w-24 ${divider}`} />
 
         <p
-          className="font-sans text-base sm:text-lg tracking-[0.3em] uppercase text-foreground/85"
+          className={`font-sans text-xs sm:text-base md:text-lg tracking-[0.18em] sm:tracking-[0.3em] uppercase ${accent}`}
           style={{ fontFamily: "'DM Sans', sans-serif" }}
         >
           {dateLabel}
@@ -75,14 +83,14 @@ const HeroEditorial = () => {
 
         {wedding.venue_name && (
           <p
-            className="mt-3 font-sans text-sm tracking-[0.25em] uppercase text-foreground/70"
+            className={`mt-3 font-sans text-[11px] sm:text-sm tracking-[0.15em] sm:tracking-[0.25em] uppercase ${accentSoft}`}
             style={{ fontFamily: "'DM Sans', sans-serif" }}
           >
             {wedding.venue_name}
           </p>
         )}
 
-        <div className="mt-12">
+        <div className="mt-10 sm:mt-12">
           <CountdownTimer
             targetDate={wedding.wedding_date}
             firstEventTime={firstEventTime}
@@ -90,8 +98,8 @@ const HeroEditorial = () => {
         </div>
       </div>
 
-      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-10">
-        <div className="w-px h-12 bg-primary/60 animate-pulse" />
+      <div className="absolute bottom-8 sm:bottom-10 left-1/2 -translate-x-1/2 z-10">
+        <div className={`w-px h-10 sm:h-12 animate-pulse ${divider}`} />
       </div>
     </section>
   );
