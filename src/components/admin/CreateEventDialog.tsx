@@ -23,6 +23,7 @@ import { toast } from "@/hooks/use-toast";
 import { buildTenantAdminUrl, isReservedSlug } from "@/lib/eventType";
 
 type EventType = "wedding" | "birthday";
+type ThemeId = "legacy" | "editorial";
 
 interface Props {
   open: boolean;
@@ -51,6 +52,7 @@ export default function CreateEventDialog({ open, onOpenChange, onCreated }: Pro
   const [slug, setSlug] = useState("");
   const [slugTouched, setSlugTouched] = useState(false);
   const [eventDate, setEventDate] = useState("");
+  const [themeId, setThemeId] = useState<ThemeId>("legacy");
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -64,6 +66,7 @@ export default function CreateEventDialog({ open, onOpenChange, onCreated }: Pro
       setSlug("");
       setSlugTouched(false);
       setEventDate("");
+      setThemeId("legacy");
       setSubmitting(false);
     }
   }, [open]);
@@ -103,6 +106,7 @@ export default function CreateEventDialog({ open, onOpenChange, onCreated }: Pro
         _primary_name: name.trim(),
         _secondary_name: "A definir",
         _event_date: eventDate,
+        _theme_id: themeId,
       });
 
       if (error) {
@@ -207,6 +211,19 @@ export default function CreateEventDialog({ open, onOpenChange, onCreated }: Pro
               value={eventDate}
               onChange={(e) => setEventDate(e.target.value)}
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Tema do convite</Label>
+            <Select value={themeId} onValueChange={(v) => setThemeId(v as ThemeId)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="z-50 bg-popover">
+                <SelectItem value="legacy">Legacy (Romântico clássico)</SelectItem>
+                <SelectItem value="editorial">Editorial</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
