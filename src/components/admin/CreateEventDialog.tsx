@@ -212,6 +212,19 @@ export default function CreateEventDialog({ open, onOpenChange, onCreated }: Pro
               onChange={(e) => setEventDate(e.target.value)}
             />
           </div>
+
+          <div className="space-y-2">
+            <Label>Tema do convite</Label>
+            <Select value={themeId} onValueChange={(v) => setThemeId(v as ThemeId)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="z-50 bg-popover">
+                <SelectItem value="legacy">Legacy (Romântico clássico)</SelectItem>
+                <SelectItem value="editorial">Editorial</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         <DialogFooter>
