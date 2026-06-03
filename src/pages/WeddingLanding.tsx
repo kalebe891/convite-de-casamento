@@ -300,6 +300,12 @@ const WeddingLanding = () => {
         </div>
       </section>
 
+      <ShowcaseSection
+        eventType="wedding"
+        title="Casamentos em destaque"
+        subtitle="Convites de casamento publicados pelos próprios noivos."
+      />
+
       <MarketingFooter />
     </div>
   );
