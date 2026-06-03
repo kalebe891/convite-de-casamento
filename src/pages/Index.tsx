@@ -84,6 +84,16 @@ const Index = () => {
             <Button
               variant="ghost"
               size="sm"
+              onClick={() => navigate(`/${dbToUrl(wedding?.event_type) ?? "casamento"}`)}
+              className="gap-2"
+              aria-label="Página inicial"
+            >
+              <Home className="w-4 h-4" />
+              <span className="hidden sm:inline">Home</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => {
                 if (session) {
                   navigate(tenantAdminUrl ?? "/admin");
