@@ -25,6 +25,7 @@ const Detalhes = () => {
       </div>
       <WeddingDetailsForm permissions={permissions} />
       <WeddingThemeForm permissions={permissions} />
+      <WeddingVisibilityForm permissions={permissions} />
       <WeddingSettingsForm permissions={permissions} />
     </div>
   );
