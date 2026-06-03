@@ -1,7 +1,8 @@
-import { Link, useParams, Navigate } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Heart, Cake } from "lucide-react";
-import { isValidRouteEventType } from "@/lib/eventType";
+import { isValidRouteEventType, urlToDb } from "@/lib/eventType";
+import ShowcaseSection from "@/components/marketing/ShowcaseSection";
 import NotFound from "./NotFound";
 
 const CONTENT = {
