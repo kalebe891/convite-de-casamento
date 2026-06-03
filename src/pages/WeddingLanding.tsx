@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import MarketingHeader from "@/components/marketing/MarketingHeader";
 import MarketingFooter from "@/components/marketing/MarketingFooter";
+import ShowcaseSection from "@/components/marketing/ShowcaseSection";
 
 const features = [
   {
