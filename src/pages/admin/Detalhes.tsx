@@ -1,6 +1,7 @@
 import WeddingDetailsForm from "@/components/admin/WeddingDetailsForm";
 import WeddingSettingsForm from "@/components/admin/WeddingSettingsForm";
 import WeddingThemeForm from "@/components/admin/WeddingThemeForm";
+import WeddingVisibilityForm from "@/components/admin/WeddingVisibilityForm";
 import { usePagePermissions } from "@/hooks/usePagePermissions";
 
 const Detalhes = () => {
@@ -24,6 +25,7 @@ const Detalhes = () => {
       </div>
       <WeddingDetailsForm permissions={permissions} />
       <WeddingThemeForm permissions={permissions} />
+      <WeddingVisibilityForm permissions={permissions} />
       <WeddingSettingsForm permissions={permissions} />
     </div>
   );

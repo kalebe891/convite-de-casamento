@@ -11,10 +11,10 @@ import PlaylistSection from "@/components/wedding/PlaylistSection";
 import GiftsSection from "@/components/wedding/GiftsSection";
 import ConfirmedGuestsSection from "@/components/wedding/ConfirmedGuestsSection";
 import { Button } from "@/components/ui/button";
-import { LogIn } from "lucide-react";
+import { Home, LogIn } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 import { useWedding } from "@/contexts/WeddingContext";
-import { buildTenantAdminUrl, formatEventTitle } from "@/lib/eventType";
+import { buildTenantAdminUrl, dbToUrl, formatEventTitle } from "@/lib/eventType";
 
 /**
  * IndexEditorial — Renderer raiz da variante "editorial".
@@ -82,6 +82,16 @@ const IndexEditorial = () => {
           </h1>
           <div className="flex shrink-0 items-center gap-2">
             <ThemeToggle />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate(`/${dbToUrl(wedding?.event_type) ?? "casamento"}`)}
+              className="gap-2"
+              aria-label="Página inicial"
+            >
+              <Home className="w-4 h-4" />
+              <span className="hidden sm:inline">Home</span>
+            </Button>
             <Button
               variant="ghost"
               size="sm"

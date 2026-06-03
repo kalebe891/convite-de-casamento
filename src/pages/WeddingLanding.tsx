@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import MarketingHeader from "@/components/marketing/MarketingHeader";
 import MarketingFooter from "@/components/marketing/MarketingFooter";
+import ShowcaseSection from "@/components/marketing/ShowcaseSection";
 
 const features = [
   {
@@ -298,6 +299,12 @@ const WeddingLanding = () => {
           </div>
         </div>
       </section>
+
+      <ShowcaseSection
+        eventType="wedding"
+        title="Casamentos em destaque"
+        subtitle="Convites de casamento publicados pelos próprios noivos."
+      />
 
       <MarketingFooter />
     </div>

@@ -810,6 +810,7 @@ export type Database = {
           hide_reserved_gifts: boolean
           id: string
           invitation_message: string | null
+          is_public_showcase: boolean
           show_buffet_section: boolean | null
           show_gifts_section: boolean | null
           show_guest_list_public: boolean | null
@@ -835,6 +836,7 @@ export type Database = {
           hide_reserved_gifts?: boolean
           id?: string
           invitation_message?: string | null
+          is_public_showcase?: boolean
           show_buffet_section?: boolean | null
           show_gifts_section?: boolean | null
           show_guest_list_public?: boolean | null
@@ -860,6 +862,7 @@ export type Database = {
           hide_reserved_gifts?: boolean
           id?: string
           invitation_message?: string | null
+          is_public_showcase?: boolean
           show_buffet_section?: boolean | null
           show_gifts_section?: boolean | null
           show_guest_list_public?: boolean | null

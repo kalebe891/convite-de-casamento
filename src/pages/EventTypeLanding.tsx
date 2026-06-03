@@ -1,7 +1,8 @@
-import { Link, useParams, Navigate } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Heart, Cake } from "lucide-react";
-import { isValidRouteEventType } from "@/lib/eventType";
+import { isValidRouteEventType, urlToDb } from "@/lib/eventType";
+import ShowcaseSection from "@/components/marketing/ShowcaseSection";
 import NotFound from "./NotFound";
 
 const CONTENT = {
@@ -37,12 +38,20 @@ const EventTypeLanding = () => {
         </Link>
       </header>
 
-      <main className="flex-1 container mx-auto px-4 py-16 flex flex-col items-center justify-center text-center">
-        <Icon className="w-16 h-16 text-primary mb-6" />
-        <h1 className="text-4xl md:text-5xl font-serif font-bold text-foreground mb-4">
-          {title}
-        </h1>
-        <p className="text-lg text-muted-foreground max-w-2xl">{subtitle}</p>
+      <main className="flex-1">
+        <div className="container mx-auto px-4 py-16 flex flex-col items-center justify-center text-center">
+          <Icon className="w-16 h-16 text-primary mb-6" />
+          <h1 className="text-4xl md:text-5xl font-serif font-bold text-foreground mb-4">
+            {title}
+          </h1>
+          <p className="text-lg text-muted-foreground max-w-2xl">{subtitle}</p>
+        </div>
+
+        <ShowcaseSection
+          eventType={urlToDb(eventType)!}
+          title={`${title} em destaque`}
+          subtitle="Convites publicados pelos próprios anfitriões."
+        />
       </main>
 
       <footer className="container mx-auto px-4 py-6 text-center text-sm text-muted-foreground">
