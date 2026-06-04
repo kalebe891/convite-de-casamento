@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Heart, Cake } from "lucide-react";
 import { isValidRouteEventType, urlToDb } from "@/lib/eventType";
 import ShowcaseSection from "@/components/marketing/ShowcaseSection";
+import SEO from "@/components/seo/SEO";
 import NotFound from "./NotFound";
 
 const CONTENT = {
@@ -29,6 +30,11 @@ const EventTypeLanding = () => {
 
   return (
     <div className="marketing-theme min-h-screen bg-gradient-elegant flex flex-col">
+      <SEO
+        title={`${title} | Convites Digitais`}
+        description={subtitle}
+        path={`/${eventType}`}
+      />
       <header className="container mx-auto px-4 py-6 flex justify-between items-center">
         <Link to="/" className="text-2xl font-serif font-bold text-primary">
           Convites

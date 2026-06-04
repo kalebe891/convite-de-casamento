@@ -1,4 +1,5 @@
 import { createRoot } from "react-dom/client";
+import { HelmetProvider } from "react-helmet-async";
 import App from "./App.tsx";
 import "./index.css";
 import { ThemeProvider } from "./components/ThemeProvider";
@@ -13,12 +14,14 @@ if ('serviceWorker' in navigator && window.location.pathname.startsWith('/admin'
 }
 
 createRoot(document.getElementById("root")!).render(
-  <ThemeProvider
-    attribute="class"
-    defaultTheme="light"
-    enableSystem
-    themes={["light", "brown", "dark"]}
-  >
-    <App />
-  </ThemeProvider>
+  <HelmetProvider>
+    <ThemeProvider
+      attribute="class"
+      defaultTheme="light"
+      enableSystem
+      themes={["light", "brown", "dark"]}
+    >
+      <App />
+    </ThemeProvider>
+  </HelmetProvider>
 );

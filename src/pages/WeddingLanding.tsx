@@ -15,6 +15,7 @@ import {
 import MarketingHeader from "@/components/marketing/MarketingHeader";
 import MarketingFooter from "@/components/marketing/MarketingFooter";
 import ShowcaseSection from "@/components/marketing/ShowcaseSection";
+import SEO from "@/components/seo/SEO";
 
 const features = [
   {
@@ -71,6 +72,11 @@ const steps = [
 const WeddingLanding = () => {
   return (
     <div className="marketing-theme min-h-screen bg-background text-foreground">
+      <SEO
+        title="Convites de Casamento Digitais | RSVP, Presentes e Cronograma"
+        description="Convite de casamento editorial com RSVP digital, lista de presentes, cronograma e check-in. Crie um convite memorável em minutos."
+        path="/casamento"
+      />
       <MarketingHeader />
 
       {/* HERO EDITORIAL */}

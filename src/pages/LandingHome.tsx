@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import MarketingHeader from "@/components/marketing/MarketingHeader";
 import MarketingFooter from "@/components/marketing/MarketingFooter";
+import SEO from "@/components/seo/SEO";
 
 const products = [
   {
@@ -64,6 +65,11 @@ const steps = [
 const LandingHome = () => {
   return (
     <div className="marketing-theme min-h-screen bg-background text-foreground">
+      <SEO
+        title="Convites Digitais para Casamento e Aniversário"
+        description="Plataforma premium para criar convites digitais com RSVP, lista de presentes, cronograma e painel administrativo. Para casamentos e aniversários."
+        path="/"
+      />
       <MarketingHeader />
 
       {/* HERO */}
