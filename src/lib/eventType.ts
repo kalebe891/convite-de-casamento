@@ -51,7 +51,7 @@ export function isReservedSlug(slug: string | null | undefined): boolean {
   return RESERVED_SLUGS.has(slug.toLowerCase());
 }
 
-interface WeddingLike {
+export interface WeddingLike {
   slug?: string | null;
   event_type?: string | null;
   bride_name?: string | null;
