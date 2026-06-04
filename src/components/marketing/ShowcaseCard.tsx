@@ -41,7 +41,7 @@ const ShowcaseCard = ({ event }: Props) => {
   return (
     <Link
       to={url}
-      className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-[hsl(var(--border)/0.25)] bg-card shadow-[0_1px_2px_hsl(0_0%_0%/0.04),0_12px_28px_-10px_hsl(var(--foreground)/0.14)] transition-[transform,box-shadow,border-color] duration-300 ease-out will-change-transform hover:-translate-y-0.5 hover:border-[hsl(var(--primary)/0.5)] hover:shadow-[0_2px_4px_hsl(0_0%_0%/0.05),0_18px_40px_-18px_hsl(var(--primary)/0.28)]"
+      className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-[hsl(var(--border)/0.25)] bg-[hsl(var(--card)/0.96)] shadow-[0_1px_2px_hsl(0_0%_0%/0.06)] transition-[transform,box-shadow,border-color,background-color] duration-300 ease-out will-change-transform hover:-translate-y-0.5 hover:bg-card hover:border-[hsl(var(--primary)/0.45)] hover:shadow-[0_2px_6px_hsl(0_0%_0%/0.08)]"
     >
       <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted">
         {event.main_photo_url ? (
