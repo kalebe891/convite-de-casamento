@@ -13,8 +13,10 @@ import ConfirmedGuestsSection from "@/components/wedding/ConfirmedGuestsSection"
 import { Button } from "@/components/ui/button";
 import { Home, LogIn } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
+import SEO from "@/components/seo/SEO";
 import { useWedding } from "@/contexts/WeddingContext";
 import { buildTenantAdminUrl, dbToUrl, formatEventTitle } from "@/lib/eventType";
+import { buildTenantSeo } from "@/lib/tenantSeo";
 
 /**
  * IndexEditorial — Renderer raiz da variante "editorial".
@@ -70,8 +72,12 @@ const IndexEditorial = () => {
     );
   }
 
+  const mainPhoto = photos?.find((p: { is_main?: boolean }) => p.is_main)?.photo_url ?? null;
+  const seo = buildTenantSeo(wedding, mainPhoto);
+
   return (
     <div className="tenant-public min-h-screen overflow-x-hidden bg-background font-editorial-body">
+      {wedding && <SEO {...seo} />}
       <header className="fixed top-0 left-0 right-0 z-50 bg-background/70 backdrop-blur-md border-b border-border/40">
         <div className="container mx-auto flex min-w-0 items-center justify-between gap-3 px-4 py-4">
           <h1
