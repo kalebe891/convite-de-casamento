@@ -9,8 +9,9 @@
 import type { ComponentType } from "react";
 import Index from "@/pages/Index";
 import IndexEditorial from "./editorial/IndexEditorial";
+import IndexMinimal from "./minimal/IndexMinimal";
 
-export type TenantThemeId = "legacy" | "editorial";
+export type TenantThemeId = "legacy" | "editorial" | "minimal";
 
 export interface TenantThemeDefinition {
   id: TenantThemeId;
@@ -31,9 +32,16 @@ const EDITORIAL_THEME: TenantThemeDefinition = {
   Renderer: IndexEditorial,
 };
 
+const MINIMAL_THEME: TenantThemeDefinition = {
+  id: "minimal",
+  label: "Minimal",
+  Renderer: IndexMinimal,
+};
+
 export const themeRegistry: Record<TenantThemeId, TenantThemeDefinition> = {
   legacy: LEGACY_THEME,
   editorial: EDITORIAL_THEME,
+  minimal: MINIMAL_THEME,
 };
 
 export const DEFAULT_THEME_ID: TenantThemeId = "legacy";
