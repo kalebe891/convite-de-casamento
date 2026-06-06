@@ -23,7 +23,7 @@ import { toast } from "@/hooks/use-toast";
 import { buildTenantAdminUrl, isReservedSlug } from "@/lib/eventType";
 
 type EventType = "wedding" | "birthday";
-type ThemeId = "legacy" | "editorial" | "minimal" | "modern-noir";
+type ThemeId = "legacy" | "editorial" | "minimal" | "modern-noir" | "art-deco";
 
 interface Props {
   open: boolean;
@@ -224,6 +224,7 @@ export default function CreateEventDialog({ open, onOpenChange, onCreated }: Pro
                 <SelectItem value="editorial">Editorial</SelectItem>
                 <SelectItem value="minimal">Minimal</SelectItem>
                 <SelectItem value="modern-noir">Modern Noir</SelectItem>
+                <SelectItem value="art-deco">Art Deco</SelectItem>
               </SelectContent>
             </Select>
           </div>
