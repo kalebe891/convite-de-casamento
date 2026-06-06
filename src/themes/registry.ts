@@ -10,8 +10,9 @@ import type { ComponentType } from "react";
 import Index from "@/pages/Index";
 import IndexEditorial from "./editorial/IndexEditorial";
 import IndexMinimal from "./minimal/IndexMinimal";
+import IndexModernNoir from "./modern-noir/IndexModernNoir";
 
-export type TenantThemeId = "legacy" | "editorial" | "minimal";
+export type TenantThemeId = "legacy" | "editorial" | "minimal" | "modern-noir";
 
 export interface TenantThemeDefinition {
   id: TenantThemeId;
@@ -38,10 +39,17 @@ const MINIMAL_THEME: TenantThemeDefinition = {
   Renderer: IndexMinimal,
 };
 
+const MODERN_NOIR_THEME: TenantThemeDefinition = {
+  id: "modern-noir",
+  label: "Modern Noir",
+  Renderer: IndexModernNoir,
+};
+
 export const themeRegistry: Record<TenantThemeId, TenantThemeDefinition> = {
   legacy: LEGACY_THEME,
   editorial: EDITORIAL_THEME,
   minimal: MINIMAL_THEME,
+  "modern-noir": MODERN_NOIR_THEME,
 };
 
 export const DEFAULT_THEME_ID: TenantThemeId = "legacy";
