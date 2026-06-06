@@ -110,6 +110,7 @@ const WeddingThemeForm = ({ permissions }: Props) => {
                 <SelectItem value="legacy">Legacy (Romântico clássico)</SelectItem>
                 <SelectItem value="editorial">Editorial</SelectItem>
                 <SelectItem value="minimal">Minimal</SelectItem>
+                <SelectItem value="modern-noir">Modern Noir</SelectItem>
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground">
