@@ -11,8 +11,9 @@ import Index from "@/pages/Index";
 import IndexEditorial from "./editorial/IndexEditorial";
 import IndexMinimal from "./minimal/IndexMinimal";
 import IndexModernNoir from "./modern-noir/IndexModernNoir";
+import IndexArtDeco from "./art-deco/IndexArtDeco";
 
-export type TenantThemeId = "legacy" | "editorial" | "minimal" | "modern-noir";
+export type TenantThemeId = "legacy" | "editorial" | "minimal" | "modern-noir" | "art-deco";
 
 export interface TenantThemeDefinition {
   id: TenantThemeId;
@@ -45,11 +46,18 @@ const MODERN_NOIR_THEME: TenantThemeDefinition = {
   Renderer: IndexModernNoir,
 };
 
+const ART_DECO_THEME: TenantThemeDefinition = {
+  id: "art-deco",
+  label: "Art Deco",
+  Renderer: IndexArtDeco,
+};
+
 export const themeRegistry: Record<TenantThemeId, TenantThemeDefinition> = {
   legacy: LEGACY_THEME,
   editorial: EDITORIAL_THEME,
   minimal: MINIMAL_THEME,
   "modern-noir": MODERN_NOIR_THEME,
+  "art-deco": ART_DECO_THEME,
 };
 
 export const DEFAULT_THEME_ID: TenantThemeId = "legacy";
