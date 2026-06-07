@@ -8,17 +8,27 @@
  */
 
 import { useOptionalWedding } from "@/contexts/WeddingContext";
+import { isDemoThemeSlug } from "@/lib/themePreviewWhitelist";
 import { getThemeDefinition, resolveThemeId } from "./registry";
 
 const ThemeRenderer = () => {
   const wedding = useOptionalWedding();
 
-  const devOverride =
-    import.meta.env.DEV && typeof window !== "undefined"
+  // Override por querystring: permitido em dev sempre, e em produção
+  // apenas para slugs explicitamente autorizados na whitelist
+  // (Etapa 1.20.13 — Showcase Comercial dos Temas).
+  const queryOverride =
+    typeof window !== "undefined"
       ? new URLSearchParams(window.location.search).get("theme")
       : null;
 
-  const themeId = resolveThemeId(devOverride ?? wedding?.themeId);
+  const allowOverride =
+    !!queryOverride &&
+    (import.meta.env.DEV || isDemoThemeSlug(wedding?.slug));
+
+  const themeId = resolveThemeId(
+    allowOverride ? queryOverride : wedding?.themeId
+  );
   const { Renderer } = getThemeDefinition(themeId);
 
   return (

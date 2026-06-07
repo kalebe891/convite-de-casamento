@@ -15,6 +15,7 @@ import {
 import MarketingHeader from "@/components/marketing/MarketingHeader";
 import MarketingFooter from "@/components/marketing/MarketingFooter";
 import ShowcaseSection from "@/components/marketing/ShowcaseSection";
+import ThemesShowcaseSection from "@/components/marketing/ThemesShowcaseSection";
 import SEO from "@/components/seo/SEO";
 
 const features = [
@@ -305,6 +306,8 @@ const WeddingLanding = () => {
           </div>
         </div>
       </section>
+
+      <ThemesShowcaseSection />
 
       <ShowcaseSection
         eventType="wedding"
