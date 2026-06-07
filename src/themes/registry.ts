@@ -53,12 +53,19 @@ const ART_DECO_THEME: TenantThemeDefinition = {
   Renderer: IndexArtDeco,
 };
 
+const BOHO_THEME: TenantThemeDefinition = {
+  id: "boho",
+  label: "Boho",
+  Renderer: IndexBoho,
+};
+
 export const themeRegistry: Record<TenantThemeId, TenantThemeDefinition> = {
   legacy: LEGACY_THEME,
   editorial: EDITORIAL_THEME,
   minimal: MINIMAL_THEME,
   "modern-noir": MODERN_NOIR_THEME,
   "art-deco": ART_DECO_THEME,
+  boho: BOHO_THEME,
 };
 
 export const DEFAULT_THEME_ID: TenantThemeId = "legacy";

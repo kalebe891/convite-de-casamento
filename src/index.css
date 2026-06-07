@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -469,6 +471,90 @@ All colors MUST be HSL.
   [data-theme="art-deco"] body,
   [data-theme="art-deco"] p {
     font-family: 'DM Sans', sans-serif;
+  }
+
+  /* ============================================================
+     Tenant theme — BOHO (Etapa 1.20.14)
+     Boêmio, natural, orgânico, acolhedor e rústico sofisticado.
+     Escopo: somente onde [data-theme="boho"] estiver presente.
+     ============================================================ */
+  [data-theme="boho"] {
+    --background: 36 33% 93%;          /* #F5F0E8 */
+    --foreground: 27 16% 25%;          /* #4A4036 */
+
+    --card: 36 43% 96%;                /* #FAF6F0 */
+    --card-foreground: 27 16% 25%;
+
+    --popover: 36 43% 96%;
+    --popover-foreground: 27 16% 25%;
+
+    --primary: 28 24% 44%;             /* #8B7355 */
+    --primary-foreground: 36 43% 96%;
+
+    --secondary: 36 30% 90%;
+    --secondary-foreground: 27 16% 25%;
+
+    --muted: 36 30% 90%;
+    --muted-foreground: 27 12% 42%;
+
+    --accent: 32 50% 65%;              /* #D4A574 */
+    --accent-foreground: 27 16% 25%;
+
+    --border: 32 30% 75%;
+    --input: 32 30% 75%;
+    --ring: 28 24% 44%;
+
+    --gradient-hero: linear-gradient(180deg, hsl(36 33% 93% / 0), hsl(28 24% 44% / 0.08));
+    --gradient-elegant: linear-gradient(180deg, hsl(36 43% 96%), hsl(36 33% 93%));
+    --shadow-elegant: 0 12px 36px -14px hsl(27 16% 25% / 0.18);
+    --shadow-soft: 0 4px 16px -6px hsl(27 16% 25% / 0.12);
+  }
+
+  .dark [data-theme="boho"],
+  [data-theme="boho"].dark {
+    --background: 30 14% 14%;          /* #2A2520 */
+    --foreground: 36 33% 93%;          /* #F5F0E8 */
+
+    --card: 28 13% 18%;                /* #332D27 */
+    --card-foreground: 36 33% 93%;
+
+    --popover: 28 13% 18%;
+    --popover-foreground: 36 33% 93%;
+
+    --primary: 32 50% 65%;             /* #D4A574 */
+    --primary-foreground: 30 14% 14%;
+
+    --secondary: 28 12% 22%;
+    --secondary-foreground: 36 33% 93%;
+
+    --muted: 28 12% 22%;
+    --muted-foreground: 36 18% 72%;
+
+    --accent: 34 56% 75%;              /* #E6C49A */
+    --accent-foreground: 30 14% 14%;
+
+    --border: 28 12% 28%;
+    --input: 28 12% 28%;
+    --ring: 32 50% 65%;
+
+    --gradient-hero: linear-gradient(180deg, hsl(30 14% 14% / 0), hsl(30 14% 14% / 0.85));
+    --gradient-elegant: linear-gradient(180deg, hsl(30 14% 14%), hsl(28 13% 18%));
+    --shadow-elegant: 0 14px 40px -14px hsl(0 0% 0% / 0.5);
+    --shadow-soft: 0 6px 20px -8px hsl(0 0% 0% / 0.35);
+  }
+
+  [data-theme="boho"] h1,
+  [data-theme="boho"] h2,
+  [data-theme="boho"] h3 {
+    font-family: 'Playfair Display', serif;
+    font-weight: 400;
+    letter-spacing: -0.005em;
+  }
+
+  [data-theme="boho"] body,
+  [data-theme="boho"] p,
+  [data-theme="boho"] {
+    font-family: 'Lora', serif;
   }
 
 
