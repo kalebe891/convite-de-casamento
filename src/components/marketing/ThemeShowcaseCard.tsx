@@ -193,4 +193,31 @@ export const ArtDecoPreview = () => (
   </Frame>
 );
 
+export const BohoPreview = () => (
+  <Frame className="bg-[#F5F0E8] p-0">
+    <div className="absolute inset-0 bg-gradient-to-br from-[#F5F0E8] via-[#FAF6F0] to-[#D4A574]/35" />
+    {/* Arco orgânico inferior */}
+    <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 h-12 w-[140%] rounded-[50%] bg-[#F5F0E8]" />
+    <div className="relative z-10 flex flex-col items-center gap-2 text-center">
+      {/* Ramo decorativo SVG inline */}
+      <svg viewBox="0 0 100 24" className="w-20 text-[#8B7355]" aria-hidden>
+        <path d="M5 12 Q30 10 50 12 T95 12" fill="none" stroke="currentColor" strokeWidth="0.7" opacity="0.8" />
+        <ellipse cx="22" cy="8" rx="4" ry="1.6" fill="currentColor" opacity="0.6" transform="rotate(-25 22 8)" />
+        <ellipse cx="32" cy="16" rx="4" ry="1.6" fill="currentColor" opacity="0.6" transform="rotate(25 32 16)" />
+        <ellipse cx="50" cy="8" rx="4" ry="1.6" fill="currentColor" opacity="0.6" transform="rotate(-25 50 8)" />
+        <ellipse cx="68" cy="16" rx="4" ry="1.6" fill="currentColor" opacity="0.6" transform="rotate(25 68 16)" />
+        <ellipse cx="80" cy="8" rx="4" ry="1.6" fill="currentColor" opacity="0.6" transform="rotate(-25 80 8)" />
+      </svg>
+      <p className="text-[7px] uppercase tracking-[0.4em] text-[#8B7355]">14 · 09 · 2026</p>
+      <p className="font-serif text-base text-[#4A4036]">Maria &amp; João</p>
+      <div className="flex items-center gap-1.5 text-[#8B7355]">
+        <span className="h-px w-5 bg-current opacity-60" />
+        <span className="h-1 w-1 rounded-full bg-current" />
+        <span className="h-px w-5 bg-current opacity-60" />
+      </div>
+      <div className="mt-1 h-3.5 w-14 rounded-full bg-[#8B7355]" />
+    </div>
+  </Frame>
+);
+
 export default ThemeShowcaseCard;

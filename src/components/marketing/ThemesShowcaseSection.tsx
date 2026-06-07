@@ -6,6 +6,7 @@ import {
 } from "@/lib/themePreviewWhitelist";
 import ThemeShowcaseCard, {
   ArtDecoPreview,
+  BohoPreview,
   EditorialPreview,
   LegacyPreview,
   MinimalPreview,
@@ -74,6 +75,18 @@ const THEMES: ThemeShowcaseItem[] = [
     ],
     Preview: ArtDecoPreview,
   },
+  {
+    id: "boho",
+    name: "Boho",
+    description:
+      "Orgânico, acolhedor e artesanal. Tons terrosos, ramos delicados e composição natural.",
+    features: [
+      "Hero centralizado com foto em background",
+      "Paleta terrosa e tipografia Lora",
+      "Ramos e separadores naturais em SVG inline",
+    ],
+    Preview: BohoPreview,
+  },
 ];
 
 const buildPreviewUrl = (themeId: string) =>
@@ -114,7 +127,7 @@ const ThemesShowcaseSection = () => {
             Escolha o estilo do seu convite
           </h2>
           <p className="mt-4 text-muted-foreground">
-            Cinco temas exclusivos, cada um com personalidade própria.
+            Seis temas exclusivos, cada um com personalidade própria.
             Visualize ao vivo antes de decidir.
           </p>
         </div>
