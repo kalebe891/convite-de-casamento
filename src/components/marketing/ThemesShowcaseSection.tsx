@@ -6,6 +6,7 @@ import {
 } from "@/lib/themePreviewWhitelist";
 import ThemeShowcaseCard, {
   ArtDecoPreview,
+  BohoPreview,
   EditorialPreview,
   LegacyPreview,
   MinimalPreview,
@@ -73,6 +74,18 @@ const THEMES: ThemeShowcaseItem[] = [
       "Tipografia serifada e ornamentos inline",
     ],
     Preview: ArtDecoPreview,
+  },
+  {
+    id: "boho",
+    name: "Boho",
+    description:
+      "Orgânico, acolhedor e artesanal. Tons terrosos, ramos delicados e composição natural.",
+    features: [
+      "Hero centralizado com foto em background",
+      "Paleta terrosa e tipografia Lora",
+      "Ramos e separadores naturais em SVG inline",
+    ],
+    Preview: BohoPreview,
   },
 ];
 
