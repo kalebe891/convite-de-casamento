@@ -12,8 +12,9 @@ import IndexEditorial from "./editorial/IndexEditorial";
 import IndexMinimal from "./minimal/IndexMinimal";
 import IndexModernNoir from "./modern-noir/IndexModernNoir";
 import IndexArtDeco from "./art-deco/IndexArtDeco";
+import IndexBoho from "./boho/IndexBoho";
 
-export type TenantThemeId = "legacy" | "editorial" | "minimal" | "modern-noir" | "art-deco";
+export type TenantThemeId = "legacy" | "editorial" | "minimal" | "modern-noir" | "art-deco" | "boho";
 
 export interface TenantThemeDefinition {
   id: TenantThemeId;
