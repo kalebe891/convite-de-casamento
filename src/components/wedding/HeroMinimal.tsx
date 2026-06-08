@@ -108,7 +108,7 @@ const HeroMinimal = () => {
                 className="rounded-none border-foreground/80 text-foreground hover:bg-foreground hover:text-background h-12 px-8 text-xs uppercase tracking-[0.3em] font-normal"
                 style={{ fontFamily: "Inter, sans-serif" }}
               >
-                Confirmar Presença
+                Ver detalhes do evento
               </Button>
             </div>
           </div>

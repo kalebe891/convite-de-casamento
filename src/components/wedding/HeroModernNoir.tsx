@@ -129,7 +129,7 @@ const HeroModernNoir = () => {
                 className="rounded-none h-12 px-10 text-xs uppercase tracking-[0.3em] font-medium bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))] hover:opacity-90"
                 style={{ fontFamily: "'DM Sans', sans-serif" }}
               >
-                Confirmar Presença
+                Ver detalhes do evento
               </Button>
             </div>
           </div>

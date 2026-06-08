@@ -173,7 +173,7 @@ const HeroSkyPeach = () => {
                 className="rounded-full h-12 px-10 text-xs uppercase tracking-[0.28em] font-medium bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] hover:opacity-90 shadow-soft"
                 style={{ fontFamily: "'Figtree', sans-serif" }}
               >
-                Confirmar Presença
+                Ver detalhes do evento
               </Button>
             </div>
           </div>

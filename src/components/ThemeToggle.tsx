@@ -11,7 +11,11 @@ const isInstitutionalPath = (pathname: string) => {
   return INSTITUTIONAL_ROUTES.has(normalized);
 };
 
-const ThemeToggle = () => {
+interface ThemeToggleProps {
+  label?: string;
+}
+
+const ThemeToggle = ({ label: textLabel }: ThemeToggleProps = {}) => {
   const { theme, setTheme } = useTheme();
   const { pathname } = useLocation();
   const institutional = isInstitutionalPath(pathname);
@@ -28,26 +32,31 @@ const ThemeToggle = () => {
     }
   };
 
-  const label = institutional
+  const a11yLabel = institutional
     ? `Alternar tema (atual: ${theme ?? "light"})`
     : "Alternar tema";
 
   return (
     <Button
       variant="ghost"
-      size="icon"
+      size={textLabel ? "sm" : "icon"}
       onClick={handleClick}
-      className="rounded-full relative"
+      className={textLabel ? "gap-2" : "rounded-full relative"}
     >
-      {institutional && theme === "brown" ? (
-        <Sparkles className="h-5 w-5 text-primary" />
-      ) : (
-        <>
-          <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-          <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-        </>
-      )}
-      <span className="sr-only">{label}</span>
+      <span className={textLabel ? "relative inline-flex h-5 w-5 items-center justify-center" : "contents"}>
+        {institutional && theme === "brown" ? (
+          <Sparkles className="h-5 w-5 text-primary" />
+        ) : (
+          <>
+            <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+            <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+          </>
+        )}
+      </span>
+      {textLabel ? (
+        <span className="hidden sm:inline">{textLabel}</span>
+      ) : null}
+      <span className="sr-only">{a11yLabel}</span>
     </Button>
   );
 };
