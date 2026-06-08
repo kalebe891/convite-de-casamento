@@ -62,7 +62,7 @@ const ThemeShowcaseCard = ({ theme, previewUrl }: Props) => {
           ) : (
             <a href={previewUrl} target="_blank" rel="noopener noreferrer">
               <Button variant="outline" size="sm" className="group/btn w-full">
-                Visualizar
+                Visualizar demonstração
                 <ArrowUpRight className="ml-1.5 h-3.5 w-3.5 transition-transform group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5" />
               </Button>
             </a>
