@@ -34,7 +34,7 @@ const features = [
   {
     n: "03",
     Icon: Gift,
-    title: "Presentes e cotas",
+    title: "Presentes",
     text: "Lista de presentes única, cotas personalizadas e PIX integrado — sem complicação.",
   },
   {
