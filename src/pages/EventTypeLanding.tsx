@@ -4,6 +4,7 @@ import { Heart, Cake } from "lucide-react";
 import { isValidRouteEventType, urlToDb } from "@/lib/eventType";
 import ShowcaseSection from "@/components/marketing/ShowcaseSection";
 import SEO from "@/components/seo/SEO";
+import ThemeToggle from "@/components/ThemeToggle";
 import NotFound from "./NotFound";
 
 const CONTENT = {
