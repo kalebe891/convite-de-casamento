@@ -136,8 +136,14 @@ export default function DeleteTenantDialog({ tenant, open, onOpenChange, onDelet
     setValidating(true);
     setImpact(null);
     try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+
       const { data, error } = await supabase.functions.invoke("delete-tenant", {
         body: { wedding_id: tenant.id, password_confirm: pin, dry_run: true },
+        headers: {
+          Authorization: token ? `Bearer ${token}` : undefined,
+        },
       });
       const { msg, code } = await extractError(error, data);
       if (msg) {
@@ -161,8 +167,14 @@ export default function DeleteTenantDialog({ tenant, open, onOpenChange, onDelet
     }
     setDeleting(true);
     try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+
       const { data, error } = await supabase.functions.invoke("delete-tenant", {
         body: { wedding_id: tenant.id, password_confirm: pin, dry_run: false },
+        headers: {
+          Authorization: token ? `Bearer ${token}` : undefined,
+        },
       });
       const { msg, code } = await extractError(error, data);
       if (msg) {
