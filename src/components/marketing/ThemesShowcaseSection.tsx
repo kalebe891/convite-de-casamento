@@ -11,6 +11,7 @@ import ThemeShowcaseCard, {
   LegacyPreview,
   MinimalPreview,
   ModernNoirPreview,
+  SkyPeachPreview,
   type ThemeShowcaseItem,
 } from "./ThemeShowcaseCard";
 
@@ -86,6 +87,18 @@ const THEMES: ThemeShowcaseItem[] = [
       "Ramos e separadores naturais em SVG inline",
     ],
     Preview: BohoPreview,
+  },
+  {
+    id: "sky-peach",
+    name: "Sky & Peach",
+    description:
+      "Sonhador e contemporâneo. Azul celeste com toques pêssego, composição leve e arejada.",
+    features: [
+      "Hero split 50/50 (foto + conteúdo)",
+      "Blobs orgânicos e arcos suaves em CSS",
+      "Tipografia Outfit + Figtree",
+    ],
+    Preview: SkyPeachPreview,
   },
 ];
 

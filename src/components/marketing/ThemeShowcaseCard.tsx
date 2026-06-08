@@ -220,4 +220,61 @@ export const BohoPreview = () => (
   </Frame>
 );
 
+export const SkyPeachPreview = () => (
+  <Frame className="bg-[#E0F2FE] p-0">
+    {/* Blobs orgânicos translúcidos */}
+    <div
+      className="absolute -top-6 -left-6 h-24 w-24 rounded-full blur-2xl opacity-70"
+      style={{ background: "radial-gradient(circle, #2E6B8A55, transparent 70%)" }}
+    />
+    <div
+      className="absolute top-1/3 -right-6 h-28 w-28 rounded-full blur-2xl opacity-80"
+      style={{ background: "radial-gradient(circle, #F4B6A6AA, transparent 70%)" }}
+    />
+    <div
+      className="absolute bottom-0 left-1/3 h-20 w-20 rounded-full blur-xl opacity-60"
+      style={{ background: "radial-gradient(circle, #F4B6A688, transparent 70%)" }}
+    />
+    {/* Nuvens sutis no topo */}
+    <svg viewBox="0 0 200 40" preserveAspectRatio="none" className="absolute top-0 left-0 w-full h-6 text-[#2E6B8A] opacity-30" aria-hidden>
+      <path d="M0,30 C40,10 80,40 120,24 C160,12 180,32 200,22 L200,0 L0,0 Z" fill="currentColor" />
+    </svg>
+    {/* Split 50/50 */}
+    <div className="absolute inset-0 grid grid-cols-2">
+      <div className="flex items-center justify-center p-3">
+        <div className="space-y-1.5">
+          <p className="text-[7px] uppercase tracking-[0.3em] text-[#2E6B8A]">Save the date</p>
+          <p className="text-base font-semibold text-[#1E293B]" style={{ fontFamily: "'Outfit', sans-serif" }}>
+            Maria
+          </p>
+          <p className="text-base font-semibold text-[#1E293B]" style={{ fontFamily: "'Outfit', sans-serif" }}>
+            &amp; João
+          </p>
+          <div className="flex items-center gap-1 text-[#2E6B8A]">
+            <span className="h-px w-4 bg-current opacity-70" />
+            <span className="h-1 w-1 rounded-full bg-current" />
+            <span className="h-px w-4 bg-current opacity-70" />
+          </div>
+          <p className="text-[7px] text-[#1E293B]/70" style={{ fontFamily: "'Figtree', sans-serif" }}>
+            14 set 2026
+          </p>
+          <div className="mt-1 h-3 w-12 rounded-full bg-[#2E6B8A]" />
+        </div>
+      </div>
+      <div
+        className="relative"
+        style={{
+          background:
+            "linear-gradient(135deg, #2E6B8A55, #F4B6A6AA)",
+        }}
+      >
+        <div
+          className="absolute inset-y-0 -left-3 w-6 bg-[#E0F2FE]"
+          style={{ borderTopRightRadius: "50%", borderBottomRightRadius: "50%" }}
+        />
+      </div>
+    </div>
+  </Frame>
+);
+
 export default ThemeShowcaseCard;
