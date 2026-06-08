@@ -136,26 +136,30 @@ Deno.serve(async (req) => {
       return errorResponse("Payload inválido", 400, "BAD_REQUEST");
     }
 
-    // ---- auth ----
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return errorResponse("Usuário não autenticado", 401, "UNAUTHENTICATED");
-    }
-
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
     const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    const userClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    // ---- auth ----
+    // 1. Capturar o header enviado pelo front-end
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return errorResponse("Header Authorization ausente na requisição", 401, "UNAUTHENTICATED");
+    }
+
+    // 2. Instanciar cliente APENAS para validação do usuário
+    const supabaseAuthClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       global: { headers: { Authorization: authHeader } },
     });
-    const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: userError } =
-      await userClient.auth.getUser(token);
-    if (userError || !userData?.user?.id) {
-      return errorResponse("Usuário não autenticado", 401, "UNAUTHENTICATED");
+
+    // 3. Validar a sessão real
+    const { data: { user }, error: authError } = await supabaseAuthClient.auth.getUser();
+
+    if (authError || !user) {
+      console.error("Erro interno do getUser:", authError);
+      return errorResponse("Sessão inválida ou expirada", 401, "UNAUTHENTICATED");
     }
-    const userId = userData.user.id;
+    const userId = user.id;
 
     const serviceClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
       auth: { persistSession: false, autoRefreshToken: false },
