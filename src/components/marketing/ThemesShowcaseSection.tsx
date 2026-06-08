@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/carousel";
 import ThemeShowcaseCard, {
   ArtDecoPreview,
-  BohoPreview,
   EditorialPreview,
   LegacyPreview,
   MinimalPreview,
