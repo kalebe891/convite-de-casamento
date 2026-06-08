@@ -20,30 +20,40 @@ const ThemeToggle = ({ label: textLabel }: ThemeToggleProps = {}) => {
   const { pathname } = useLocation();
   const institutional = isInstitutionalPath(pathname);
 
+  // Calcula o próximo tema, seguindo a mesma lógica do clique.
+  const nextTheme = institutional
+    ? theme === "light"
+      ? "brown"
+      : theme === "brown"
+        ? "dark"
+        : "light"
+    : theme === "dark"
+      ? "light"
+      : "dark";
+
+  // Label dinâmico: representa o próximo tema que será ativado.
+  const NEXT_LABELS: Record<string, string> = {
+    light: "Light",
+    brown: "Brown",
+    dark: "Dark",
+  };
+  const dynamicLabel = NEXT_LABELS[nextTheme] ?? "Tema";
+
   const handleClick = () => {
-    if (institutional) {
-      // Ciclo institucional: light → brown → dark → light
-      const next =
-        theme === "light" ? "brown" : theme === "brown" ? "dark" : "light";
-      setTheme(next);
-    } else {
-      // Tenant/Admin: apenas light ↔ dark (brown é tratado como "não-dark")
-      setTheme(theme === "dark" ? "light" : "dark");
-    }
+    setTheme(nextTheme);
   };
 
-  const a11yLabel = institutional
-    ? `Alternar tema (atual: ${theme ?? "light"})`
-    : "Alternar tema";
+  const a11yLabel = `Alternar tema (próximo: ${dynamicLabel})`;
+  const showLabel = Boolean(textLabel);
 
   return (
     <Button
       variant="ghost"
-      size={textLabel ? "sm" : "icon"}
+      size={showLabel ? "sm" : "icon"}
       onClick={handleClick}
-      className={textLabel ? "gap-2" : "rounded-full relative"}
+      className={showLabel ? "gap-2" : "rounded-full relative"}
     >
-      <span className={textLabel ? "relative inline-flex h-5 w-5 items-center justify-center" : "contents"}>
+      <span className={showLabel ? "relative inline-flex h-5 w-5 items-center justify-center" : "contents"}>
         {institutional && theme === "brown" ? (
           <Sparkles className="h-5 w-5 text-primary" />
         ) : (
@@ -53,8 +63,8 @@ const ThemeToggle = ({ label: textLabel }: ThemeToggleProps = {}) => {
           </>
         )}
       </span>
-      {textLabel ? (
-        <span className="hidden sm:inline">{textLabel}</span>
+      {showLabel ? (
+        <span className="hidden sm:inline">{dynamicLabel}</span>
       ) : null}
       <span className="sr-only">{a11yLabel}</span>
     </Button>

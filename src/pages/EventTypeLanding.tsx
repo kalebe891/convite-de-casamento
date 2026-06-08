@@ -4,6 +4,7 @@ import { Heart, Cake } from "lucide-react";
 import { isValidRouteEventType, urlToDb } from "@/lib/eventType";
 import ShowcaseSection from "@/components/marketing/ShowcaseSection";
 import SEO from "@/components/seo/SEO";
+import ThemeToggle from "@/components/ThemeToggle";
 import NotFound from "./NotFound";
 
 const CONTENT = {
@@ -39,9 +40,12 @@ const EventTypeLanding = () => {
         <Link to="/" className="text-2xl font-serif font-bold text-primary">
           Convites
         </Link>
-        <Link to="/auth">
-          <Button variant="outline" size="sm">Entrar</Button>
-        </Link>
+        <div className="flex items-center gap-2">
+          <ThemeToggle label="Tema" />
+          <Link to="/auth">
+            <Button variant="outline" size="sm">Entrar</Button>
+          </Link>
+        </div>
       </header>
 
       <main className="flex-1">

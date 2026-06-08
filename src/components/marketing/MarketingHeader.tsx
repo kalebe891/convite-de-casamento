@@ -32,7 +32,7 @@ const MarketingHeader = () => {
         </nav>
 
         <div className="flex items-center gap-2">
-          <ThemeToggle />
+          <ThemeToggle label="Tema" />
           <Link to="/auth">
             <Button variant="outline" size="sm" className="hidden sm:inline-flex">
               Entrar
