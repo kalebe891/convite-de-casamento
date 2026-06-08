@@ -5,24 +5,25 @@ import {
   Cake,
   Sparkles,
   CheckCircle2,
+  XCircle,
   Users,
-  Gift,
-  Calendar,
-  MapPin,
-  Camera,
-  ShieldCheck,
+  UserCheck,
+  FileSpreadsheet,
   Smartphone,
   ArrowRight,
+  Wallet,
+  Percent,
 } from "lucide-react";
 import MarketingHeader from "@/components/marketing/MarketingHeader";
 import MarketingFooter from "@/components/marketing/MarketingFooter";
+import ThemesShowcaseSection from "@/components/marketing/ThemesShowcaseSection";
 import SEO from "@/components/seo/SEO";
 
 const products = [
   {
     to: "/casamento",
     Icon: Heart,
-    eyebrow: "Para noivos",
+    eyebrow: "Disponível",
     title: "Casamento",
     description:
       "Convite digital completo com RSVP, lista de presentes, cronograma, painel administrativo e check-in no dia.",
@@ -41,33 +42,59 @@ const products = [
   },
 ];
 
-const features = [
-  { Icon: Users, title: "Gestão de convidados", text: "Importe, organize por grupos e acompanhe confirmações em tempo real." },
-  { Icon: CheckCircle2, title: "RSVP digital", text: "Confirmação simples no celular, com lembrete automático por WhatsApp." },
-  { Icon: Gift, title: "Lista de presentes", text: "Cotas, presentes únicos e PIX integrado em uma experiência única." },
-  { Icon: Calendar, title: "Cronograma do dia", text: "Programação detalhada acessível para convidados e fornecedores." },
-  { Icon: MapPin, title: "Localização", text: "Mapa interativo, rotas e instruções claras para chegar ao evento." },
-  { Icon: Camera, title: "Galeria de momentos", text: "Receba e exiba fotos dos convidados em uma galeria curada." },
+const gestaoItems = [
+  {
+    Icon: LayoutDashboard,
+    title: "Centralize confirmações",
+    text: "Acompanhe RSVPs, acompanhantes e restrições alimentares em um painel único, sem depender de planilhas.",
+  },
+  {
+    Icon: UserCheck,
+    title: "Controle visual de acompanhantes",
+    text: "Veja exatamente quem confirmou, com quantos acompanhantes e quais preferências, em tempo real.",
+  },
+  {
+    Icon: Users,
+    title: "Gestão sem fricção",
+    text: "Importe listas, organize por grupos e envie lembretes — tudo em um fluxo pensado para cerimonialistas.",
+  },
 ];
 
-const benefits = [
-  { Icon: Sparkles, title: "Experiência premium", text: "Design editorial sob medida — sem cara de template." },
-  { Icon: ShieldCheck, title: "Privacidade e controle", text: "Cada evento em ambiente isolado, com perfis e permissões." },
-  { Icon: Smartphone, title: "Mobile-first", text: "Tudo otimizado para o celular dos convidados." },
-];
-
-const steps = [
-  { n: "01", title: "Crie seu convite", text: "Personalize textos, fotos e cores em poucos minutos." },
-  { n: "02", title: "Compartilhe", text: "Envie o link aos convidados e acompanhe RSVPs em tempo real." },
-  { n: "03", title: "Receba no grande dia", text: "Use o check-in, cronograma e relatórios diretamente no celular." },
+const comparativo = [
+  {
+    label: "Modelo tradicional",
+    border: "border-border/60",
+    bg: "bg-card",
+    icon: XCircle,
+    iconColor: "text-muted-foreground",
+    headline: "Algumas plataformas compensam a gratuidade cobrando taxas sobre presentes ou transferências.",
+    points: [
+      { ok: false, text: "Taxas sobre cada presente recebido" },
+      { ok: false, text: "Intermediários no pagamento" },
+      { ok: false, text: "Custo oculto repassado ao convidado" },
+    ],
+  },
+  {
+    label: "Nosso modelo",
+    border: "border-primary/40",
+    bg: "bg-primary/5",
+    icon: CheckCircle2,
+    iconColor: "text-primary",
+    headline: "Taxa única de adesão. 100% do valor dos presentes vai direto para você, sem intermediários. Zero comissões ocultas.",
+    points: [
+      { ok: true, text: "Zero comissão sobre presentes" },
+      { ok: true, text: "PIX direto para sua conta" },
+      { ok: true, text: "Transparência total desde o início" },
+    ],
+  },
 ];
 
 const LandingHome = () => {
   return (
     <div className="marketing-theme min-h-screen bg-background text-foreground">
       <SEO
-        title="Convites Digitais para Casamento e Aniversário"
-        description="Plataforma premium para criar convites digitais com RSVP, lista de presentes, cronograma e painel administrativo. Para casamentos e aniversários."
+        title="Convites Digitais Premium e Gestão Inteligente"
+        description="Plataforma premium para criar convites digitais com RSVP, lista de presentes sem taxas, cronograma e painel administrativo."
         path="/"
       />
       <MarketingHeader />
@@ -86,22 +113,21 @@ const LandingHome = () => {
               Plataforma premium de convites digitais
             </span>
             <h1 className="mt-6 font-serif text-[2.5rem] font-semibold leading-[1.08] tracking-tight text-foreground sm:text-5xl md:text-6xl">
-              Convites digitais com a sofisticação que o seu evento merece.
+              Convites digitais premium e gestão inteligente para o seu evento.
             </h1>
             <p className="mx-auto mt-5 max-w-2xl text-base text-muted-foreground sm:mt-6 sm:text-lg">
-              Uma experiência completa para criar convites, confirmar presenças, organizar presentes e gerenciar
-              todos os detalhes do seu evento em um só lugar.
+              A plataforma que substitui as gráficas, elimina as taxas sobre seus presentes e centraliza confirmações e gestão de convidados em um único painel.
             </p>
             <div className="mt-8 flex flex-col items-stretch justify-center gap-3 sm:mt-10 sm:flex-row sm:items-center">
               <Link to="/casamento" className="sm:w-auto">
                 <Button size="lg" className="group w-full sm:w-auto">
-                  Convite de casamento
+                  Criar meu evento
                   <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </Button>
               </Link>
-              <Link to="/aniversario" className="sm:w-auto">
+              <Link to="#temas" className="sm:w-auto">
                 <Button size="lg" variant="outline" className="w-full sm:w-auto">
-                  Convite de aniversário
+                  Ver temas
                 </Button>
               </Link>
             </div>
@@ -112,130 +138,119 @@ const LandingHome = () => {
         </div>
       </section>
 
-      {/* PRODUTOS */}
-      <section id="produtos" className="container mx-auto px-4 py-16 sm:py-20 md:py-28">
+      {/* GESTÃO — O FIM DAS PLANILHAS */}
+      <section id="gestao" className="border-t border-border/40 bg-muted/30 py-16 sm:py-20 md:py-28">
+        <div className="container mx-auto px-4">
+          <div className="mx-auto mb-10 max-w-2xl text-center sm:mb-14">
+            <p className="text-xs uppercase tracking-[0.2em] text-primary">Gestão</p>
+            <h2 className="mt-3 font-serif text-3xl font-semibold leading-tight md:text-4xl">
+              Abandone as planilhas.
+            </h2>
+            <p className="mt-4 text-muted-foreground">
+              Não dependa de planilhas confusas e mensagens no WhatsApp para saber quem vai ao seu evento.
+            </p>
+          </div>
+
+          <div className="mx-auto grid max-w-5xl gap-5 sm:grid-cols-2 md:grid-cols-3">
+            {gestaoItems.map(({ Icon, title, text }) => (
+              <div
+                key={title}
+                className="rounded-2xl border border-border/60 bg-card p-7 transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-soft sm:p-8"
+              >
+                <span className="grid h-12 w-12 place-items-center rounded-xl bg-primary/10 text-primary">
+                  <Icon className="h-5 w-5" />
+                </span>
+                <h3 className="mt-5 font-serif text-xl font-semibold">{title}</h3>
+                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{text}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* TRANSPARÊNCIA FINANCEIRA */}
+      <section className="container mx-auto px-4 py-16 sm:py-20 md:py-28">
         <div className="mx-auto mb-10 max-w-2xl text-center sm:mb-14">
-          <p className="text-xs uppercase tracking-[0.2em] text-primary">Soluções</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-primary">Transparência</p>
           <h2 className="mt-3 font-serif text-3xl font-semibold leading-tight md:text-4xl">
-            Um produto para cada celebração
+            Sem taxas ocultas sobre seus presentes.
           </h2>
           <p className="mt-4 text-muted-foreground">
-            Comece pelo casamento — em breve, novas categorias para festejar cada momento importante.
+            Compare como funciona e veja por que nosso modelo é diferente.
           </p>
         </div>
 
-        <div className="mx-auto grid max-w-5xl gap-5 sm:gap-6 md:grid-cols-2">
-          {products.map(({ to, Icon, eyebrow, title, description, cta, available }) => (
-            <Link
-              key={title}
-              to={to}
-              className="group relative flex flex-col overflow-hidden rounded-2xl border border-border/60 bg-card p-7 transition-all duration-300 hover:-translate-y-1 hover:border-primary/50 hover:shadow-elegant sm:p-8"
+        <div className="mx-auto grid max-w-4xl gap-5 md:grid-cols-2">
+          {comparativo.map(({ label, border, bg, icon: Icon, iconColor, headline, points }) => (
+            <div
+              key={label}
+              className={`rounded-2xl border ${border} ${bg} p-7 sm:p-8`}
             >
-              <div className="flex items-center justify-between">
-                <span className="grid h-12 w-12 place-items-center rounded-xl bg-primary/10 text-primary transition-colors group-hover:bg-primary/15">
-                  <Icon className="h-5 w-5" />
-                </span>
-                <span className="rounded-full border border-border/60 px-3 py-1 text-[10px] uppercase tracking-wider text-muted-foreground">
-                  {eyebrow}
+              <div className="flex items-center gap-3">
+                <Icon className={`h-5 w-5 ${iconColor}`} />
+                <span className="text-sm font-semibold uppercase tracking-wider text-foreground">
+                  {label}
                 </span>
               </div>
-              <h3 className="mt-6 font-serif text-2xl font-semibold">{title}</h3>
-              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{description}</p>
-              <span className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-primary">
-                {cta}
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-              </span>
-              {!available && (
-                <span className="absolute right-6 top-6 hidden text-[10px] uppercase tracking-wider text-muted-foreground" />
-              )}
-            </Link>
+              <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{headline}</p>
+              <ul className="mt-6 space-y-3">
+                {points.map(({ ok, text }, i) => (
+                  <li key={i} className="flex items-start gap-3 text-sm">
+                    {ok ? (
+                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                    ) : (
+                      <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground/60" />
+                    )}
+                    <span className={ok ? "text-foreground" : "text-muted-foreground"}>{text}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           ))}
         </div>
       </section>
 
-      {/* RECURSOS */}
-      <section id="recursos" className="border-y border-border/40 bg-muted/30 py-16 sm:py-20 md:py-28">
+      {/* VITRINE DE TEMAS */}
+      <ThemesShowcaseSection />
+
+      {/* MULTI-EVENTO */}
+      <section id="produtos" className="border-t border-border/40 bg-muted/30 py-16 sm:py-20 md:py-28">
         <div className="container mx-auto px-4">
           <div className="mx-auto mb-10 max-w-2xl text-center sm:mb-14">
-            <p className="text-xs uppercase tracking-[0.2em] text-primary">Recursos</p>
+            <p className="text-xs uppercase tracking-[0.2em] text-primary">Soluções</p>
             <h2 className="mt-3 font-serif text-3xl font-semibold leading-tight md:text-4xl">
-              Tudo o que você precisa em um único painel
+              Um produto para cada celebração
             </h2>
             <p className="mt-4 text-muted-foreground">
-              Recursos pensados para hosts, cerimonialistas e convidados — com a estética de um convite impresso e
-              a praticidade de um app moderno.
+              Casamentos e aniversários. Cada evento com a mesma sofisticação e controle total.
             </p>
           </div>
 
-          <div className="mx-auto grid max-w-6xl gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
-            {features.map(({ Icon, title, text }) => (
-              <div
+          <div className="mx-auto grid max-w-5xl gap-5 sm:gap-6 md:grid-cols-2">
+            {products.map(({ to, Icon, eyebrow, title, description, cta, available }) => (
+              <Link
                 key={title}
-                className="rounded-xl border border-border/60 bg-card p-6 transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-soft"
+                to={to}
+                className="group relative flex flex-col overflow-hidden rounded-2xl border border-border/60 bg-card p-7 transition-all duration-300 hover:-translate-y-1 hover:border-primary/50 hover:shadow-elegant sm:p-8"
               >
-                <span className="grid h-10 w-10 place-items-center rounded-lg bg-primary/10 text-primary">
-                  <Icon className="h-5 w-5" />
-                </span>
-                <h3 className="mt-4 font-serif text-lg font-semibold">{title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{text}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* BENEFÍCIOS */}
-      <section className="container mx-auto px-4 py-16 sm:py-20 md:py-28">
-        <div className="grid gap-10 md:grid-cols-2 md:items-center md:gap-12">
-          <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-primary">Por que escolher</p>
-            <h2 className="mt-3 font-serif text-3xl font-semibold leading-tight md:text-4xl">
-              Sofisticação, simplicidade e controle total.
-            </h2>
-            <p className="mt-4 text-muted-foreground">
-              Pensado para quem quer surpreender os convidados sem abrir mão da praticidade. Uma plataforma robusta,
-              com a delicadeza necessária para celebrar.
-            </p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Link to="/casamento">
-                <Button size="lg" className="w-full sm:w-auto">Começar pelo casamento</Button>
-              </Link>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            {benefits.map(({ Icon, title, text }) => (
-              <div
-                key={title}
-                className="flex gap-4 rounded-xl border border-border/60 bg-card p-5 transition-colors hover:border-primary/40"
-              >
-                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
-                  <Icon className="h-5 w-5" />
-                </span>
-                <div className="min-w-0">
-                  <h3 className="font-serif text-lg font-semibold">{title}</h3>
-                  <p className="text-sm leading-relaxed text-muted-foreground">{text}</p>
+                <div className="flex items-center justify-between">
+                  <span className="grid h-12 w-12 place-items-center rounded-xl bg-primary/10 text-primary transition-colors group-hover:bg-primary/15">
+                    <Icon className="h-5 w-5" />
+                  </span>
+                  <span className="rounded-full border border-border/60 px-3 py-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+                    {eyebrow}
+                  </span>
                 </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* COMO FUNCIONA */}
-      <section id="como-funciona" className="border-t border-border/40 bg-muted/30 py-16 sm:py-20 md:py-28">
-        <div className="container mx-auto px-4">
-          <div className="mx-auto mb-10 max-w-2xl text-center sm:mb-14">
-            <p className="text-xs uppercase tracking-[0.2em] text-primary">Como funciona</p>
-            <h2 className="mt-3 font-serif text-3xl font-semibold leading-tight md:text-4xl">Três passos para começar</h2>
-          </div>
-          <div className="mx-auto grid max-w-5xl gap-5 sm:gap-6 md:grid-cols-3">
-            {steps.map(({ n, title, text }) => (
-              <div key={n} className="rounded-2xl border border-border/60 bg-card p-7 transition-colors hover:border-primary/40 sm:p-8">
-                <span className="font-serif text-4xl text-primary">{n}</span>
-                <h3 className="mt-4 font-serif text-xl font-semibold">{title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{text}</p>
-              </div>
+                <h3 className="mt-6 font-serif text-2xl font-semibold">{title}</h3>
+                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{description}</p>
+                <span className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-primary">
+                  {cta}
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                </span>
+                {!available && (
+                  <span className="absolute right-6 top-6 hidden text-[10px] uppercase tracking-wider text-muted-foreground" />
+                )}
+              </Link>
             ))}
           </div>
         </div>
