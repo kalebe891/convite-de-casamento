@@ -140,7 +140,7 @@ const ThemesShowcaseSection = () => {
             Escolha o estilo do seu convite
           </h2>
           <p className="mt-4 text-muted-foreground">
-            Seis temas exclusivos, cada um com personalidade própria.
+            Sete temas exclusivos, cada um com personalidade própria.
             Visualize ao vivo antes de decidir.
           </p>
         </div>
