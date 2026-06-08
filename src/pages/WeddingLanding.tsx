@@ -230,11 +230,11 @@ const WeddingLanding = () => {
           <div className="order-2 md:order-1">
             <p className="text-xs uppercase tracking-[0.2em] text-primary">A experiência</p>
             <h2 className="mt-3 font-serif text-3xl font-semibold leading-tight md:text-4xl">
-              Um convite que respira como uma página de revista.
+              Um convite pensado para a tela do convidado.
             </h2>
             <p className="mt-4 text-muted-foreground">
-              Tipografia refinada, ritmo editorial e foco na história de vocês. Tudo otimizado para o celular dos
-              convidados, com elegância em cada toque.
+              Layout responsivo, tipografia refinada e navegação fluida no celular. Cada bloco de conteúdo tem um
+              propósito claro.
             </p>
             <ul className="mt-6 space-y-3">
               {experience.map((item) => (
@@ -249,7 +249,7 @@ const WeddingLanding = () => {
             <div className="mt-8 inline-flex items-center gap-2 rounded-xl border border-border/60 bg-card px-4 py-3 text-sm">
               <LayoutDashboard className="h-4 w-4 text-primary" />
               <span className="text-muted-foreground">
-                Painel administrativo completo para acompanhar tudo
+                Painel administrativo completo para gerenciar tudo
               </span>
             </div>
           </div>
