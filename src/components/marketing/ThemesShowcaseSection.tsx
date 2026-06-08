@@ -129,13 +129,12 @@ const ThemesShowcaseSection = () => {
     >
       <div className="container mx-auto px-4">
         <div className="mx-auto mb-10 max-w-2xl text-center sm:mb-14">
-          <p className="text-xs uppercase tracking-[0.2em] text-primary">Estilos</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-primary">Temas</p>
           <h2 className="mt-3 font-serif text-3xl font-semibold leading-tight md:text-4xl">
             Escolha o estilo do seu convite
           </h2>
           <p className="mt-4 text-muted-foreground">
-            Sete temas exclusivos, cada um com personalidade própria.
-            Visualize ao vivo antes de decidir.
+            Seis temas prontos para personalizar. Visualize cada um em uma demonstração real antes de decidir.
           </p>
         </div>
 
