@@ -109,23 +109,23 @@ const WeddingLanding = () => {
               Convite de casamento
             </span>
             <h1 className="mt-6 font-serif text-[2.5rem] font-semibold leading-[1.05] tracking-tight sm:text-5xl md:text-6xl">
-              Um convite à altura
+              Páginas e convites digitais
               <br />
-              do <em className="font-serif italic text-primary">amor de vocês</em>.
+              feitos para o <em className="font-serif italic text-primary">seu casamento</em>.
             </h1>
             <p className="mt-5 max-w-xl text-base text-muted-foreground sm:mt-6 sm:text-lg">
-              Uma plataforma editorial e elegante para criar o convite, organizar os convidados, receber confirmações e
-              viver o grande dia com tranquilidade.
+              Uma plataforma completa para criar a página do casamento, enviar o convite, receber confirmações e
+              organizar tudo em um único painel. Personalização rápida, visual elegante e gestão prática.
             </p>
             <div className="mt-8 flex flex-col items-stretch gap-3 sm:mt-10 sm:flex-row sm:items-center">
-              <Link to="/auth">
+              <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer">
                 <Button size="lg" className="group w-full sm:w-auto">
-                  Criar nosso convite
+                  Falar no WhatsApp
                   <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </Button>
-              </Link>
-              <a href="#recursos">
-                <Button size="lg" variant="outline" className="w-full sm:w-auto">Ver recursos</Button>
+              </a>
+              <a href="#temas">
+                <Button size="lg" variant="outline" className="w-full sm:w-auto">Ver temas</Button>
               </a>
             </div>
           </div>
