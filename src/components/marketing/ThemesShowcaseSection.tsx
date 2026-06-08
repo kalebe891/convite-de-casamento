@@ -83,18 +83,6 @@ const THEMES: ThemeShowcaseItem[] = [
     Preview: ArtDecoPreview,
   },
   {
-    id: "boho",
-    name: "Boho",
-    description:
-      "Orgânico, acolhedor e artesanal. Tons terrosos, ramos delicados e composição natural.",
-    features: [
-      "Hero centralizado com foto em background",
-      "Paleta terrosa e tipografia Lora",
-      "Ramos e separadores naturais em SVG inline",
-    ],
-    Preview: BohoPreview,
-  },
-  {
     id: "sky-peach",
     name: "Sky & Peach",
     description:
