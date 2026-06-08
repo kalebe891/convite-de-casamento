@@ -1,0 +1,2 @@
+ALTER TABLE public.wedding_details DROP CONSTRAINT IF EXISTS wedding_details_theme_id_check;
+ALTER TABLE public.wedding_details ADD CONSTRAINT wedding_details_theme_id_check CHECK (theme_id = ANY (ARRAY['legacy'::text, 'editorial'::text, 'minimal'::text, 'modern-noir'::text, 'art-deco'::text, 'sky-peach'::text, 'default'::text]));
