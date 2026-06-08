@@ -3,10 +3,10 @@ import { Button } from "@/components/ui/button";
 import {
   Heart,
   Users,
+  UsersRound,
   Gift,
   Calendar,
-  Camera,
-  MapPin,
+  Newspaper,
   CheckCircle2,
   LayoutDashboard,
   ArrowRight,
@@ -28,8 +28,8 @@ const features = [
   {
     n: "02",
     Icon: Users,
-    title: "Lista de convidados",
-    text: "Organize por grupos, mesas e acompanhantes. Importe sua planilha e mantenha tudo sob controle.",
+    title: "Gestão inteligente de convidados\n",
+    text: "Cadastre convidados, acompanhe confirmações e controle presenças em um único painel administrativo.",
   },
   {
     n: "03",
@@ -45,27 +45,27 @@ const features = [
   },
   {
     n: "05",
-    Icon: Camera,
-    title: "Galeria de momentos",
-    text: "Receba fotos dos convidados em uma galeria curada que vive muito além do grande dia.",
+    Icon: Newspaper,
+    title: "Página personalizada\n",
+    text: "Compartilhe todas as informações importantes do evento em uma única página elegante e responsiva.",
   },
   {
     n: "06",
-    Icon: MapPin,
-    title: "Localização",
-    text: "Mapa interativo, traslado e indicações claras para cerimônia e recepção.",
+    Icon: UsersRound,
+    title: "Equipe e permissões",
+    text: "Convide cerimonialistas e colaboradores para ajudar na administração do evento com permissões controladas.",
   },
 ];
 
 const experience = [
-  "Hero do convite com nomes dos noivos, data e local",
-  "Confirmação de presença com lembrete automático",
+  "Título com nomes dos noivos, data e local",
+  "Confirmação de presença / check-in",
   "Mensagens dos convidados em uma galeria de afetos",
   "Cronograma e localização ao alcance do bolso",
 ];
 
 const steps = [
-  { n: "01", title: "Personalize", text: "Defina os nomes, data, fotos, cores e textos do convite." },
+  { n: "01", title: "Personalize", text: "Defina os nomes, data, fotos e textos do convite." },
   { n: "02", title: "Compartilhe", text: "Envie o link aos convidados e acompanhe confirmações em tempo real." },
   { n: "03", title: "Celebre", text: "Use o painel e o check-in no grande dia — sem stress." },
 ];
