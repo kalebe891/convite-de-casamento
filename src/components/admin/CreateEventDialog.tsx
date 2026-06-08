@@ -23,7 +23,7 @@ import { toast } from "@/hooks/use-toast";
 import { buildTenantAdminUrl, isReservedSlug } from "@/lib/eventType";
 
 type EventType = "wedding" | "birthday";
-type ThemeId = "legacy" | "editorial" | "minimal" | "modern-noir" | "art-deco" | "boho" | "sky-peach";
+type ThemeId = "legacy" | "editorial" | "minimal" | "modern-noir" | "art-deco" | "sky-peach";
 
 interface Props {
   open: boolean;
