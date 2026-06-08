@@ -294,12 +294,16 @@ const WeddingLanding = () => {
             Solicite o seu acesso e crie um convite digital memorável em poucos minutos.
           </p>
           <div className="relative mt-8 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
-            <Link to="/auth">
+            <a
+              href="https://api.whatsapp.com/send/?phone=5562992485994&text=Olá,%20Quero%20criar%20o%20meu%20convite%20de%20casamento.&type=phone_number&app_absent=0"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               <Button size="lg" className="group w-full sm:w-auto">
                 Solicitar convite
                 <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Button>
-            </Link>
+            </a>
             <Link to="/">
               <Button size="lg" variant="outline" className="w-full sm:w-auto">Voltar para a Home</Button>
             </Link>
