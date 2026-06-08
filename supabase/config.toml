@@ -25,4 +25,4 @@ verify_jwt = true
 verify_jwt = false
 
 [functions.delete-tenant]
-verify_jwt = true
+verify_jwt = false
