@@ -26,11 +26,11 @@ const THEMES: ThemeShowcaseItem[] = [
     id: "legacy",
     name: "Legacy",
     description:
-      "O tema original. Romântico, centralizado e atemporal — ideal para convites clássicos.",
+      "Convite clássico e atemporal, com hero centralizado e tipografia serifada.",
     features: [
-      "Hero centralizado com moldura romântica",
-      "Blocos clássicos e ritmo tradicional",
-      "Paleta suave e tipografia serifada",
+      "Layout centralizado e simétrico",
+      "Paleta neutra e elegante",
+      "Ideal para cerimônias tradicionais",
     ],
     Preview: LegacyPreview,
   },
@@ -38,11 +38,11 @@ const THEMES: ThemeShowcaseItem[] = [
     id: "editorial",
     name: "Editorial",
     description:
-      "Estética de revista: hero full-bleed, tipografia oversized e respiro fotográfico.",
+      "Estética de revista com hero full-bleed e tipografia em grande escala.",
     features: [
       "Hero full-bleed com overlay fotográfico",
-      "Tipografia oversized e contraste alto",
-      "Ritmo editorial e composições amplas",
+      "Tipografia oversized e alto contraste",
+      "Pensado para fotos marcantes",
     ],
     Preview: EditorialPreview,
   },
@@ -50,11 +50,11 @@ const THEMES: ThemeShowcaseItem[] = [
     id: "minimal",
     name: "Minimal",
     description:
-      "Composição limpa em split 50/50, com linhas finas e uso generoso de espaços em branco.",
+      "Composição limpa em split 50/50, com bastante respiro e foco na tipografia.",
     features: [
       "Layout split 50/50",
-      "Linhas finas e grande área em branco",
-      "Foco absoluto na tipografia",
+      "Espaço em branco generoso",
+      "Visual moderno e sóbrio",
     ],
     Preview: MinimalPreview,
   },
@@ -62,11 +62,11 @@ const THEMES: ThemeShowcaseItem[] = [
     id: "modern-noir",
     name: "Modern Noir",
     description:
-      "Cinematográfico e sofisticado. Fundo escuro, contraste elevado e contador regressivo.",
+      "Visual cinematográfico em fundo escuro, com contador regressivo integrado.",
     features: [
-      "Hero escuro full-screen no desktop",
-      "Contraste elevado e elementos cinematográficos",
-      "Countdown integrado",
+      "Hero escuro full-screen",
+      "Contraste alto e ar cinematográfico",
+      "Countdown nativo até o evento",
     ],
     Preview: ModernNoirPreview,
   },
@@ -74,11 +74,11 @@ const THEMES: ThemeShowcaseItem[] = [
     id: "art-deco",
     name: "Art Deco",
     description:
-      "Luxo geométrico inspirado nos anos 20. Molduras douradas, simetria e detalhes ornamentais.",
+      "Luxo geométrico inspirado nos anos 20, com molduras douradas e simetria.",
     features: [
-      "Linhas geométricas e simetria visual",
       "Molduras douradas em camadas",
-      "Tipografia serifada e ornamentos inline",
+      "Simetria e ornamentos geométricos",
+      "Indicado para celebrações formais",
     ],
     Preview: ArtDecoPreview,
   },
@@ -86,10 +86,10 @@ const THEMES: ThemeShowcaseItem[] = [
     id: "sky-peach",
     name: "Sky & Peach",
     description:
-      "Sonhador e contemporâneo. Azul celeste com toques pêssego, composição leve e arejada.",
+      "Paleta azul celeste com toques pêssego, composição leve e contemporânea.",
     features: [
-      "Hero split 50/50 (foto + conteúdo)",
-      "Blobs orgânicos e arcos suaves em CSS",
+      "Hero split com foto + conteúdo",
+      "Formas orgânicas e arcos suaves",
       "Tipografia Outfit + Figtree",
     ],
     Preview: SkyPeachPreview,
