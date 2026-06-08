@@ -4,10 +4,23 @@ import {
   DEMO_TENANT_EVENT_TYPE,
   DEMO_TENANT_SLUG,
 } from "@/lib/themePreviewWhitelist";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 import ThemeShowcaseCard, {
   ArtDecoPreview,
   BohoPreview,
   EditorialPreview,
+  LegacyPreview,
+  MinimalPreview,
+  ModernNoirPreview,
+  SkyPeachPreview,
+  type ThemeShowcaseItem,
+} from "./ThemeShowcaseCard";
   LegacyPreview,
   MinimalPreview,
   ModernNoirPreview,
@@ -145,14 +158,27 @@ const ThemesShowcaseSection = () => {
           </p>
         </div>
 
-        <div className="mx-auto grid max-w-6xl gap-5 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {THEMES.map((theme) => (
-            <ThemeShowcaseCard
-              key={theme.id}
-              theme={theme}
-              previewUrl={demoExists ? buildPreviewUrl(theme.id) : null}
-            />
-          ))}
+        <div className="mx-auto max-w-6xl">
+          <Carousel
+            opts={{ align: "start", loop: false }}
+            className="w-full"
+          >
+            <CarouselContent className="-ml-4 sm:-ml-5">
+              {THEMES.map((theme) => (
+                <CarouselItem
+                  key={theme.id}
+                  className="pl-4 sm:pl-5 basis-full md:basis-1/2 lg:basis-1/4"
+                >
+                  <ThemeShowcaseCard
+                    theme={theme}
+                    previewUrl={demoExists ? buildPreviewUrl(theme.id) : null}
+                  />
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="hidden md:flex -left-4 lg:-left-6" />
+            <CarouselNext className="hidden md:flex -right-4 lg:-right-6" />
+          </Carousel>
         </div>
       </div>
     </section>
