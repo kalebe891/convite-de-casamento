@@ -21,12 +21,6 @@ import ThemeShowcaseCard, {
   SkyPeachPreview,
   type ThemeShowcaseItem,
 } from "./ThemeShowcaseCard";
-  LegacyPreview,
-  MinimalPreview,
-  ModernNoirPreview,
-  SkyPeachPreview,
-  type ThemeShowcaseItem,
-} from "./ThemeShowcaseCard";
 
 const THEMES: ThemeShowcaseItem[] = [
   {
