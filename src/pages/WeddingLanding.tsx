@@ -19,56 +19,65 @@ import ShowcaseSection from "@/components/marketing/ShowcaseSection";
 import ThemesShowcaseSection from "@/components/marketing/ThemesShowcaseSection";
 import SEO from "@/components/seo/SEO";
 
+const WHATSAPP_URL =
+  "https://api.whatsapp.com/send/?phone=5562992485994&text=Olá,%20Quero%20criar%20o%20meu%20convite%20de%20casamento.&type=phone_number&app_absent=0";
+
 const features = [
   {
     n: "01",
     Icon: CheckCircle2,
-    title: "RSVP elegante",
-    text: "Convidados confirmam presença pelo celular em segundos, com mensagens carinhosas para os noivos.",
+    title: "RSVP integrado",
+    text: "Convidados confirmam presença pelo celular em poucos segundos.",
   },
   {
     n: "02",
     Icon: Users,
-    title: "Gestão inteligente de convidados\n",
-    text: "Cadastre convidados, acompanhe confirmações e controle presenças em um único painel administrativo.",
+    title: "Gestão de convidados",
+    text: "Cadastro, confirmações e check-in centralizados em um painel.",
   },
   {
     n: "03",
     Icon: Gift,
-    title: "Presentes",
-    text: "Lista de presentes única, cotas personalizadas e PIX integrado — sem complicação.",
+    title: "Lista de presentes",
+    text: "Itens, cotas e PIX integrados, sem depender de outras plataformas.",
   },
   {
     n: "04",
     Icon: Calendar,
-    title: "Cronograma do dia",
-    text: "Programação detalhada para convidados, padrinhos e fornecedores acessarem com clareza.",
+    title: "Cronograma do evento",
+    text: "Programação clara para convidados, padrinhos e fornecedores.",
   },
   {
     n: "05",
     Icon: Newspaper,
-    title: "Página personalizada\n",
-    text: "Compartilhe todas as informações importantes do evento em uma única página elegante e responsiva.",
+    title: "Página personalizada",
+    text: "Todas as informações do casamento em uma página elegante e responsiva.",
   },
   {
     n: "06",
     Icon: UsersRound,
     title: "Equipe e permissões",
-    text: "Convide cerimonialistas e colaboradores para ajudar na administração do evento com permissões controladas.",
+    text: "Cerimonialistas e colaboradores com acessos controlados por papel.",
   },
 ];
 
 const experience = [
-  "Título com nomes dos noivos, data e local",
-  "Confirmação de presença / check-in",
-  "Mensagens dos convidados em uma galeria de afetos",
-  "Cronograma e localização ao alcance do bolso",
+  "Nomes dos noivos, data e local em destaque",
+  "Confirmação de presença e check-in no dia",
+  "Mensagens dos convidados em uma galeria dedicada",
+  "Cronograma e localização sempre à mão",
 ];
 
 const steps = [
-  { n: "01", title: "Personalize", text: "Defina os nomes, data, fotos e textos do convite." },
-  { n: "02", title: "Compartilhe", text: "Envie o link aos convidados e acompanhe confirmações em tempo real." },
-  { n: "03", title: "Celebre", text: "Use o painel e o check-in no grande dia — sem stress." },
+  { n: "01", title: "Personalize", text: "Defina nomes, data, fotos e textos do convite." },
+  { n: "02", title: "Compartilhe", text: "Envie o link aos convidados e acompanhe as confirmações." },
+  { n: "03", title: "Celebre", text: "Use o painel e o check-in no dia do evento, sem complicação." },
+];
+
+const trustBadges = [
+  { Icon: Sparkles, label: "Convite digital personalizado" },
+  { Icon: CheckCircle2, label: "RSVP integrado" },
+  { Icon: ShieldCheck, label: "Gestão inteligente de convidados" },
 ];
 
 const WeddingLanding = () => {
