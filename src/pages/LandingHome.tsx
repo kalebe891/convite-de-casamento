@@ -13,6 +13,7 @@ import {
   ArrowRight,
   Wallet,
   Percent,
+  LayoutDashboard,
 } from "lucide-react";
 import MarketingHeader from "@/components/marketing/MarketingHeader";
 import MarketingFooter from "@/components/marketing/MarketingFooter";
