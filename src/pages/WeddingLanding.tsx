@@ -314,25 +314,25 @@ const WeddingLanding = () => {
           <div className="pointer-events-none absolute -top-20 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-primary/20 blur-3xl" aria-hidden />
           <p className="relative text-xs uppercase tracking-[0.3em] text-primary">Vamos começar</p>
           <h2 className="relative mt-3 font-serif text-3xl font-semibold leading-tight md:text-5xl">
-            O convite de casamento dos seus sonhos começa aqui.
+            Pronto para criar o convite do seu casamento?
           </h2>
           <p className="relative mx-auto mt-4 max-w-xl text-muted-foreground">
-            Solicite o seu acesso e crie um convite digital memorável em poucos minutos.
+            Fale com a gente no WhatsApp e receba o acesso para começar a personalizar a sua página.
           </p>
           <div className="relative mt-8 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
             <a
-              href="https://api.whatsapp.com/send/?phone=5562992485994&text=Olá,%20Quero%20criar%20o%20meu%20convite%20de%20casamento.&type=phone_number&app_absent=0"
+              href={WHATSAPP_URL}
               target="_blank"
               rel="noopener noreferrer"
             >
               <Button size="lg" className="group w-full sm:w-auto">
-                Solicitar convite
+                Falar no WhatsApp
                 <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Button>
             </a>
-            <Link to="/">
-              <Button size="lg" variant="outline" className="w-full sm:w-auto">Voltar para a Home</Button>
-            </Link>
+            <a href="#temas">
+              <Button size="lg" variant="outline" className="w-full sm:w-auto">Ver temas</Button>
+            </a>
           </div>
         </div>
       </section>
