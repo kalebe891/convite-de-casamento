@@ -164,16 +164,29 @@ const WeddingLanding = () => {
         </div>
       </section>
 
+      {/* TRUST BAR */}
+      <section className="border-y border-border/40 bg-card/40">
+        <div className="container mx-auto px-4 py-5">
+          <div className="flex flex-col items-center justify-center gap-3 text-xs text-muted-foreground sm:flex-row sm:flex-wrap sm:gap-x-8 sm:gap-y-2 sm:text-sm">
+            {trustBadges.map(({ Icon, label }) => (
+              <div key={label} className="inline-flex items-center gap-2">
+                <Icon className="h-4 w-4 text-primary" />
+                <span>{label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* PROPOSTA DE VALOR */}
       <section className="container mx-auto px-4 py-16 sm:py-20 md:py-28">
         <div className="mx-auto max-w-3xl text-center">
           <p className="text-xs uppercase tracking-[0.2em] text-primary">Para noivos</p>
           <h2 className="mt-3 font-serif text-3xl font-semibold leading-tight md:text-5xl">
-            Cada detalhe do seu casamento, em um lugar só.
+            Tudo do seu casamento em um único lugar.
           </h2>
           <p className="mt-5 text-muted-foreground">
-            Da primeira confirmação ao último brinde — uma plataforma feita para que vocês curtam o processo,
-            não apenas a festa.
+            Da primeira confirmação ao check-in no dia do evento, com um painel pensado para reduzir trabalho manual.
           </p>
         </div>
       </section>
@@ -184,8 +197,11 @@ const WeddingLanding = () => {
           <div className="mb-10 max-w-2xl sm:mb-14">
             <p className="text-xs uppercase tracking-[0.2em] text-primary">Recursos</p>
             <h2 className="mt-3 font-serif text-3xl font-semibold leading-tight md:text-4xl">
-              Pensado para casamentos elegantes
+              O essencial para organizar o casamento
             </h2>
+            <p className="mt-3 text-sm text-muted-foreground sm:text-base">
+              Funcionalidades reais da plataforma, sem promessas vagas.
+            </p>
           </div>
 
           <div className="mx-auto grid max-w-6xl gap-5 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
