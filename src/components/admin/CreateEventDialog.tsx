@@ -225,7 +225,7 @@ export default function CreateEventDialog({ open, onOpenChange, onCreated }: Pro
                 <SelectItem value="minimal">Minimal</SelectItem>
                 <SelectItem value="modern-noir">Modern Noir</SelectItem>
                 <SelectItem value="art-deco">Art Deco</SelectItem>
-                <SelectItem value="boho">Boho</SelectItem>
+                
                 <SelectItem value="sky-peach">Sky & Peach</SelectItem>
               </SelectContent>
             </Select>
