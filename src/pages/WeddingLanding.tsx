@@ -1,4 +1,3 @@
-import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   Heart,
@@ -11,6 +10,7 @@ import {
   LayoutDashboard,
   ArrowRight,
   Sparkles,
+  ShieldCheck,
 } from "lucide-react";
 import MarketingHeader from "@/components/marketing/MarketingHeader";
 import MarketingFooter from "@/components/marketing/MarketingFooter";
@@ -18,64 +18,73 @@ import ShowcaseSection from "@/components/marketing/ShowcaseSection";
 import ThemesShowcaseSection from "@/components/marketing/ThemesShowcaseSection";
 import SEO from "@/components/seo/SEO";
 
+const WHATSAPP_URL =
+  "https://api.whatsapp.com/send/?phone=5562992485994&text=Olá,%20Quero%20criar%20o%20meu%20convite%20de%20casamento.&type=phone_number&app_absent=0";
+
 const features = [
   {
     n: "01",
     Icon: CheckCircle2,
-    title: "RSVP elegante",
-    text: "Convidados confirmam presença pelo celular em segundos, com mensagens carinhosas para os noivos.",
+    title: "RSVP integrado",
+    text: "Convidados confirmam presença pelo celular em poucos segundos.",
   },
   {
     n: "02",
     Icon: Users,
-    title: "Gestão inteligente de convidados\n",
-    text: "Cadastre convidados, acompanhe confirmações e controle presenças em um único painel administrativo.",
+    title: "Gestão de convidados",
+    text: "Cadastro, confirmações e check-in centralizados em um painel.",
   },
   {
     n: "03",
     Icon: Gift,
-    title: "Presentes",
-    text: "Lista de presentes única, cotas personalizadas e PIX integrado — sem complicação.",
+    title: "Lista de presentes",
+    text: "Itens, cotas e PIX integrados, sem depender de outras plataformas.",
   },
   {
     n: "04",
     Icon: Calendar,
-    title: "Cronograma do dia",
-    text: "Programação detalhada para convidados, padrinhos e fornecedores acessarem com clareza.",
+    title: "Cronograma do evento",
+    text: "Programação clara para convidados, padrinhos e fornecedores.",
   },
   {
     n: "05",
     Icon: Newspaper,
-    title: "Página personalizada\n",
-    text: "Compartilhe todas as informações importantes do evento em uma única página elegante e responsiva.",
+    title: "Página personalizada",
+    text: "Todas as informações do casamento em uma página elegante e responsiva.",
   },
   {
     n: "06",
     Icon: UsersRound,
     title: "Equipe e permissões",
-    text: "Convide cerimonialistas e colaboradores para ajudar na administração do evento com permissões controladas.",
+    text: "Cerimonialistas e colaboradores com acessos controlados por papel.",
   },
 ];
 
 const experience = [
-  "Título com nomes dos noivos, data e local",
-  "Confirmação de presença / check-in",
-  "Mensagens dos convidados em uma galeria de afetos",
-  "Cronograma e localização ao alcance do bolso",
+  "Nomes dos noivos, data e local em destaque",
+  "Confirmação de presença e check-in no dia",
+  "Mensagens dos convidados em uma galeria dedicada",
+  "Cronograma e localização sempre à mão",
 ];
 
 const steps = [
-  { n: "01", title: "Personalize", text: "Defina os nomes, data, fotos e textos do convite." },
-  { n: "02", title: "Compartilhe", text: "Envie o link aos convidados e acompanhe confirmações em tempo real." },
-  { n: "03", title: "Celebre", text: "Use o painel e o check-in no grande dia — sem stress." },
+  { n: "01", title: "Personalize", text: "Defina nomes, data, fotos e textos do convite." },
+  { n: "02", title: "Compartilhe", text: "Envie o link aos convidados e acompanhe as confirmações." },
+  { n: "03", title: "Celebre", text: "Use o painel e o check-in no dia do evento, sem complicação." },
+];
+
+const trustBadges = [
+  { Icon: Sparkles, label: "Convite digital personalizado" },
+  { Icon: CheckCircle2, label: "RSVP integrado" },
+  { Icon: ShieldCheck, label: "Gestão inteligente de convidados" },
 ];
 
 const WeddingLanding = () => {
   return (
     <div className="marketing-theme min-h-screen bg-background text-foreground">
       <SEO
-        title="Convites de Casamento Digitais | RSVP, Presentes e Cronograma"
-        description="Convite de casamento editorial com RSVP digital, lista de presentes, cronograma e check-in. Crie um convite memorável em minutos."
+        title="Convite de Casamento Digital | Página exclusiva, RSVP e presentes"
+        description="Crie uma página de casamento exclusiva com RSVP integrado, lista de presentes e cronograma. Personalização rápida, visual elegante e gestão completa em um único painel."
         path="/casamento"
       />
       <MarketingHeader />
@@ -99,23 +108,23 @@ const WeddingLanding = () => {
               Convite de casamento
             </span>
             <h1 className="mt-6 font-serif text-[2.5rem] font-semibold leading-[1.05] tracking-tight sm:text-5xl md:text-6xl">
-              Um convite à altura
+              Páginas e convites digitais
               <br />
-              do <em className="font-serif italic text-primary">amor de vocês</em>.
+              feitos para o <em className="font-serif italic text-primary">seu casamento</em>.
             </h1>
             <p className="mt-5 max-w-xl text-base text-muted-foreground sm:mt-6 sm:text-lg">
-              Uma plataforma editorial e elegante para criar o convite, organizar os convidados, receber confirmações e
-              viver o grande dia com tranquilidade.
+              Uma plataforma completa para criar a página do casamento, enviar o convite, receber confirmações e
+              organizar tudo em um único painel. Personalização rápida, visual elegante e gestão prática.
             </p>
             <div className="mt-8 flex flex-col items-stretch gap-3 sm:mt-10 sm:flex-row sm:items-center">
-              <Link to="/auth">
+              <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer">
                 <Button size="lg" className="group w-full sm:w-auto">
-                  Criar nosso convite
+                  Falar no WhatsApp
                   <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </Button>
-              </Link>
-              <a href="#recursos">
-                <Button size="lg" variant="outline" className="w-full sm:w-auto">Ver recursos</Button>
+              </a>
+              <a href="#temas">
+                <Button size="lg" variant="outline" className="w-full sm:w-auto">Ver temas</Button>
               </a>
             </div>
           </div>
@@ -154,16 +163,29 @@ const WeddingLanding = () => {
         </div>
       </section>
 
+      {/* TRUST BAR */}
+      <section className="border-y border-border/40 bg-card/40">
+        <div className="container mx-auto px-4 py-5">
+          <div className="flex flex-col items-center justify-center gap-3 text-xs text-muted-foreground sm:flex-row sm:flex-wrap sm:gap-x-8 sm:gap-y-2 sm:text-sm">
+            {trustBadges.map(({ Icon, label }) => (
+              <div key={label} className="inline-flex items-center gap-2">
+                <Icon className="h-4 w-4 text-primary" />
+                <span>{label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* PROPOSTA DE VALOR */}
       <section className="container mx-auto px-4 py-16 sm:py-20 md:py-28">
         <div className="mx-auto max-w-3xl text-center">
           <p className="text-xs uppercase tracking-[0.2em] text-primary">Para noivos</p>
           <h2 className="mt-3 font-serif text-3xl font-semibold leading-tight md:text-5xl">
-            Cada detalhe do seu casamento, em um lugar só.
+            Tudo do seu casamento em um único lugar.
           </h2>
           <p className="mt-5 text-muted-foreground">
-            Da primeira confirmação ao último brinde — uma plataforma feita para que vocês curtam o processo,
-            não apenas a festa.
+            Da primeira confirmação ao check-in no dia do evento, com um painel pensado para reduzir trabalho manual.
           </p>
         </div>
       </section>
@@ -174,8 +196,11 @@ const WeddingLanding = () => {
           <div className="mb-10 max-w-2xl sm:mb-14">
             <p className="text-xs uppercase tracking-[0.2em] text-primary">Recursos</p>
             <h2 className="mt-3 font-serif text-3xl font-semibold leading-tight md:text-4xl">
-              Pensado para casamentos elegantes
+              O essencial para organizar o casamento
             </h2>
+            <p className="mt-3 text-sm text-muted-foreground sm:text-base">
+              Funcionalidades reais da plataforma, sem promessas vagas.
+            </p>
           </div>
 
           <div className="mx-auto grid max-w-6xl gap-5 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -204,11 +229,11 @@ const WeddingLanding = () => {
           <div className="order-2 md:order-1">
             <p className="text-xs uppercase tracking-[0.2em] text-primary">A experiência</p>
             <h2 className="mt-3 font-serif text-3xl font-semibold leading-tight md:text-4xl">
-              Um convite que respira como uma página de revista.
+              Um convite pensado para a tela do convidado.
             </h2>
             <p className="mt-4 text-muted-foreground">
-              Tipografia refinada, ritmo editorial e foco na história de vocês. Tudo otimizado para o celular dos
-              convidados, com elegância em cada toque.
+              Layout responsivo, tipografia refinada e navegação fluida no celular. Cada bloco de conteúdo tem um
+              propósito claro.
             </p>
             <ul className="mt-6 space-y-3">
               {experience.map((item) => (
@@ -223,7 +248,7 @@ const WeddingLanding = () => {
             <div className="mt-8 inline-flex items-center gap-2 rounded-xl border border-border/60 bg-card px-4 py-3 text-sm">
               <LayoutDashboard className="h-4 w-4 text-primary" />
               <span className="text-muted-foreground">
-                Painel administrativo completo para acompanhar tudo
+                Painel administrativo completo para gerenciar tudo
               </span>
             </div>
           </div>
@@ -267,7 +292,7 @@ const WeddingLanding = () => {
           <div className="mx-auto mb-10 max-w-2xl text-center sm:mb-14">
             <p className="text-xs uppercase tracking-[0.2em] text-primary">Como funciona</p>
             <h2 className="mt-3 font-serif text-3xl font-semibold leading-tight md:text-4xl">
-              Do convite ao brinde, sem complicação
+              Três passos, do setup ao dia do evento
             </h2>
           </div>
           <div className="mx-auto grid max-w-5xl gap-5 sm:gap-6 md:grid-cols-3">
@@ -288,25 +313,25 @@ const WeddingLanding = () => {
           <div className="pointer-events-none absolute -top-20 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-primary/20 blur-3xl" aria-hidden />
           <p className="relative text-xs uppercase tracking-[0.3em] text-primary">Vamos começar</p>
           <h2 className="relative mt-3 font-serif text-3xl font-semibold leading-tight md:text-5xl">
-            O convite de casamento dos seus sonhos começa aqui.
+            Pronto para criar o convite do seu casamento?
           </h2>
           <p className="relative mx-auto mt-4 max-w-xl text-muted-foreground">
-            Solicite o seu acesso e crie um convite digital memorável em poucos minutos.
+            Fale com a gente no WhatsApp e receba o acesso para começar a personalizar a sua página.
           </p>
           <div className="relative mt-8 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
             <a
-              href="https://api.whatsapp.com/send/?phone=5562992485994&text=Olá,%20Quero%20criar%20o%20meu%20convite%20de%20casamento.&type=phone_number&app_absent=0"
+              href={WHATSAPP_URL}
               target="_blank"
               rel="noopener noreferrer"
             >
               <Button size="lg" className="group w-full sm:w-auto">
-                Solicitar convite
+                Falar no WhatsApp
                 <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Button>
             </a>
-            <Link to="/">
-              <Button size="lg" variant="outline" className="w-full sm:w-auto">Voltar para a Home</Button>
-            </Link>
+            <a href="#temas">
+              <Button size="lg" variant="outline" className="w-full sm:w-auto">Ver temas</Button>
+            </a>
           </div>
         </div>
       </section>
