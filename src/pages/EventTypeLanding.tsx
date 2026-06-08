@@ -40,9 +40,12 @@ const EventTypeLanding = () => {
         <Link to="/" className="text-2xl font-serif font-bold text-primary">
           Convites
         </Link>
-        <Link to="/auth">
-          <Button variant="outline" size="sm">Entrar</Button>
-        </Link>
+        <div className="flex items-center gap-2">
+          <ThemeToggle label="Tema" />
+          <Link to="/auth">
+            <Button variant="outline" size="sm">Entrar</Button>
+          </Link>
+        </div>
       </header>
 
       <main className="flex-1">
