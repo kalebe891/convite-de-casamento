@@ -293,7 +293,7 @@ const WeddingLanding = () => {
           <div className="mx-auto mb-10 max-w-2xl text-center sm:mb-14">
             <p className="text-xs uppercase tracking-[0.2em] text-primary">Como funciona</p>
             <h2 className="mt-3 font-serif text-3xl font-semibold leading-tight md:text-4xl">
-              Do convite ao brinde, sem complicação
+              Três passos, do setup ao dia do evento
             </h2>
           </div>
           <div className="mx-auto grid max-w-5xl gap-5 sm:gap-6 md:grid-cols-3">
