@@ -11,6 +11,7 @@ import ThemeShowcaseCard, {
   LegacyPreview,
   MinimalPreview,
   ModernNoirPreview,
+  SkyPeachPreview,
   type ThemeShowcaseItem,
 } from "./ThemeShowcaseCard";
 
@@ -87,6 +88,18 @@ const THEMES: ThemeShowcaseItem[] = [
     ],
     Preview: BohoPreview,
   },
+  {
+    id: "sky-peach",
+    name: "Sky & Peach",
+    description:
+      "Sonhador e contemporâneo. Azul celeste com toques pêssego, composição leve e arejada.",
+    features: [
+      "Hero split 50/50 (foto + conteúdo)",
+      "Blobs orgânicos e arcos suaves em CSS",
+      "Tipografia Outfit + Figtree",
+    ],
+    Preview: SkyPeachPreview,
+  },
 ];
 
 const buildPreviewUrl = (themeId: string) =>
@@ -127,7 +140,7 @@ const ThemesShowcaseSection = () => {
             Escolha o estilo do seu convite
           </h2>
           <p className="mt-4 text-muted-foreground">
-            Seis temas exclusivos, cada um com personalidade própria.
+            Sete temas exclusivos, cada um com personalidade própria.
             Visualize ao vivo antes de decidir.
           </p>
         </div>
