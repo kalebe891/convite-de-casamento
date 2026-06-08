@@ -12,10 +12,9 @@ import IndexEditorial from "./editorial/IndexEditorial";
 import IndexMinimal from "./minimal/IndexMinimal";
 import IndexModernNoir from "./modern-noir/IndexModernNoir";
 import IndexArtDeco from "./art-deco/IndexArtDeco";
-import IndexBoho from "./boho/IndexBoho";
 import IndexSkyPeach from "./sky-peach/IndexSkyPeach";
 
-export type TenantThemeId = "legacy" | "editorial" | "minimal" | "modern-noir" | "art-deco" | "boho" | "sky-peach";
+export type TenantThemeId = "legacy" | "editorial" | "minimal" | "modern-noir" | "art-deco" | "sky-peach";
 
 export interface TenantThemeDefinition {
   id: TenantThemeId;
@@ -54,12 +53,6 @@ const ART_DECO_THEME: TenantThemeDefinition = {
   Renderer: IndexArtDeco,
 };
 
-const BOHO_THEME: TenantThemeDefinition = {
-  id: "boho",
-  label: "Boho",
-  Renderer: IndexBoho,
-};
-
 const SKY_PEACH_THEME: TenantThemeDefinition = {
   id: "sky-peach",
   label: "Sky & Peach",
@@ -72,7 +65,6 @@ export const themeRegistry: Record<TenantThemeId, TenantThemeDefinition> = {
   minimal: MINIMAL_THEME,
   "modern-noir": MODERN_NOIR_THEME,
   "art-deco": ART_DECO_THEME,
-  boho: BOHO_THEME,
   "sky-peach": SKY_PEACH_THEME,
 };
 
