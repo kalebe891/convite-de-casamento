@@ -84,8 +84,8 @@ const WeddingLanding = () => {
   return (
     <div className="marketing-theme min-h-screen bg-background text-foreground">
       <SEO
-        title="Convites de Casamento Digitais | RSVP, Presentes e Cronograma"
-        description="Convite de casamento editorial com RSVP digital, lista de presentes, cronograma e check-in. Crie um convite memorável em minutos."
+        title="Convite de Casamento Digital | Página exclusiva, RSVP e presentes"
+        description="Crie uma página de casamento exclusiva com RSVP integrado, lista de presentes e cronograma. Personalização rápida, visual elegante e gestão completa em um único painel."
         path="/casamento"
       />
       <MarketingHeader />
