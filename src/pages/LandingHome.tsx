@@ -128,7 +128,7 @@ const LandingHome = () => {
               </Link>
               <Link to="#temas" className="sm:w-auto">
                 <Button size="lg" variant="outline" className="w-full sm:w-auto">
-                  Ver temas
+                  Ver opções
                 </Button>
               </Link>
             </div>
