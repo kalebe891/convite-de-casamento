@@ -126,11 +126,20 @@ const LandingHome = () => {
                   <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </Button>
               </Link>
-              <Link to="#produtos" className="sm:w-auto">
+              <a
+                href="#produtos"
+                className="sm:w-auto"
+                onClick={(e) => {
+                  e.preventDefault();
+                  document
+                    .getElementById("produtos")
+                    ?.scrollIntoView({ behavior: "smooth", block: "start" });
+                }}
+              >
                 <Button size="lg" variant="outline" className="w-full sm:w-auto">
                   Ver opções
                 </Button>
-              </Link>
+              </a>
             </div>
             <p className="mt-6 text-xs text-muted-foreground">
               Sem instalação · Acesso via celular · Pronto em minutos

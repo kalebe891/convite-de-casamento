@@ -18,6 +18,7 @@ import EventTypeLanding from "./pages/EventTypeLanding";
 import TenantPublicLayout from "./components/routing/TenantPublicLayout";
 import TenantAdminGuard from "./components/routing/TenantAdminGuard";
 import MasterAdminGuard from "./components/routing/MasterAdminGuard";
+import ScrollToTop from "./components/ScrollToTop";
 import Usuarios from "./pages/admin/Usuarios";
 import Convidados from "./pages/admin/Convidados";
 import Detalhes from "./pages/admin/Detalhes";
@@ -64,6 +65,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <ScrollToTop />
         <Routes>
           {/* ===== Rotas estáticas / institucionais ===== */}
           <Route path="/" element={<LandingHome />} />
