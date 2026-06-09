@@ -81,11 +81,12 @@ const comparativo = [
     bg: "bg-primary/5",
     icon: CheckCircle2,
     iconColor: "text-primary",
-    headline: "Taxa única de adesão. 100% do valor dos presentes vai direto para você, sem intermediários. Zero comissões ocultas.",
+    headline: "Taxa única de utilização. 100% do valor dos presentes vai direto para você, sem intermediários. Zero comissões ocultas.",
     points: [
-      { ok: true, text: "Zero comissão sobre presentes" },
-      { ok: true, text: "Acesso garantido por 365 dias (renovável)" },
+      { ok: true, text: "Taxa única de utilização" },
+      { ok: true, text: "Sem comissão sobre presentes" },
       { ok: true, text: "Transparência desde o início" },
+      { ok: true, text: "Acesso garantido por 365 dias (renovável)" },
     ],
   },
 ];
