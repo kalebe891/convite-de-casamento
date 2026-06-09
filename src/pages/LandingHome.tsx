@@ -81,11 +81,12 @@ const comparativo = [
     bg: "bg-primary/5",
     icon: CheckCircle2,
     iconColor: "text-primary",
-    headline: "Taxa única de adesão. 100% do valor dos presentes vai direto para você, sem intermediários. Zero comissões ocultas.",
+    headline: "Taxa única de utilização. 100% do valor dos presentes vai direto para você, sem intermediários. Zero comissões ocultas.",
     points: [
-      { ok: true, text: "Zero comissão sobre presentes" },
-      { ok: true, text: "PIX direto para sua conta" },
-      { ok: true, text: "Transparência total desde o início" },
+      { ok: true, text: "Taxa única de utilização" },
+      { ok: true, text: "Sem comissão sobre presentes" },
+      { ok: true, text: "Transparência desde o início" },
+      { ok: true, text: "Acesso garantido por 365 dias (renovável)" },
     ],
   },
 ];
@@ -265,7 +266,7 @@ const LandingHome = () => {
             Pronto para criar um convite memorável?
           </h2>
           <p className="relative mx-auto mt-4 max-w-xl text-muted-foreground">
-            Comece agora e tenha tudo pronto antes do que você imagina.
+            Fale com nossa equipe para garantir sua licença, escolher seu tema e começar a personalizar os detalhes do seu evento.
           </p>
           <div className="relative mt-8 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
             <Link to="/casamento">
