@@ -266,7 +266,7 @@ const LandingHome = () => {
             Pronto para criar um convite memorável?
           </h2>
           <p className="relative mx-auto mt-4 max-w-xl text-muted-foreground">
-            Comece agora e tenha tudo pronto antes do que você imagina.
+            Fale com nossa equipe para garantir sua licença, escolher seu tema e começar a personalizar os detalhes do seu evento.
           </p>
           <div className="relative mt-8 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
             <Link to="/casamento">
