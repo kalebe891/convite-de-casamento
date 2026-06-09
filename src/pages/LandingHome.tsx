@@ -17,7 +17,6 @@ import {
 } from "lucide-react";
 import MarketingHeader from "@/components/marketing/MarketingHeader";
 import MarketingFooter from "@/components/marketing/MarketingFooter";
-import ThemesShowcaseSection from "@/components/marketing/ThemesShowcaseSection";
 import SEO from "@/components/seo/SEO";
 
 const products = [
@@ -211,9 +210,6 @@ const LandingHome = () => {
           ))}
         </div>
       </section>
-
-      {/* VITRINE DE TEMAS */}
-      <ThemesShowcaseSection />
 
       {/* MULTI-EVENTO */}
       <section id="produtos" className="border-t border-border/40 bg-muted/30 py-16 sm:py-20 md:py-28">
