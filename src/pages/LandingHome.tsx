@@ -271,7 +271,7 @@ const LandingHome = () => {
           <div className="relative mt-8 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
             <Link to="/casamento">
               <Button size="lg" className="group w-full sm:w-auto">
-                Criar convite de casamento
+                Criar convite
                 <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Button>
             </Link>
