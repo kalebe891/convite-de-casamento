@@ -84,8 +84,8 @@ const comparativo = [
     headline: "Taxa única de adesão. 100% do valor dos presentes vai direto para você, sem intermediários. Zero comissões ocultas.",
     points: [
       { ok: true, text: "Zero comissão sobre presentes" },
-      { ok: true, text: "PIX direto para sua conta" },
-      { ok: true, text: "Transparência total desde o início" },
+      { ok: true, text: "Acesso garantido por 365 dias (renovável)" },
+      { ok: true, text: "Transparência desde o início" },
     ],
   },
 ];
