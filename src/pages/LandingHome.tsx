@@ -17,7 +17,6 @@ import {
 } from "lucide-react";
 import MarketingHeader from "@/components/marketing/MarketingHeader";
 import MarketingFooter from "@/components/marketing/MarketingFooter";
-import ThemesShowcaseSection from "@/components/marketing/ThemesShowcaseSection";
 import SEO from "@/components/seo/SEO";
 
 const products = [
