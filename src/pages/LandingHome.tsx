@@ -47,17 +47,17 @@ const gestaoItems = [
   {
     Icon: LayoutDashboard,
     title: "Centralize confirmações",
-    text: "Acompanhe RSVPs, acompanhantes e restrições alimentares em um painel único, sem depender de planilhas.",
+    text: "Acompanhe RSVPs em um painel único, sem depender de planilhas.",
   },
   {
     Icon: UserCheck,
     title: "Controle visual de acompanhantes",
-    text: "Veja exatamente quem confirmou, com quantos acompanhantes e quais preferências, em tempo real.",
+    text: "Veja exatamente quem confirmou em tempo real.",
   },
   {
     Icon: Users,
     title: "Gestão sem fricção",
-    text: "Importe listas, organize por grupos e envie lembretes — tudo em um fluxo pensado para cerimonialistas.",
+    text: "Gestão de usuário com permissões definidas, por exemplo: cerimonialistas.",
   },
 ];
 
