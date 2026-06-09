@@ -124,7 +124,7 @@ const WeddingLanding = () => {
                 </Button>
               </a>
               <a href="#temas">
-                <Button size="lg" variant="outline" className="w-full sm:w-auto">Ver temas</Button>
+                <Button size="lg" variant="outline" className="w-full sm:w-auto">Ver opções</Button>
               </a>
             </div>
           </div>
