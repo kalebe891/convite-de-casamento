@@ -123,7 +123,7 @@ const LandingHome = () => {
             <div className="mt-8 flex flex-col items-stretch justify-center gap-3 sm:mt-10 sm:flex-row sm:items-center">
               <Link to="/casamento" className="sm:w-auto">
                 <Button size="lg" className="group w-full sm:w-auto">
-                  Criar meu evento
+                  Criar meu convite
                   <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </Button>
               </Link>
