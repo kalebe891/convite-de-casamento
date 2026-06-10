@@ -31,6 +31,10 @@ type Wedding = {
   groom_name: string | null;
   wedding_date: string;
   created_at: string;
+  tenant_status: string | null;
+  expires_at: string | null;
+  archived_at: string | null;
+  is_public_showcase: boolean | null;
 };
 
 type Counts = {
