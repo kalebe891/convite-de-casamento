@@ -14,7 +14,8 @@ import {
 } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 import { buildTenantAdminUrl } from "@/lib/eventType";
-import { CalendarDays, Plus, Users, Gift, Images, Mail, ArrowRight, Search, RefreshCw, PartyPopper, Heart, CalendarCheck, Trash2 } from "lucide-react";
+import { logAdminAction } from "@/lib/adminLogger";
+import { CalendarDays, Plus, Users, Gift, Images, Mail, ArrowRight, Search, RefreshCw, PartyPopper, Heart, CalendarCheck, Trash2, Archive, RotateCcw } from "lucide-react";
 import CreateEventDialog from "@/components/admin/CreateEventDialog";
 import DeleteTenantDialog from "@/components/admin/DeleteTenantDialog";
 import TenantViewToggle, { type TenantViewMode } from "@/components/admin/TenantViewToggle";
@@ -31,6 +32,10 @@ type Wedding = {
   groom_name: string | null;
   wedding_date: string;
   created_at: string;
+  tenant_status?: string | null;
+  expires_at?: string | null;
+  archived_at?: string | null;
+  is_public_showcase?: boolean | null;
 };
 
 type Counts = {
@@ -118,7 +123,7 @@ export default function MasterDashboard() {
     setError(null);
     const { data, error: err } = await supabase
       .from("wedding_details")
-      .select("id,slug,event_type,theme_id,bride_name,groom_name,wedding_date,created_at")
+      .select("id,slug,event_type,theme_id,bride_name,groom_name,wedding_date,created_at,tenant_status,expires_at,archived_at,is_public_showcase")
       .order("created_at", { ascending: false });
 
     if (err) {
@@ -189,6 +194,78 @@ export default function MasterDashboard() {
   }, [weddings, search, typeFilter, sortBy]);
 
   const handleCreate = () => setCreateOpen(true);
+
+  const tenantDisplayName = (w: Wedding) => formatNames(w);
+
+  const handleRenew = async (w: Wedding) => {
+    const base = w.expires_at ? new Date(w.expires_at) : new Date();
+    const next = new Date(base.getTime() + 365 * 24 * 60 * 60 * 1000).toISOString();
+    const { error: err } = await supabase
+      .from("wedding_details")
+      .update({ expires_at: next })
+      .eq("id", w.id);
+    if (err) {
+      toast({ title: "Erro ao renovar", description: err.message, variant: "destructive" });
+      return;
+    }
+    await logAdminAction({
+      action: "TENANT_RENEWED",
+      tableName: "wedding_details",
+      recordId: w.id,
+      oldData: { expires_at: w.expires_at },
+      newData: { expires_at: next },
+      affectedName: tenantDisplayName(w),
+      weddingId: w.id,
+    });
+    toast({ title: "Tenant renovado", description: "+365 dias adicionados à validade." });
+    await load();
+  };
+
+  const handleArchive = async (w: Wedding) => {
+    if (!window.confirm(`Arquivar o tenant "${tenantDisplayName(w)}"? Os dados serão preservados.`)) return;
+    const now = new Date().toISOString();
+    const { error: err } = await supabase
+      .from("wedding_details")
+      .update({ tenant_status: "archived", archived_at: now, is_public_showcase: false })
+      .eq("id", w.id);
+    if (err) {
+      toast({ title: "Erro ao arquivar", description: err.message, variant: "destructive" });
+      return;
+    }
+    await logAdminAction({
+      action: "TENANT_ARCHIVED",
+      tableName: "wedding_details",
+      recordId: w.id,
+      oldData: { tenant_status: w.tenant_status, archived_at: w.archived_at, is_public_showcase: w.is_public_showcase },
+      newData: { tenant_status: "archived", archived_at: now, is_public_showcase: false },
+      affectedName: tenantDisplayName(w),
+      weddingId: w.id,
+    });
+    toast({ title: "Tenant arquivado", description: "Removido da vitrine pública. Dados preservados." });
+    await load();
+  };
+
+  const handleRestore = async (w: Wedding) => {
+    const { error: err } = await supabase
+      .from("wedding_details")
+      .update({ tenant_status: "active", archived_at: null })
+      .eq("id", w.id);
+    if (err) {
+      toast({ title: "Erro ao restaurar", description: err.message, variant: "destructive" });
+      return;
+    }
+    await logAdminAction({
+      action: "TENANT_RESTORED",
+      tableName: "wedding_details",
+      recordId: w.id,
+      oldData: { tenant_status: w.tenant_status, archived_at: w.archived_at },
+      newData: { tenant_status: "active", archived_at: null },
+      affectedName: tenantDisplayName(w),
+      weddingId: w.id,
+    });
+    toast({ title: "Tenant restaurado", description: "Tenant voltou ao estado ativo." });
+    await load();
+  };
 
   const summary = useMemo(() => {
     const total = weddings.length;
@@ -320,6 +397,9 @@ export default function MasterDashboard() {
           buildUrl={(w) => buildTenantAdminUrl(w)}
           onAccess={(url) => navigate(url)}
           onDelete={(w) => setDeleteTarget(w)}
+          onRenew={handleRenew}
+          onArchive={handleArchive}
+          onRestore={handleRestore}
         />
       ) : (
         <div className="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
@@ -327,13 +407,20 @@ export default function MasterDashboard() {
             const url = buildTenantAdminUrl(w);
             const c = counts[w.id];
             const status = statusLabel(getEventStatus(w.wedding_date));
+            const isArchived = w.tenant_status === "archived";
+            const days = w.expires_at
+              ? Math.ceil((new Date(w.expires_at).getTime() - Date.now()) / 86400000)
+              : null;
             return (
-              <Card key={w.id} className="flex flex-col">
+              <Card key={w.id} className={`flex flex-col ${isArchived ? "opacity-80" : ""}`}>
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between gap-2">
                     <CardTitle className="text-lg font-serif">{formatNames(w)}</CardTitle>
                     <div className="flex flex-col items-end gap-1">
                       <Badge variant="secondary">{eventTypeLabel(w.event_type)}</Badge>
+                      <Badge variant={isArchived ? "outline" : "default"}>
+                        {isArchived ? "Arquivado" : "Ativo"}
+                      </Badge>
                       {status && <Badge variant={status.variant}>{status.label}</Badge>}
                     </div>
                   </div>
@@ -347,6 +434,12 @@ export default function MasterDashboard() {
                     </div>
                     <div className="text-muted-foreground">
                       Tema: <span className="font-medium text-foreground">{w.theme_id ?? "default"}</span>
+                    </div>
+                    <div className="text-muted-foreground">
+                      Expira em: <span className="font-medium text-foreground">{formatDate(w.expires_at)}</span>
+                    </div>
+                    <div className="text-muted-foreground">
+                      Dias restantes: <span className="font-medium text-foreground">{days === null ? "—" : days}</span>
                     </div>
                     <div className="text-muted-foreground col-span-2">
                       Criado em {formatDate(w.created_at)}
@@ -376,9 +469,9 @@ export default function MasterDashboard() {
                     </div>
                   </div>
 
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 flex-wrap">
                     <Button
-                      className="flex-1 gap-2"
+                      className="flex-1 gap-2 min-w-[140px]"
                       variant="outline"
                       disabled={!url}
                       onClick={() => url && navigate(url)}
@@ -386,6 +479,20 @@ export default function MasterDashboard() {
                       Acessar painel
                       <ArrowRight className="w-4 h-4" />
                     </Button>
+                    {!isArchived ? (
+                      <>
+                        <Button variant="outline" size="icon" title="Renovar +365 dias" onClick={() => handleRenew(w)}>
+                          <RefreshCw className="w-4 h-4" />
+                        </Button>
+                        <Button variant="outline" size="icon" title="Arquivar tenant" onClick={() => handleArchive(w)}>
+                          <Archive className="w-4 h-4" />
+                        </Button>
+                      </>
+                    ) : (
+                      <Button variant="outline" size="icon" title="Restaurar tenant" onClick={() => handleRestore(w)}>
+                        <RotateCcw className="w-4 h-4" />
+                      </Button>
+                    )}
                     <Button
                       variant="destructive"
                       size="icon"
