@@ -137,7 +137,7 @@ const LandingHome = () => {
                 }}
               >
                 <Button size="lg" variant="outline" className="w-full sm:w-auto">
-                  Ver opções
+                  Ver temas
                 </Button>
               </a>
             </div>
