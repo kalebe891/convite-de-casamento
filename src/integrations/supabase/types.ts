@@ -802,10 +802,12 @@ export type Database = {
       }
       wedding_details: {
         Row: {
+          archived_at: string | null
           bride_name: string
           couple_message: string | null
           created_at: string | null
           event_type: string | null
+          expires_at: string | null
           groom_name: string
           hide_reserved_gifts: boolean
           id: string
@@ -819,6 +821,7 @@ export type Database = {
           show_timeline_section: boolean | null
           slug: string | null
           story: string | null
+          tenant_status: string
           theme_color: string | null
           theme_id: string
           updated_at: string | null
@@ -828,10 +831,12 @@ export type Database = {
           wedding_date: string
         }
         Insert: {
+          archived_at?: string | null
           bride_name: string
           couple_message?: string | null
           created_at?: string | null
           event_type?: string | null
+          expires_at?: string | null
           groom_name: string
           hide_reserved_gifts?: boolean
           id?: string
@@ -845,6 +850,7 @@ export type Database = {
           show_timeline_section?: boolean | null
           slug?: string | null
           story?: string | null
+          tenant_status?: string
           theme_color?: string | null
           theme_id?: string
           updated_at?: string | null
@@ -854,10 +860,12 @@ export type Database = {
           wedding_date: string
         }
         Update: {
+          archived_at?: string | null
           bride_name?: string
           couple_message?: string | null
           created_at?: string | null
           event_type?: string | null
+          expires_at?: string | null
           groom_name?: string
           hide_reserved_gifts?: boolean
           id?: string
@@ -871,6 +879,7 @@ export type Database = {
           show_timeline_section?: boolean | null
           slug?: string | null
           story?: string | null
+          tenant_status?: string
           theme_color?: string | null
           theme_id?: string
           updated_at?: string | null
