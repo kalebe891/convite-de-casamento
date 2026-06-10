@@ -1,7 +1,17 @@
 import { supabase } from "@/integrations/supabase/client";
 
 interface LogParams {
-  action: 'insert' | 'update' | 'delete' | 'checkin' | 'undo_checkin' | 'gift_received' | 'gift_cancelled';
+  action:
+    | 'insert'
+    | 'update'
+    | 'delete'
+    | 'checkin'
+    | 'undo_checkin'
+    | 'gift_received'
+    | 'gift_cancelled'
+    | 'TENANT_RENEWED'
+    | 'TENANT_ARCHIVED'
+    | 'TENANT_RESTORED';
   tableName: string;
   recordId?: string;
   oldData?: any;
