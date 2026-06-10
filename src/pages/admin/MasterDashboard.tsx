@@ -195,6 +195,78 @@ export default function MasterDashboard() {
 
   const handleCreate = () => setCreateOpen(true);
 
+  const tenantDisplayName = (w: Wedding) => formatNames(w);
+
+  const handleRenew = async (w: Wedding) => {
+    const base = w.expires_at ? new Date(w.expires_at) : new Date();
+    const next = new Date(base.getTime() + 365 * 24 * 60 * 60 * 1000).toISOString();
+    const { error: err } = await supabase
+      .from("wedding_details")
+      .update({ expires_at: next })
+      .eq("id", w.id);
+    if (err) {
+      toast({ title: "Erro ao renovar", description: err.message, variant: "destructive" });
+      return;
+    }
+    await logAdminAction({
+      action: "TENANT_RENEWED",
+      tableName: "wedding_details",
+      recordId: w.id,
+      oldData: { expires_at: w.expires_at },
+      newData: { expires_at: next },
+      affectedName: tenantDisplayName(w),
+      weddingId: w.id,
+    });
+    toast({ title: "Tenant renovado", description: "+365 dias adicionados à validade." });
+    await load();
+  };
+
+  const handleArchive = async (w: Wedding) => {
+    if (!window.confirm(`Arquivar o tenant "${tenantDisplayName(w)}"? Os dados serão preservados.`)) return;
+    const now = new Date().toISOString();
+    const { error: err } = await supabase
+      .from("wedding_details")
+      .update({ tenant_status: "archived", archived_at: now, is_public_showcase: false })
+      .eq("id", w.id);
+    if (err) {
+      toast({ title: "Erro ao arquivar", description: err.message, variant: "destructive" });
+      return;
+    }
+    await logAdminAction({
+      action: "TENANT_ARCHIVED",
+      tableName: "wedding_details",
+      recordId: w.id,
+      oldData: { tenant_status: w.tenant_status, archived_at: w.archived_at, is_public_showcase: w.is_public_showcase },
+      newData: { tenant_status: "archived", archived_at: now, is_public_showcase: false },
+      affectedName: tenantDisplayName(w),
+      weddingId: w.id,
+    });
+    toast({ title: "Tenant arquivado", description: "Removido da vitrine pública. Dados preservados." });
+    await load();
+  };
+
+  const handleRestore = async (w: Wedding) => {
+    const { error: err } = await supabase
+      .from("wedding_details")
+      .update({ tenant_status: "active", archived_at: null })
+      .eq("id", w.id);
+    if (err) {
+      toast({ title: "Erro ao restaurar", description: err.message, variant: "destructive" });
+      return;
+    }
+    await logAdminAction({
+      action: "TENANT_RESTORED",
+      tableName: "wedding_details",
+      recordId: w.id,
+      oldData: { tenant_status: w.tenant_status, archived_at: w.archived_at },
+      newData: { tenant_status: "active", archived_at: null },
+      affectedName: tenantDisplayName(w),
+      weddingId: w.id,
+    });
+    toast({ title: "Tenant restaurado", description: "Tenant voltou ao estado ativo." });
+    await load();
+  };
+
   const summary = useMemo(() => {
     const total = weddings.length;
     const weddingCount = weddings.filter((w) => w.event_type === "wedding").length;
