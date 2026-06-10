@@ -397,6 +397,9 @@ export default function MasterDashboard() {
           buildUrl={(w) => buildTenantAdminUrl(w)}
           onAccess={(url) => navigate(url)}
           onDelete={(w) => setDeleteTarget(w)}
+          onRenew={handleRenew}
+          onArchive={handleArchive}
+          onRestore={handleRestore}
         />
       ) : (
         <div className="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
