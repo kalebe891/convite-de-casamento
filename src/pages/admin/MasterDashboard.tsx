@@ -407,13 +407,20 @@ export default function MasterDashboard() {
             const url = buildTenantAdminUrl(w);
             const c = counts[w.id];
             const status = statusLabel(getEventStatus(w.wedding_date));
+            const isArchived = w.tenant_status === "archived";
+            const days = w.expires_at
+              ? Math.ceil((new Date(w.expires_at).getTime() - Date.now()) / 86400000)
+              : null;
             return (
-              <Card key={w.id} className="flex flex-col">
+              <Card key={w.id} className={`flex flex-col ${isArchived ? "opacity-80" : ""}`}>
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between gap-2">
                     <CardTitle className="text-lg font-serif">{formatNames(w)}</CardTitle>
                     <div className="flex flex-col items-end gap-1">
                       <Badge variant="secondary">{eventTypeLabel(w.event_type)}</Badge>
+                      <Badge variant={isArchived ? "outline" : "default"}>
+                        {isArchived ? "Arquivado" : "Ativo"}
+                      </Badge>
                       {status && <Badge variant={status.variant}>{status.label}</Badge>}
                     </div>
                   </div>
@@ -427,6 +434,12 @@ export default function MasterDashboard() {
                     </div>
                     <div className="text-muted-foreground">
                       Tema: <span className="font-medium text-foreground">{w.theme_id ?? "default"}</span>
+                    </div>
+                    <div className="text-muted-foreground">
+                      Expira em: <span className="font-medium text-foreground">{formatDate(w.expires_at)}</span>
+                    </div>
+                    <div className="text-muted-foreground">
+                      Dias restantes: <span className="font-medium text-foreground">{days === null ? "—" : days}</span>
                     </div>
                     <div className="text-muted-foreground col-span-2">
                       Criado em {formatDate(w.created_at)}
@@ -456,9 +469,9 @@ export default function MasterDashboard() {
                     </div>
                   </div>
 
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 flex-wrap">
                     <Button
-                      className="flex-1 gap-2"
+                      className="flex-1 gap-2 min-w-[140px]"
                       variant="outline"
                       disabled={!url}
                       onClick={() => url && navigate(url)}
@@ -466,6 +479,20 @@ export default function MasterDashboard() {
                       Acessar painel
                       <ArrowRight className="w-4 h-4" />
                     </Button>
+                    {!isArchived ? (
+                      <>
+                        <Button variant="outline" size="icon" title="Renovar +365 dias" onClick={() => handleRenew(w)}>
+                          <RefreshCw className="w-4 h-4" />
+                        </Button>
+                        <Button variant="outline" size="icon" title="Arquivar tenant" onClick={() => handleArchive(w)}>
+                          <Archive className="w-4 h-4" />
+                        </Button>
+                      </>
+                    ) : (
+                      <Button variant="outline" size="icon" title="Restaurar tenant" onClick={() => handleRestore(w)}>
+                        <RotateCcw className="w-4 h-4" />
+                      </Button>
+                    )}
                     <Button
                       variant="destructive"
                       size="icon"
