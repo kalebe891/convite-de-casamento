@@ -337,7 +337,15 @@ const WeddingLanding = () => {
                 <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Button>
             </a>
-            <a href="#temas">
+            <a
+              href="#temas"
+              onClick={(e) => {
+                e.preventDefault();
+                document
+                  .getElementById("temas")
+                  ?.scrollIntoView({ behavior: "smooth", block: "start" });
+              }}
+            >
               <Button size="lg" variant="outline" className="w-full sm:w-auto">Ver opções</Button>
             </a>
           </div>
