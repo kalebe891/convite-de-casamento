@@ -12,7 +12,10 @@ interface LogParams {
    | 'TENANT_RENEWED'
    | 'TENANT_ARCHIVED'
    | 'TENANT_RESTORED'
-   | 'THEME_CORRECTED';
+   | 'THEME_CORRECTED'
+   | 'DEMO_CREATED'
+   | 'DEMO_CONVERTED'
+   | 'DEMO_EXPIRED';
   tableName: string;
   recordId?: string;
   oldData?: any;

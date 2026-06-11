@@ -37,6 +37,8 @@ type Wedding = {
   expires_at?: string | null;
   archived_at?: string | null;
   is_public_showcase?: boolean | null;
+  is_demo?: boolean | null;
+  demo_expires_at?: string | null;
 };
 
 type Counts = {
@@ -124,7 +126,7 @@ export default function MasterDashboard() {
     setError(null);
     const { data, error: err } = await supabase
       .from("wedding_details")
-      .select("id,slug,event_type,theme_id,bride_name,groom_name,wedding_date,created_at,tenant_status,expires_at,archived_at,is_public_showcase")
+      .select("id,slug,event_type,theme_id,bride_name,groom_name,wedding_date,created_at,tenant_status,expires_at,archived_at,is_public_showcase,is_demo,demo_expires_at")
       .order("created_at", { ascending: false });
 
     if (err) {
@@ -447,6 +449,11 @@ export default function MasterDashboard() {
                       <Badge variant={isArchived ? "outline" : "default"}>
                         {isArchived ? "Arquivado" : "Ativo"}
                       </Badge>
+                      {w.is_demo && (
+                        <Badge variant="secondary">
+                          Demo{w.demo_expires_at ? ` · expira em ${Math.max(0, Math.ceil((new Date(w.demo_expires_at).getTime() - Date.now()) / 86400000))}d` : ""}
+                        </Badge>
+                      )}
                       {status && <Badge variant={status.variant}>{status.label}</Badge>}
                       {!isValidThemeId(w.theme_id) && (
                         <Badge variant="destructive" className="gap-1">

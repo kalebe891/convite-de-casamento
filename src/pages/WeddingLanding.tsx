@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Heart,
@@ -16,6 +17,7 @@ import MarketingHeader from "@/components/marketing/MarketingHeader";
 import MarketingFooter from "@/components/marketing/MarketingFooter";
 import ShowcaseSection from "@/components/marketing/ShowcaseSection";
 import ThemesShowcaseSection from "@/components/marketing/ThemesShowcaseSection";
+import DemoSignupDialog from "@/components/marketing/DemoSignupDialog";
 import SEO from "@/components/seo/SEO";
 
 const WHATSAPP_URL =
@@ -80,6 +82,7 @@ const trustBadges = [
 ];
 
 const WeddingLanding = () => {
+  const [demoOpen, setDemoOpen] = useState(false);
   return (
     <div className="marketing-theme min-h-screen bg-background text-foreground">
       <SEO
@@ -117,12 +120,10 @@ const WeddingLanding = () => {
               organizar tudo em um único painel. Personalização rápida, visual elegante e gestão prática.
             </p>
             <div className="mt-8 flex flex-col items-stretch gap-3 sm:mt-10 sm:flex-row sm:items-center">
-              <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer">
-                <Button size="lg" className="group w-full sm:w-auto">
-                  Falar no WhatsApp
-                  <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-                </Button>
-              </a>
+              <Button size="lg" className="group w-full sm:w-auto" onClick={() => setDemoOpen(true)}>
+                Criar meu convite
+                <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+              </Button>
               <a
                 href="#temas"
                 onClick={(e) => {
@@ -327,16 +328,10 @@ const WeddingLanding = () => {
             Fale com a gente no WhatsApp e receba o acesso para começar a personalizar a sua página.
           </p>
           <div className="relative mt-8 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
-            <a
-              href={WHATSAPP_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <Button size="lg" className="group w-full sm:w-auto">
-                Falar no WhatsApp
-                <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-              </Button>
-            </a>
+            <Button size="lg" className="group w-full sm:w-auto" onClick={() => setDemoOpen(true)}>
+              Criar meu convite
+              <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+            </Button>
             <a
               href="#temas"
               onClick={(e) => {
@@ -361,6 +356,7 @@ const WeddingLanding = () => {
       />
 
       <MarketingFooter />
+      <DemoSignupDialog open={demoOpen} onOpenChange={setDemoOpen} />
     </div>
   );
 };
