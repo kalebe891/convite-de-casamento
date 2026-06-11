@@ -175,6 +175,18 @@ export default function TenantTable({
                         Restaurar
                       </Button>
                     )}
+                    {!isValidThemeId(w.theme_id) && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => onFixTheme(w)}
+                        className="gap-1"
+                        title="Corrigir tema inválido (define legacy)"
+                      >
+                        <Wrench className="w-3.5 h-3.5" />
+                        Corrigir Tema
+                      </Button>
+                    )}
                     <Button
                       size="sm"
                       variant="destructive"
