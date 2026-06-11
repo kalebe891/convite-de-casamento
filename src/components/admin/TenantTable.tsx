@@ -8,7 +8,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ArrowRight, Trash2, RefreshCw, Archive, RotateCcw } from "lucide-react";
+import { ArrowRight, Trash2, RefreshCw, Archive, RotateCcw, AlertTriangle, Wrench } from "lucide-react";
+import { isValidThemeId } from "@/lib/themeValidation";
 
 type Wedding = {
   id: string;
@@ -47,7 +48,9 @@ interface Props {
   onRenew: (w: Wedding) => void;
   onArchive: (w: Wedding) => void;
   onRestore: (w: Wedding) => void;
+  onFixTheme: (w: Wedding) => void;
 }
+
 
 function daysRemaining(expires: string | null | undefined): number | null {
   if (!expires) return null;
@@ -69,6 +72,7 @@ export default function TenantTable({
   onRenew,
   onArchive,
   onRestore,
+  onFixTheme,
 }: Props) {
   return (
     <div className="border rounded-md overflow-x-auto">
@@ -106,9 +110,17 @@ export default function TenantTable({
                   {status ? <Badge variant={status.variant}>{status.label}</Badge> : "—"}
                 </TableCell>
                 <TableCell>
-                  <Badge variant={isArchived ? "outline" : "default"}>
-                    {isArchived ? "Arquivado" : "Ativo"}
-                  </Badge>
+                  <div className="flex flex-col gap-1 items-start">
+                    <Badge variant={isArchived ? "outline" : "default"}>
+                      {isArchived ? "Arquivado" : "Ativo"}
+                    </Badge>
+                    {!isValidThemeId(w.theme_id) && (
+                      <Badge variant="destructive" className="gap-1">
+                        <AlertTriangle className="w-3 h-3" />
+                        Tema Inválido
+                      </Badge>
+                    )}
+                  </div>
                 </TableCell>
                 <TableCell className="text-xs">{formatDate(w.expires_at)}</TableCell>
                 <TableCell className="text-right text-xs">
@@ -161,6 +173,18 @@ export default function TenantTable({
                       >
                         <RotateCcw className="w-3.5 h-3.5" />
                         Restaurar
+                      </Button>
+                    )}
+                    {!isValidThemeId(w.theme_id) && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => onFixTheme(w)}
+                        className="gap-1"
+                        title="Corrigir tema inválido (define legacy)"
+                      >
+                        <Wrench className="w-3.5 h-3.5" />
+                        Corrigir Tema
                       </Button>
                     )}
                     <Button

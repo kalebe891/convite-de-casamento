@@ -9,9 +9,10 @@ interface LogParams {
     | 'undo_checkin'
     | 'gift_received'
     | 'gift_cancelled'
-    | 'TENANT_RENEWED'
-    | 'TENANT_ARCHIVED'
-    | 'TENANT_RESTORED';
+   | 'TENANT_RENEWED'
+   | 'TENANT_ARCHIVED'
+   | 'TENANT_RESTORED'
+   | 'THEME_CORRECTED';
   tableName: string;
   recordId?: string;
   oldData?: any;

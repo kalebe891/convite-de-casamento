@@ -15,7 +15,8 @@ import {
 import { toast } from "@/hooks/use-toast";
 import { buildTenantAdminUrl } from "@/lib/eventType";
 import { logAdminAction } from "@/lib/adminLogger";
-import { CalendarDays, Plus, Users, Gift, Images, Mail, ArrowRight, Search, RefreshCw, PartyPopper, Heart, CalendarCheck, Trash2, Archive, RotateCcw } from "lucide-react";
+import { CalendarDays, Plus, Users, Gift, Images, Mail, ArrowRight, Search, RefreshCw, PartyPopper, Heart, CalendarCheck, Trash2, Archive, RotateCcw, AlertTriangle, Wrench } from "lucide-react";
+import { isValidThemeId } from "@/lib/themeValidation";
 import CreateEventDialog from "@/components/admin/CreateEventDialog";
 import DeleteTenantDialog from "@/components/admin/DeleteTenantDialog";
 import TenantViewToggle, { type TenantViewMode } from "@/components/admin/TenantViewToggle";
@@ -244,6 +245,30 @@ export default function MasterDashboard() {
     toast({ title: "Tenant arquivado", description: "Removido da vitrine pública. Dados preservados." });
     await load();
   };
+  const handleFixTheme = async (w: Wedding) => {
+    const oldTheme = w.theme_id ?? null;
+    if (!window.confirm(`Corrigir tema do tenant "${tenantDisplayName(w)}"? O tema atual ("${oldTheme ?? "—"}") será substituído por "legacy".`)) return;
+    const { error: err } = await supabase
+      .from("wedding_details")
+      .update({ theme_id: "legacy" })
+      .eq("id", w.id);
+    if (err) {
+      toast({ title: "Erro ao corrigir tema", description: err.message, variant: "destructive" });
+      return;
+    }
+    await logAdminAction({
+      action: "THEME_CORRECTED",
+      tableName: "wedding_details",
+      recordId: w.id,
+      oldData: { old_theme: oldTheme },
+      newData: { new_theme: "legacy" },
+      affectedName: tenantDisplayName(w),
+      weddingId: w.id,
+    });
+    toast({ title: "Tema corrigido", description: "Tenant agora utiliza o tema legacy." });
+    await load();
+  };
+
 
   const handleRestore = async (w: Wedding) => {
     const { error: err } = await supabase
@@ -400,6 +425,7 @@ export default function MasterDashboard() {
           onRenew={handleRenew}
           onArchive={handleArchive}
           onRestore={handleRestore}
+          onFixTheme={handleFixTheme}
         />
       ) : (
         <div className="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
@@ -422,6 +448,12 @@ export default function MasterDashboard() {
                         {isArchived ? "Arquivado" : "Ativo"}
                       </Badge>
                       {status && <Badge variant={status.variant}>{status.label}</Badge>}
+                      {!isValidThemeId(w.theme_id) && (
+                        <Badge variant="destructive" className="gap-1">
+                          <AlertTriangle className="w-3 h-3" />
+                          Tema Inválido
+                        </Badge>
+                      )}
                     </div>
                   </div>
                   <p className="text-xs text-muted-foreground font-mono">/{w.slug}</p>
@@ -491,6 +523,16 @@ export default function MasterDashboard() {
                     ) : (
                       <Button variant="outline" size="icon" title="Restaurar tenant" onClick={() => handleRestore(w)}>
                         <RotateCcw className="w-4 h-4" />
+                      </Button>
+                    )}
+                    {!isValidThemeId(w.theme_id) && (
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        title="Corrigir tema inválido (define legacy)"
+                        onClick={() => handleFixTheme(w)}
+                      >
+                        <Wrench className="w-4 h-4" />
                       </Button>
                     )}
                     <Button
