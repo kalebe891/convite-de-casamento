@@ -245,6 +245,30 @@ export default function MasterDashboard() {
     toast({ title: "Tenant arquivado", description: "Removido da vitrine pública. Dados preservados." });
     await load();
   };
+  const handleFixTheme = async (w: Wedding) => {
+    const oldTheme = w.theme_id ?? null;
+    if (!window.confirm(`Corrigir tema do tenant "${tenantDisplayName(w)}"? O tema atual ("${oldTheme ?? "—"}") será substituído por "legacy".`)) return;
+    const { error: err } = await supabase
+      .from("wedding_details")
+      .update({ theme_id: "legacy" })
+      .eq("id", w.id);
+    if (err) {
+      toast({ title: "Erro ao corrigir tema", description: err.message, variant: "destructive" });
+      return;
+    }
+    await logAdminAction({
+      action: "THEME_CORRECTED",
+      tableName: "wedding_details",
+      recordId: w.id,
+      oldData: { old_theme: oldTheme },
+      newData: { new_theme: "legacy" },
+      affectedName: tenantDisplayName(w),
+      weddingId: w.id,
+    });
+    toast({ title: "Tema corrigido", description: "Tenant agora utiliza o tema legacy." });
+    await load();
+  };
+
 
   const handleRestore = async (w: Wedding) => {
     const { error: err } = await supabase
