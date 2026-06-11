@@ -449,6 +449,11 @@ export default function MasterDashboard() {
                       <Badge variant={isArchived ? "outline" : "default"}>
                         {isArchived ? "Arquivado" : "Ativo"}
                       </Badge>
+                      {w.is_demo && (
+                        <Badge variant="secondary">
+                          Demo{w.demo_expires_at ? ` · expira em ${Math.max(0, Math.ceil((new Date(w.demo_expires_at).getTime() - Date.now()) / 86400000))}d` : ""}
+                        </Badge>
+                      )}
                       {status && <Badge variant={status.variant}>{status.label}</Badge>}
                       {!isValidThemeId(w.theme_id) && (
                         <Badge variant="destructive" className="gap-1">
