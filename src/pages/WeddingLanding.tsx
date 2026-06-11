@@ -120,12 +120,10 @@ const WeddingLanding = () => {
               organizar tudo em um único painel. Personalização rápida, visual elegante e gestão prática.
             </p>
             <div className="mt-8 flex flex-col items-stretch gap-3 sm:mt-10 sm:flex-row sm:items-center">
-              <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer">
-                <Button size="lg" className="group w-full sm:w-auto">
-                  Falar no WhatsApp
-                  <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-                </Button>
-              </a>
+              <Button size="lg" className="group w-full sm:w-auto" onClick={() => setDemoOpen(true)}>
+                Criar meu convite
+                <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+              </Button>
               <a
                 href="#temas"
                 onClick={(e) => {
