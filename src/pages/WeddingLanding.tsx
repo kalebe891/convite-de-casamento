@@ -82,6 +82,7 @@ const trustBadges = [
 ];
 
 const WeddingLanding = () => {
+  const [demoOpen, setDemoOpen] = useState(false);
   return (
     <div className="marketing-theme min-h-screen bg-background text-foreground">
       <SEO
