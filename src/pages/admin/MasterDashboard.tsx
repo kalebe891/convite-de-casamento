@@ -37,6 +37,8 @@ type Wedding = {
   expires_at?: string | null;
   archived_at?: string | null;
   is_public_showcase?: boolean | null;
+  is_demo?: boolean | null;
+  demo_expires_at?: string | null;
 };
 
 type Counts = {
