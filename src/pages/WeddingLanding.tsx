@@ -356,6 +356,7 @@ const WeddingLanding = () => {
       />
 
       <MarketingFooter />
+      <DemoSignupDialog open={demoOpen} onOpenChange={setDemoOpen} />
     </div>
   );
 };
