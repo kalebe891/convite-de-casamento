@@ -23,6 +23,8 @@ type Wedding = {
   tenant_status?: string | null;
   expires_at?: string | null;
   archived_at?: string | null;
+  is_demo?: boolean | null;
+  demo_expires_at?: string | null;
 };
 
 type Counts = {
