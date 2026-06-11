@@ -49,6 +49,8 @@ interface Props {
   onArchive: (w: Wedding) => void;
   onRestore: (w: Wedding) => void;
   onFixTheme: (w: Wedding) => void;
+}
+
 
 function daysRemaining(expires: string | null | undefined): number | null {
   if (!expires) return null;
