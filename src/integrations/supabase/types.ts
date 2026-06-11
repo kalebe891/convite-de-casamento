@@ -806,12 +806,14 @@ export type Database = {
           bride_name: string
           couple_message: string | null
           created_at: string | null
+          demo_expires_at: string | null
           event_type: string | null
           expires_at: string | null
           groom_name: string
           hide_reserved_gifts: boolean
           id: string
           invitation_message: string | null
+          is_demo: boolean
           is_public_showcase: boolean
           show_buffet_section: boolean | null
           show_gifts_section: boolean | null
@@ -835,12 +837,14 @@ export type Database = {
           bride_name: string
           couple_message?: string | null
           created_at?: string | null
+          demo_expires_at?: string | null
           event_type?: string | null
           expires_at?: string | null
           groom_name: string
           hide_reserved_gifts?: boolean
           id?: string
           invitation_message?: string | null
+          is_demo?: boolean
           is_public_showcase?: boolean
           show_buffet_section?: boolean | null
           show_gifts_section?: boolean | null
@@ -864,12 +868,14 @@ export type Database = {
           bride_name?: string
           couple_message?: string | null
           created_at?: string | null
+          demo_expires_at?: string | null
           event_type?: string | null
           expires_at?: string | null
           groom_name?: string
           hide_reserved_gifts?: boolean
           id?: string
           invitation_message?: string | null
+          is_demo?: boolean
           is_public_showcase?: boolean
           show_buffet_section?: boolean | null
           show_gifts_section?: boolean | null
@@ -908,6 +914,18 @@ export type Database = {
         }[]
       }
       cleanup_archived_guests: { Args: never; Returns: number }
+      create_demo_tenant: {
+        Args: {
+          _event_type?: string
+          _primary_name: string
+          _secondary_name: string
+          _theme_id?: string
+        }
+        Returns: {
+          tenant_id: string
+          tenant_slug: string
+        }[]
+      }
       create_new_event:
         | {
             Args: {
