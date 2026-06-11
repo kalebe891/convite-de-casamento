@@ -448,6 +448,12 @@ export default function MasterDashboard() {
                         {isArchived ? "Arquivado" : "Ativo"}
                       </Badge>
                       {status && <Badge variant={status.variant}>{status.label}</Badge>}
+                      {!isValidThemeId(w.theme_id) && (
+                        <Badge variant="destructive" className="gap-1">
+                          <AlertTriangle className="w-3 h-3" />
+                          Tema Inválido
+                        </Badge>
+                      )}
                     </div>
                   </div>
                   <p className="text-xs text-muted-foreground font-mono">/{w.slug}</p>
