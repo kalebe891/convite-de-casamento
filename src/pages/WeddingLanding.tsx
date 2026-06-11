@@ -328,16 +328,10 @@ const WeddingLanding = () => {
             Fale com a gente no WhatsApp e receba o acesso para começar a personalizar a sua página.
           </p>
           <div className="relative mt-8 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
-            <a
-              href={WHATSAPP_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <Button size="lg" className="group w-full sm:w-auto">
-                Falar no WhatsApp
-                <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-              </Button>
-            </a>
+            <Button size="lg" className="group w-full sm:w-auto" onClick={() => setDemoOpen(true)}>
+              Criar meu convite
+              <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+            </Button>
             <a
               href="#temas"
               onClick={(e) => {
