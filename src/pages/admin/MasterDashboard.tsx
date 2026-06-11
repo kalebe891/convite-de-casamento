@@ -525,6 +525,16 @@ export default function MasterDashboard() {
                         <RotateCcw className="w-4 h-4" />
                       </Button>
                     )}
+                    {!isValidThemeId(w.theme_id) && (
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        title="Corrigir tema inválido (define legacy)"
+                        onClick={() => handleFixTheme(w)}
+                      >
+                        <Wrench className="w-4 h-4" />
+                      </Button>
+                    )}
                     <Button
                       variant="destructive"
                       size="icon"
