@@ -110,9 +110,17 @@ export default function TenantTable({
                   {status ? <Badge variant={status.variant}>{status.label}</Badge> : "—"}
                 </TableCell>
                 <TableCell>
-                  <Badge variant={isArchived ? "outline" : "default"}>
-                    {isArchived ? "Arquivado" : "Ativo"}
-                  </Badge>
+                  <div className="flex flex-col gap-1 items-start">
+                    <Badge variant={isArchived ? "outline" : "default"}>
+                      {isArchived ? "Arquivado" : "Ativo"}
+                    </Badge>
+                    {!isValidThemeId(w.theme_id) && (
+                      <Badge variant="destructive" className="gap-1">
+                        <AlertTriangle className="w-3 h-3" />
+                        Tema Inválido
+                      </Badge>
+                    )}
+                  </div>
                 </TableCell>
                 <TableCell className="text-xs">{formatDate(w.expires_at)}</TableCell>
                 <TableCell className="text-right text-xs">
