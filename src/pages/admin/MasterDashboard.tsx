@@ -126,7 +126,7 @@ export default function MasterDashboard() {
     setError(null);
     const { data, error: err } = await supabase
       .from("wedding_details")
-      .select("id,slug,event_type,theme_id,bride_name,groom_name,wedding_date,created_at,tenant_status,expires_at,archived_at,is_public_showcase")
+      .select("id,slug,event_type,theme_id,bride_name,groom_name,wedding_date,created_at,tenant_status,expires_at,archived_at,is_public_showcase,is_demo,demo_expires_at")
       .order("created_at", { ascending: false });
 
     if (err) {
