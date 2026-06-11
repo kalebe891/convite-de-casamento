@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Heart,
@@ -16,6 +17,7 @@ import MarketingHeader from "@/components/marketing/MarketingHeader";
 import MarketingFooter from "@/components/marketing/MarketingFooter";
 import ShowcaseSection from "@/components/marketing/ShowcaseSection";
 import ThemesShowcaseSection from "@/components/marketing/ThemesShowcaseSection";
+import DemoSignupDialog from "@/components/marketing/DemoSignupDialog";
 import SEO from "@/components/seo/SEO";
 
 const WHATSAPP_URL =
