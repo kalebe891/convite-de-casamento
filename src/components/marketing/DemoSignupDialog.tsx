@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTheme } from "next-themes";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import {
@@ -13,37 +14,80 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { themeRegistry, DEFAULT_THEME_ID } from "@/themes/registry";
+import { themeRegistry, DEFAULT_THEME_ID, type TenantThemeId } from "@/themes/registry";
 import { logAdminAction } from "@/lib/adminLogger";
 import { buildTenantAdminUrl } from "@/lib/eventType";
+import { cn } from "@/lib/utils";
 
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-const THEME_OPTIONS = Object.values(themeRegistry).map((t) => ({
-  id: t.id,
-  label: t.label,
-}));
+/** Visual preview tokens per theme — pure CSS/SVG, no assets. */
+const THEME_PREVIEWS: Record<
+  TenantThemeId,
+  { bg: string; fg: string; accent: string; font: string; sample: string }
+> = {
+  legacy: {
+    bg: "#fdfaf6",
+    fg: "#2b2b2b",
+    accent: "#c5a572",
+    font: "'Playfair Display', serif",
+    sample: "Aa",
+  },
+  editorial: {
+    bg: "#f5f1ea",
+    fg: "#1a1a1a",
+    accent: "#8b6f47",
+    font: "'Cormorant Garamond', serif",
+    sample: "Aa",
+  },
+  minimal: {
+    bg: "#ffffff",
+    fg: "#111111",
+    accent: "#666666",
+    font: "'Inter', sans-serif",
+    sample: "Aa",
+  },
+  "modern-noir": {
+    bg: "#0e0e0e",
+    fg: "#f5f5f5",
+    accent: "#d4af37",
+    font: "'Bodoni Moda', serif",
+    sample: "Aa",
+  },
+  "art-deco": {
+    bg: "#1a1a2e",
+    fg: "#f0d878",
+    accent: "#c9a227",
+    font: "'Cinzel', serif",
+    sample: "Aa",
+  },
+  "sky-peach": {
+    bg: "#fde8d7",
+    fg: "#3a3a55",
+    accent: "#7aa9d6",
+    font: "'Quicksand', sans-serif",
+    sample: "Aa",
+  },
+};
 
 export default function DemoSignupDialog({ open, onOpenChange }: Props) {
   const navigate = useNavigate();
+  const { resolvedTheme, theme } = useTheme();
+  const activeThemeClass = (resolvedTheme || theme || "light") as string;
+
   const [hosts, setHosts] = useState("");
+  const [eventDate, setEventDate] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [themeId, setThemeId] = useState<string>(DEFAULT_THEME_ID);
+  const [themeId, setThemeId] = useState<TenantThemeId>(DEFAULT_THEME_ID);
   const [submitting, setSubmitting] = useState(false);
 
   const reset = () => {
     setHosts("");
+    setEventDate("");
     setEmail("");
     setPassword("");
     setThemeId(DEFAULT_THEME_ID);
@@ -63,6 +107,10 @@ export default function DemoSignupDialog({ open, onOpenChange }: Props) {
 
     if (hosts.trim().length < 2) {
       toast({ title: "Informe o nome dos anfitriões.", variant: "destructive" });
+      return;
+    }
+    if (!eventDate) {
+      toast({ title: "Informe a data do casamento.", variant: "destructive" });
       return;
     }
     if (!/^\S+@\S+\.\S+$/.test(email.trim())) {
@@ -103,7 +151,6 @@ export default function DemoSignupDialog({ open, onOpenChange }: Props) {
         return;
       }
 
-      // No active session → email confirmation required
       if (!signUpData.session) {
         toast({
           title: "Verifique seu e-mail",
@@ -114,10 +161,10 @@ export default function DemoSignupDialog({ open, onOpenChange }: Props) {
         return;
       }
 
-      // Authenticated → invoke RPC
       const { data: rpcData, error: rpcError } = await supabase.rpc("create_demo_tenant", {
         _primary_name: primary || hosts.trim(),
         _secondary_name: secondary,
+        _event_date: eventDate,
         _theme_id: themeId,
         _event_type: "wedding",
       });
@@ -165,7 +212,9 @@ export default function DemoSignupDialog({ open, onOpenChange }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!submitting) onOpenChange(v); }}>
-      <DialogContent className="sm:max-w-md">
+      {/* Explicit theme inheritance: Dialog uses a Portal so we must
+          re-apply the active next-themes class on the portal content. */}
+      <DialogContent className={cn(activeThemeClass, "sm:max-w-md max-h-[90vh] overflow-y-auto")}>
         <DialogHeader>
           <DialogTitle>Criar demonstração gratuita</DialogTitle>
           <DialogDescription>
@@ -182,6 +231,17 @@ export default function DemoSignupDialog({ open, onOpenChange }: Props) {
               value={hosts}
               onChange={(e) => setHosts(e.target.value)}
               maxLength={120}
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="demo-date">Data do casamento</Label>
+            <Input
+              id="demo-date"
+              type="date"
+              value={eventDate}
+              onChange={(e) => setEventDate(e.target.value)}
               required
             />
           </div>
@@ -214,31 +274,47 @@ export default function DemoSignupDialog({ open, onOpenChange }: Props) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="demo-theme">Tema</Label>
-            <Select value={themeId} onValueChange={setThemeId}>
-              <SelectTrigger id="demo-theme">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="z-50 bg-popover">
-                {THEME_OPTIONS.map((t) => (
-                  <SelectItem key={t.id} value={t.id}>
-                    {t.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Tipo de evento</Label>
-            <Select value="wedding" disabled>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="z-50 bg-popover">
-                <SelectItem value="wedding">Casamento</SelectItem>
-              </SelectContent>
-            </Select>
+            <Label>Tema</Label>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {Object.values(themeRegistry).map((t) => {
+                const preview = THEME_PREVIEWS[t.id];
+                const selected = themeId === t.id;
+                return (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => setThemeId(t.id)}
+                    aria-pressed={selected}
+                    className={cn(
+                      "group relative rounded-md border overflow-hidden text-left transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                      selected
+                        ? "border-primary ring-2 ring-primary/60"
+                        : "border-border hover:border-primary/50",
+                    )}
+                  >
+                    <div
+                      className="h-16 px-2 flex items-center justify-between"
+                      style={{ background: preview.bg, color: preview.fg }}
+                    >
+                      <span
+                        style={{ fontFamily: preview.font }}
+                        className="text-2xl leading-none"
+                      >
+                        {preview.sample}
+                      </span>
+                      <span
+                        className="h-6 w-6 rounded-full border"
+                        style={{ background: preview.accent, borderColor: preview.fg + "33" }}
+                        aria-hidden
+                      />
+                    </div>
+                    <div className="px-2 py-1.5 text-xs font-medium bg-background">
+                      {t.label}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           <DialogFooter>
