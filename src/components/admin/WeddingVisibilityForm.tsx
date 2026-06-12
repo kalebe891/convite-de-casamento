@@ -28,18 +28,20 @@ const WeddingVisibilityForm = ({ permissions }: Props) => {
   const [loading, setLoading] = useState(false);
   const [isPublic, setIsPublic] = useState(false);
   const [initial, setInitial] = useState(false);
+  const [isDemo, setIsDemo] = useState(false);
 
   useEffect(() => {
     if (!weddingId) return;
     (async () => {
       const { data } = await supabase
         .from("wedding_details")
-        .select("is_public_showcase")
+        .select("is_public_showcase, is_demo")
         .eq("id", weddingId)
         .maybeSingle();
       const v = !!data?.is_public_showcase;
       setIsPublic(v);
       setInitial(v);
+      setIsDemo(!!data?.is_demo);
     })();
   }, [weddingId]);
 
@@ -102,17 +104,34 @@ const WeddingVisibilityForm = ({ permissions }: Props) => {
                 encontrado por qualquer visitante.
               </p>
             </div>
-            <Switch
-              id="showcase-toggle"
-              checked={isPublic}
-              onCheckedChange={setIsPublic}
-              disabled={!permissions.canEdit}
-            />
+            {isDemo ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span>
+                    <Switch
+                      id="showcase-toggle"
+                      checked={false}
+                      disabled
+                    />
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>
+                  Disponível apenas para eventos licenciados.
+                </TooltipContent>
+              </Tooltip>
+            ) : (
+              <Switch
+                id="showcase-toggle"
+                checked={isPublic}
+                onCheckedChange={setIsPublic}
+                disabled={!permissions.canEdit}
+              />
+            )}
           </div>
 
           <Button
             type="submit"
-            disabled={loading || !permissions.canEdit || isPublic === initial}
+            disabled={loading || !permissions.canEdit || isDemo || isPublic === initial}
           >
             {loading
               ? "Salvando..."
