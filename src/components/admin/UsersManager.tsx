@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Loader2, Copy, Mail, MessageCircle } from "lucide-react";
 import UsersList from "./UsersList";
 import PendingInvitesList from "./PendingInvitesList";
@@ -28,7 +29,8 @@ interface UsersManagerProps {
 
 const UsersManager = ({ roleProfiles, onRoleProfilesChange, permissions }: UsersManagerProps) => {
   const { toast } = useToast();
-  const { mode, weddingId } = useWedding();
+  const { mode, weddingId, wedding } = useWedding();
+  const isDemo = !!wedding?.is_demo;
   const [email, setEmail] = useState("");
   const [nome, setNome] = useState("");
   const [role, setRole] = useState<string>("couple");
@@ -182,19 +184,35 @@ const UsersManager = ({ roleProfiles, onRoleProfilesChange, permissions }: Users
               </div>
 
               {permissions.isAdmin && (
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Enviando convite...
-                    </>
-                  ) : (
-                    <>
-                      <Mail className="mr-2 h-4 w-4" />
-                      Enviar Convite por Email
-                    </>
-                  )}
-                </Button>
+                isDemo ? (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="block w-full">
+                        <Button type="button" className="w-full" disabled>
+                          <Mail className="mr-2 h-4 w-4" />
+                          Convidar Usuário
+                        </Button>
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      Disponível apenas para eventos licenciados.
+                    </TooltipContent>
+                  </Tooltip>
+                ) : (
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {loading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Enviando convite...
+                      </>
+                    ) : (
+                      <>
+                        <Mail className="mr-2 h-4 w-4" />
+                        Enviar Convite por Email
+                      </>
+                    )}
+                  </Button>
+                )
               )}
 
               {magicLink && (

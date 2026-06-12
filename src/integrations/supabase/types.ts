@@ -916,6 +916,7 @@ export type Database = {
       cleanup_archived_guests: { Args: never; Returns: number }
       create_demo_tenant: {
         Args: {
+          _event_date: string
           _event_type?: string
           _primary_name: string
           _secondary_name: string
