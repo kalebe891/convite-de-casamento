@@ -356,7 +356,7 @@ const WeddingLanding = () => {
       />
 
       <MarketingFooter />
-      <DemoSignupDialog open={demoOpen} onOpenChange={setDemoOpen} />
+      <DemoSignupDialog open={demoOpen} onOpenChange={setDemoOpen} currentThemeId="legacy" />
     </div>
   );
 };
