@@ -22,6 +22,8 @@ import { cn } from "@/lib/utils";
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Theme id da página que abriu o modal (legacy, editorial, minimal...). */
+  currentThemeId?: TenantThemeId;
 }
 
 /** Visual preview tokens per theme — pure CSS/SVG, no assets. */
