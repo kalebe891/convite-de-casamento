@@ -331,6 +331,7 @@ export default function DemoSignupDialog({ open, onOpenChange, currentThemeId }:
             </Button>
           </DialogFooter>
         </form>
+        </div>
       </DialogContent>
     </Dialog>
   );
