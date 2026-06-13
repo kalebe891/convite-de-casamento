@@ -75,10 +75,11 @@ const THEME_PREVIEWS: Record<
   },
 };
 
-export default function DemoSignupDialog({ open, onOpenChange }: Props) {
+export default function DemoSignupDialog({ open, onOpenChange, currentThemeId }: Props) {
   const navigate = useNavigate();
   const { resolvedTheme, theme } = useTheme();
   const activeThemeClass = (resolvedTheme || theme || "light") as string;
+  const activeThemeId: TenantThemeId = currentThemeId ?? DEFAULT_THEME_ID;
 
   const [hosts, setHosts] = useState("");
   const [eventDate, setEventDate] = useState("");
