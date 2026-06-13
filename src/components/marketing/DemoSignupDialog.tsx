@@ -215,15 +215,17 @@ export default function DemoSignupDialog({ open, onOpenChange, currentThemeId }:
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!submitting) onOpenChange(v); }}>
-      {/* Explicit theme inheritance: Dialog uses a Portal so we must
-          re-apply the active next-themes class on the portal content. */}
-      <DialogContent className={cn(activeThemeClass, "sm:max-w-md max-h-[90vh] overflow-y-auto")}>
-        <DialogHeader>
-          <DialogTitle>Criar demonstração gratuita</DialogTitle>
-          <DialogDescription>
-            Teste a plataforma por 7 dias com acesso completo ao painel administrativo.
-          </DialogDescription>
-        </DialogHeader>
+      {/* Explicit theme inheritance inside the Radix Portal:
+          - className={activeThemeClass}: light/brown/dark (next-themes)
+          - data-theme={activeThemeId}: tenant theme tokens (legacy, editorial, minimal...) */}
+      <DialogContent className={cn(activeThemeClass, "sm:max-w-md max-h-[90vh] overflow-y-auto p-0")}>
+        <div data-theme={activeThemeId} className={cn(activeThemeClass, "bg-background text-foreground p-6")}>
+          <DialogHeader>
+            <DialogTitle>Criar demonstração gratuita</DialogTitle>
+            <DialogDescription>
+              Teste a plataforma por 7 dias com acesso completo ao painel administrativo.
+            </DialogDescription>
+          </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
