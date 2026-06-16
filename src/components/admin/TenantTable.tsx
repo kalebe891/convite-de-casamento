@@ -117,9 +117,13 @@ export default function TenantTable({
                       {isArchived ? "Arquivado" : "Ativo"}
                     </Badge>
                     {w.is_demo && (
-                      <Badge variant="secondary" title={w.demo_expires_at ? `Expira em ${formatDate(w.demo_expires_at)}` : undefined}>
-                        Demo{w.demo_expires_at ? ` · ${Math.max(0, Math.ceil((new Date(w.demo_expires_at).getTime() - Date.now()) / 86400000))}d` : ""}
-                      </Badge>
+                      isArchived ? (
+                        <Badge variant="destructive">Demo Expirada</Badge>
+                      ) : (
+                        <Badge variant="secondary" title={w.demo_expires_at ? `Expira em ${formatDate(w.demo_expires_at)}` : undefined}>
+                          Demo{w.demo_expires_at ? ` · ${Math.max(0, Math.ceil((new Date(w.demo_expires_at).getTime() - Date.now()) / 86400000))}d` : ""}
+                        </Badge>
+                      )
                     )}
                     {!isValidThemeId(w.theme_id) && (
                       <Badge variant="destructive" className="gap-1">

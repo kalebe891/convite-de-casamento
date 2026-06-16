@@ -450,9 +450,13 @@ export default function MasterDashboard() {
                         {isArchived ? "Arquivado" : "Ativo"}
                       </Badge>
                       {w.is_demo && (
-                        <Badge variant="secondary">
-                          Demo{w.demo_expires_at ? ` · expira em ${Math.max(0, Math.ceil((new Date(w.demo_expires_at).getTime() - Date.now()) / 86400000))}d` : ""}
-                        </Badge>
+                        isArchived ? (
+                          <Badge variant="destructive">Demo Expirada</Badge>
+                        ) : (
+                          <Badge variant="secondary">
+                            Demo{w.demo_expires_at ? ` · expira em ${Math.max(0, Math.ceil((new Date(w.demo_expires_at).getTime() - Date.now()) / 86400000))}d` : ""}
+                          </Badge>
+                        )
                       )}
                       {status && <Badge variant={status.variant}>{status.label}</Badge>}
                       {!isValidThemeId(w.theme_id) && (
