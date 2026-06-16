@@ -25,7 +25,7 @@ export type Database = {
           record_id: string | null
           table_name: string
           user_email: string | null
-          user_id: string
+          user_id: string | null
           wedding_id: string | null
         }
         Insert: {
@@ -38,7 +38,7 @@ export type Database = {
           record_id?: string | null
           table_name: string
           user_email?: string | null
-          user_id: string
+          user_id?: string | null
           wedding_id?: string | null
         }
         Update: {
@@ -51,7 +51,7 @@ export type Database = {
           record_id?: string | null
           table_name?: string
           user_email?: string | null
-          user_id?: string
+          user_id?: string | null
           wedding_id?: string | null
         }
         Relationships: [
