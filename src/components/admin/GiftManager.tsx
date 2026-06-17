@@ -10,9 +10,10 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, Plus, Pencil, X, PackageCheck, AlertTriangle } from "lucide-react";
+import { Trash2, Plus, Pencil, X, PackageCheck, AlertTriangle, QrCode } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { getSafeErrorMessage } from "@/lib/errorHandling";
+import PixGiftDialog from "./PixGiftDialog";
 import { logAdminAction } from "@/lib/adminLogger";
 
 interface GiftManagerProps {
