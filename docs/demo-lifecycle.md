@@ -1,4 +1,4 @@
-# Ciclo de Vida do Tenant Demo — v1.22.00
+# Ciclo de Vida do Tenant Demo — v1.22.01
 
 ## Modelo
 Em `wedding_details`:
