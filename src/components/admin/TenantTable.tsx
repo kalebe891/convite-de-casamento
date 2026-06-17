@@ -76,6 +76,7 @@ export default function TenantTable({
   onArchive,
   onRestore,
   onFixTheme,
+  onConvertDemo,
 }: Props) {
   return (
     <div className="border rounded-md overflow-x-auto">
