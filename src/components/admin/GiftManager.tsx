@@ -441,8 +441,17 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
                 return (
                   <div key={item.id} className="flex items-center justify-between p-4 border rounded-lg">
                     <div className="flex-1">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <p className="font-semibold">{item.gift_name}</p>
+                        {item.gift_kind === "pix_manual" && (
+                          <Badge variant="secondary" className="text-xs">
+                            <QrCode className="w-3 h-3 mr-1" />
+                            PIX
+                            {item.pix_mode === "fixed" && item.suggested_amount
+                              ? ` · R$ ${Number(item.suggested_amount).toFixed(2)}`
+                              : " · Livre"}
+                          </Badge>
+                        )}
                         {isReceived && (
                           <Badge variant="default" className="bg-green-600 text-xs">
                             <PackageCheck className="w-3 h-3 mr-1" />
