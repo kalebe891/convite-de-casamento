@@ -314,12 +314,33 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
             <Switch checked={newItem.is_public} onCheckedChange={(checked) => setNewItem({ ...newItem, is_public: checked })} disabled={!permissions.canPublish} />
             <Label>Exibir publicamente</Label>
           </div>
-          <Button onClick={handleAdd} disabled={!newItem.gift_name || !permissions.canAdd}>
-            <Plus className="w-4 h-4 mr-2" />
-            Adicionar
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button onClick={handleAdd} disabled={!newItem.gift_name || !permissions.canAdd}>
+              <Plus className="w-4 h-4 mr-2" />
+              Adicionar
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsPixOpen(true)}
+              disabled={!permissions.canAdd}
+            >
+              <QrCode className="w-4 h-4 mr-2" />
+              QR Code PIX
+            </Button>
+          </div>
         </CardContent>
       </Card>
+
+      {weddingId && (
+        <PixGiftDialog
+          open={isPixOpen}
+          onOpenChange={setIsPixOpen}
+          weddingId={weddingId}
+          onCreated={fetchData}
+          itemsCount={items.length}
+        />
+      )}
 
       {/* Edit Dialog */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
