@@ -188,6 +188,18 @@ export default function TenantTable({
                         Restaurar
                       </Button>
                     )}
+                    {w.is_demo && onConvertDemo && (
+                      <Button
+                        size="sm"
+                        variant="default"
+                        onClick={() => onConvertDemo(w)}
+                        className="gap-1"
+                        title="Converter em licença definitiva"
+                      >
+                        <BadgeCheck className="w-3.5 h-3.5" />
+                        Converter Licença
+                      </Button>
+                    )}
                     {!isValidThemeId(w.theme_id) && (
                       <Button
                         size="sm"
