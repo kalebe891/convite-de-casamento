@@ -8,7 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ArrowRight, Trash2, RefreshCw, Archive, RotateCcw, AlertTriangle, Wrench } from "lucide-react";
+import { ArrowRight, Trash2, RefreshCw, Archive, RotateCcw, AlertTriangle, Wrench, BadgeCheck } from "lucide-react";
 import { isValidThemeId } from "@/lib/themeValidation";
 
 type Wedding = {
