@@ -294,6 +294,46 @@ export default function MasterDashboard() {
     await load();
   };
 
+  const handleConvertDemo = async (w: Wedding) => {
+    if (!w.is_demo) return;
+    if (!window.confirm(
+      "Converter esta demonstração em uma licença definitiva?\n\nO acesso administrativo será restaurado imediatamente e o período de licença será reiniciado para 365 dias."
+    )) return;
+    const newExpires = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString();
+    const { error: err } = await supabase
+      .from("wedding_details")
+      .update({
+        is_demo: false,
+        tenant_status: "active",
+        demo_expires_at: null,
+        archived_at: null,
+        expires_at: newExpires,
+      })
+      .eq("id", w.id);
+    if (err) {
+      toast({
+        title: "Não foi possível converter esta demonstração.",
+        description: "Tente novamente.",
+        variant: "destructive",
+      });
+      return;
+    }
+    await logAdminAction({
+      action: "DEMO_CONVERTED",
+      tableName: "wedding_details",
+      recordId: w.id,
+      oldData: { is_demo: true, tenant_status: w.tenant_status ?? "active" },
+      newData: { is_demo: false, tenant_status: "active", expires_at: newExpires },
+      affectedName: tenantDisplayName(w),
+      weddingId: w.id,
+    });
+    toast({
+      title: "Licença ativada com sucesso.",
+      description: "O acesso administrativo foi restaurado.",
+    });
+    await load();
+  };
+
   const summary = useMemo(() => {
     const total = weddings.length;
     const weddingCount = weddings.filter((w) => w.event_type === "wedding").length;
