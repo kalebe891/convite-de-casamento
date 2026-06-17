@@ -468,6 +468,7 @@ export default function MasterDashboard() {
           onArchive={handleArchive}
           onRestore={handleRestore}
           onFixTheme={handleFixTheme}
+          onConvertDemo={handleConvertDemo}
         />
       ) : (
         <div className="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
