@@ -577,6 +577,16 @@ export default function MasterDashboard() {
                         <RotateCcw className="w-4 h-4" />
                       </Button>
                     )}
+                    {w.is_demo && (
+                      <Button
+                        variant="default"
+                        size="icon"
+                        title="Converter em licença definitiva"
+                        onClick={() => handleConvertDemo(w)}
+                      >
+                        <BadgeCheck className="w-4 h-4" />
+                      </Button>
+                    )}
                     {!isValidThemeId(w.theme_id) && (
                       <Button
                         variant="outline"
