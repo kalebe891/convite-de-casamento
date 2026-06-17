@@ -40,6 +40,7 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
     is_public: true 
   });
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isPixOpen, setIsPixOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editItem, setEditItem] = useState({
     gift_name: "",
