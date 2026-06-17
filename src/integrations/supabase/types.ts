@@ -239,13 +239,18 @@ export type Database = {
           created_at: string | null
           description: string | null
           display_order: number | null
+          gift_kind: string
           gift_name: string
           id: string
           is_public: boolean | null
           is_purchased: boolean | null
           link: string | null
+          pix_copy_paste_code: string | null
+          pix_mode: string | null
+          qr_image_url: string | null
           selected_by_guest_id: string | null
           selected_by_invitation_id: string | null
+          suggested_amount: number | null
           wedding_id: string
         }
         Insert: {
@@ -254,13 +259,18 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           display_order?: number | null
+          gift_kind?: string
           gift_name: string
           id?: string
           is_public?: boolean | null
           is_purchased?: boolean | null
           link?: string | null
+          pix_copy_paste_code?: string | null
+          pix_mode?: string | null
+          qr_image_url?: string | null
           selected_by_guest_id?: string | null
           selected_by_invitation_id?: string | null
+          suggested_amount?: number | null
           wedding_id: string
         }
         Update: {
@@ -269,13 +279,18 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           display_order?: number | null
+          gift_kind?: string
           gift_name?: string
           id?: string
           is_public?: boolean | null
           is_purchased?: boolean | null
           link?: string | null
+          pix_copy_paste_code?: string | null
+          pix_mode?: string | null
+          qr_image_url?: string | null
           selected_by_guest_id?: string | null
           selected_by_invitation_id?: string | null
+          suggested_amount?: number | null
           wedding_id?: string
         }
         Relationships: [
