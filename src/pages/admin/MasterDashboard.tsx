@@ -15,7 +15,7 @@ import {
 import { toast } from "@/hooks/use-toast";
 import { buildTenantAdminUrl } from "@/lib/eventType";
 import { logAdminAction } from "@/lib/adminLogger";
-import { CalendarDays, Plus, Users, Gift, Images, Mail, ArrowRight, Search, RefreshCw, PartyPopper, Heart, CalendarCheck, Trash2, Archive, RotateCcw, AlertTriangle, Wrench } from "lucide-react";
+import { CalendarDays, Plus, Users, Gift, Images, Mail, ArrowRight, Search, RefreshCw, PartyPopper, Heart, CalendarCheck, Trash2, Archive, RotateCcw, AlertTriangle, Wrench, BadgeCheck } from "lucide-react";
 import { isValidThemeId } from "@/lib/themeValidation";
 import CreateEventDialog from "@/components/admin/CreateEventDialog";
 import DeleteTenantDialog from "@/components/admin/DeleteTenantDialog";
@@ -294,6 +294,46 @@ export default function MasterDashboard() {
     await load();
   };
 
+  const handleConvertDemo = async (w: Wedding) => {
+    if (!w.is_demo) return;
+    if (!window.confirm(
+      "Converter esta demonstração em uma licença definitiva?\n\nO acesso administrativo será restaurado imediatamente e o período de licença será reiniciado para 365 dias."
+    )) return;
+    const newExpires = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString();
+    const { error: err } = await supabase
+      .from("wedding_details")
+      .update({
+        is_demo: false,
+        tenant_status: "active",
+        demo_expires_at: null,
+        archived_at: null,
+        expires_at: newExpires,
+      })
+      .eq("id", w.id);
+    if (err) {
+      toast({
+        title: "Não foi possível converter esta demonstração.",
+        description: "Tente novamente.",
+        variant: "destructive",
+      });
+      return;
+    }
+    await logAdminAction({
+      action: "DEMO_CONVERTED",
+      tableName: "wedding_details",
+      recordId: w.id,
+      oldData: { is_demo: true, tenant_status: w.tenant_status ?? "active" },
+      newData: { is_demo: false, tenant_status: "active", expires_at: newExpires },
+      affectedName: tenantDisplayName(w),
+      weddingId: w.id,
+    });
+    toast({
+      title: "Licença ativada com sucesso.",
+      description: "O acesso administrativo foi restaurado.",
+    });
+    await load();
+  };
+
   const summary = useMemo(() => {
     const total = weddings.length;
     const weddingCount = weddings.filter((w) => w.event_type === "wedding").length;
@@ -428,6 +468,7 @@ export default function MasterDashboard() {
           onArchive={handleArchive}
           onRestore={handleRestore}
           onFixTheme={handleFixTheme}
+          onConvertDemo={handleConvertDemo}
         />
       ) : (
         <div className="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
@@ -534,6 +575,16 @@ export default function MasterDashboard() {
                     ) : (
                       <Button variant="outline" size="icon" title="Restaurar tenant" onClick={() => handleRestore(w)}>
                         <RotateCcw className="w-4 h-4" />
+                      </Button>
+                    )}
+                    {w.is_demo && (
+                      <Button
+                        variant="default"
+                        size="icon"
+                        title="Converter em licença definitiva"
+                        onClick={() => handleConvertDemo(w)}
+                      >
+                        <BadgeCheck className="w-4 h-4" />
                       </Button>
                     )}
                     {!isValidThemeId(w.theme_id) && (

@@ -1,4 +1,4 @@
-# Ciclo de Vida do Tenant Demo — v1.22.00
+# Ciclo de Vida do Tenant Demo — v1.22.01
 
 ## Modelo
 Em `wedding_details`:
@@ -100,10 +100,28 @@ Cards e lista exibem badge:
 ## Logs
 - `DEMO_CREATED` — registrado na criação via modal.
 - `DEMO_EXPIRED` — registrado pela Edge Function ao arquivar demos vencidas.
-- `DEMO_CONVERTED` — reservado para etapa futura de conversão em licença paga.
+- `DEMO_CONVERTED` — registrado quando o Master Admin converte uma demo (ativa ou expirada) em licença definitiva.
 
-## Conversão futura (não implementada)
-A transformação de uma demo em tenant pago será implementada em etapa posterior, utilizando o estado `Demo Expirada` como ponto de partida. Como nenhum dado é excluído, basta reverter `tenant_status` para `active`, limpar `is_demo` / `demo_expires_at` e definir `expires_at` segundo a licença adquirida. O log da ação será `DEMO_CONVERTED`.
+## Conversão Demo → Licença (v1.22.01)
+
+Disponível no Master Dashboard (cards e lista) sempre que `is_demo=true`, independente de `tenant_status`.
+
+Fluxo:
+1. Master Admin clica em **Converter Licença** no card/linha do tenant.
+2. Confirmação via `window.confirm` ("Converter esta demonstração em uma licença definitiva?").
+3. `UPDATE wedding_details SET is_demo=false, tenant_status='active', demo_expires_at=null, archived_at=null, expires_at = now() + 365 days WHERE id = :tenant`.
+4. Log `DEMO_CONVERTED` com `old_data={is_demo:true, tenant_status}` e `new_data={is_demo:false, tenant_status:'active', expires_at}`.
+5. Refetch imediato da query do dashboard — badges e ações refletem o novo estado.
+
+Regras preservadas:
+- Mesmo tenant (sem clonagem, sem novo slug, sem novo `wedding_details`).
+- `created_at`, `wedding_date`, `slug`, `theme_id` permanecem intactos.
+- Convidados, RSVPs, presentes, cronograma, buffet, playlists, fotos, mensagens, permissões, logs, `user_weddings` e URLs públicas continuam intactos.
+- Se a demo estava arquivada, a conversão restaura automaticamente o acesso administrativo (o `TenantAdminGuard` libera o painel ao detectar `is_demo=false` + `tenant_status='active'`).
+
+Nenhuma migration, Edge Function, cron, scheduler, checkout, cobrança, WhatsApp automático ou e-mail automático foi criado nesta etapa.
+
+> **Débito técnico futuro**: recomenda-se centralizar todas as regras comerciais em uma função única (ex.: `canAccessAdmin()`), permitindo suportar demos expiradas, licenças vencidas, inadimplência e suspensões administrativas sem espalhar lógica pelo sistema. Não implementado nesta etapa — apenas documentado.
 
 ## Restrições atuais / débito técnico
 - **Sem cron / scheduler ativo**: a Edge Function existe, mas não é disparada automaticamente.

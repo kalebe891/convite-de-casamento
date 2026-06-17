@@ -8,7 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ArrowRight, Trash2, RefreshCw, Archive, RotateCcw, AlertTriangle, Wrench } from "lucide-react";
+import { ArrowRight, Trash2, RefreshCw, Archive, RotateCcw, AlertTriangle, Wrench, BadgeCheck } from "lucide-react";
 import { isValidThemeId } from "@/lib/themeValidation";
 
 type Wedding = {
@@ -51,6 +51,7 @@ interface Props {
   onArchive: (w: Wedding) => void;
   onRestore: (w: Wedding) => void;
   onFixTheme: (w: Wedding) => void;
+  onConvertDemo?: (w: Wedding) => void;
 }
 
 
@@ -75,6 +76,7 @@ export default function TenantTable({
   onArchive,
   onRestore,
   onFixTheme,
+  onConvertDemo,
 }: Props) {
   return (
     <div className="border rounded-md overflow-x-auto">
@@ -184,6 +186,18 @@ export default function TenantTable({
                       >
                         <RotateCcw className="w-3.5 h-3.5" />
                         Restaurar
+                      </Button>
+                    )}
+                    {w.is_demo && onConvertDemo && (
+                      <Button
+                        size="sm"
+                        variant="default"
+                        onClick={() => onConvertDemo(w)}
+                        className="gap-1"
+                        title="Converter em licença definitiva"
+                      >
+                        <BadgeCheck className="w-3.5 h-3.5" />
+                        Converter Licença
                       </Button>
                     )}
                     {!isValidThemeId(w.theme_id) && (
