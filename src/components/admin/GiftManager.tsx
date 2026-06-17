@@ -10,9 +10,10 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, Plus, Pencil, X, PackageCheck, AlertTriangle } from "lucide-react";
+import { Trash2, Plus, Pencil, X, PackageCheck, AlertTriangle, QrCode } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { getSafeErrorMessage } from "@/lib/errorHandling";
+import PixGiftDialog from "./PixGiftDialog";
 import { logAdminAction } from "@/lib/adminLogger";
 
 interface GiftManagerProps {
@@ -39,6 +40,7 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
     is_public: true 
   });
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isPixOpen, setIsPixOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editItem, setEditItem] = useState({
     gift_name: "",
@@ -312,12 +314,33 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
             <Switch checked={newItem.is_public} onCheckedChange={(checked) => setNewItem({ ...newItem, is_public: checked })} disabled={!permissions.canPublish} />
             <Label>Exibir publicamente</Label>
           </div>
-          <Button onClick={handleAdd} disabled={!newItem.gift_name || !permissions.canAdd}>
-            <Plus className="w-4 h-4 mr-2" />
-            Adicionar
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button onClick={handleAdd} disabled={!newItem.gift_name || !permissions.canAdd}>
+              <Plus className="w-4 h-4 mr-2" />
+              Adicionar
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsPixOpen(true)}
+              disabled={!permissions.canAdd}
+            >
+              <QrCode className="w-4 h-4 mr-2" />
+              QR Code PIX
+            </Button>
+          </div>
         </CardContent>
       </Card>
+
+      {weddingId && (
+        <PixGiftDialog
+          open={isPixOpen}
+          onOpenChange={setIsPixOpen}
+          weddingId={weddingId}
+          onCreated={fetchData}
+          itemsCount={items.length}
+        />
+      )}
 
       {/* Edit Dialog */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
@@ -418,8 +441,17 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
                 return (
                   <div key={item.id} className="flex items-center justify-between p-4 border rounded-lg">
                     <div className="flex-1">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <p className="font-semibold">{item.gift_name}</p>
+                        {item.gift_kind === "pix_manual" && (
+                          <Badge variant="secondary" className="text-xs">
+                            <QrCode className="w-3 h-3 mr-1" />
+                            PIX
+                            {item.pix_mode === "fixed" && item.suggested_amount
+                              ? ` · R$ ${Number(item.suggested_amount).toFixed(2)}`
+                              : " · Livre"}
+                          </Badge>
+                        )}
                         {isReceived && (
                           <Badge variant="default" className="bg-green-600 text-xs">
                             <PackageCheck className="w-3 h-3 mr-1" />
