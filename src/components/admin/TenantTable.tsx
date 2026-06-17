@@ -51,6 +51,7 @@ interface Props {
   onArchive: (w: Wedding) => void;
   onRestore: (w: Wedding) => void;
   onFixTheme: (w: Wedding) => void;
+  onConvertDemo?: (w: Wedding) => void;
 }
 
 
