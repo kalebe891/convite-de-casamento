@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect } from "react";
-import { QRCodeCanvas, QRCodeSVG } from "qrcode.react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,7 +16,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
 import { getSafeErrorMessage } from "@/lib/errorHandling";
 import { logAdminAction } from "@/lib/adminLogger";
-import { Loader2, Copy, Upload, QrCode } from "lucide-react";
+import { Loader2, Upload, QrCode, ClipboardPaste } from "lucide-react";
 
 interface PixGiftDialogProps {
   open: boolean;
@@ -28,7 +27,6 @@ interface PixGiftDialogProps {
 }
 
 type PixMode = "free" | "fixed";
-type Source = "upload" | "code";
 
 const MAX_FILE_BYTES = 2 * 1024 * 1024;
 
@@ -61,12 +59,11 @@ async function compressToWebP(file: File): Promise<Blob> {
 
 const PixGiftDialog = ({ open, onOpenChange, weddingId, onCreated, itemsCount }: PixGiftDialogProps) => {
   const { toast } = useToast();
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [step, setStep] = useState<1 | 2>(1);
   const [pixMode, setPixMode] = useState<PixMode>("free");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState<string>("");
-  const [source, setSource] = useState<Source>("code");
   const [pixCode, setPixCode] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string>("");
@@ -80,7 +77,6 @@ const PixGiftDialog = ({ open, onOpenChange, weddingId, onCreated, itemsCount }:
       setTitle("");
       setDescription("");
       setAmount("");
-      setSource("code");
       setPixCode("");
       setFile(null);
       setPreview("");
@@ -89,46 +85,66 @@ const PixGiftDialog = ({ open, onOpenChange, weddingId, onCreated, itemsCount }:
 
   const handleFile = (f: File | null) => {
     if (!f) return;
+    if (!f.type.startsWith("image/")) {
+      toast({
+        title: "Arquivo inválido",
+        description: "Selecione uma imagem válida para o QR Code.",
+        variant: "destructive",
+      });
+      return;
+    }
     if (f.size > MAX_FILE_BYTES) {
-      toast({ title: "Arquivo muito grande", description: "Máximo 2 MB.", variant: "destructive" });
+      toast({
+        title: "Arquivo muito grande",
+        description: "A imagem do QR Code deve ter no máximo 2 MB.",
+        variant: "destructive",
+      });
       return;
     }
     setFile(f);
     setPreview(URL.createObjectURL(f));
   };
 
-  const canAdvance1 = true;
-  const canAdvance2 = title.trim().length > 0 && (pixMode === "free" || (pixMode === "fixed" && parseFloat(amount) > 0));
-  const canSave =
-    canAdvance2 &&
-    ((source === "code" && pixCode.trim().length > 0) || (source === "upload" && !!file));
-
-  const handleCopy = async () => {
+  const handlePaste = async () => {
     try {
-      await navigator.clipboard.writeText(pixCode);
-      toast({ title: "Copiado", description: "Código PIX copiado para a área de transferência." });
+      const text = await navigator.clipboard.readText();
+      if (text) setPixCode(text);
     } catch {
-      toast({ title: "Erro", description: "Não foi possível copiar.", variant: "destructive" });
+      toast({
+        title: "Colar indisponível",
+        description:
+          "Não foi possível acessar sua área de transferência. Utilize Ctrl+V (Windows) ou Cmd+V (Mac).",
+      });
     }
   };
 
+  const canAdvance1 = true;
+  const titleOk = title.trim().length > 0;
+  const amountOk = pixMode === "free" || parseFloat(amount) > 0;
+  const imageOk = !!file;
+  const codeOk = pixCode.trim().length > 0;
+  const canSave = titleOk && amountOk && imageOk && codeOk;
+
   const handleSave = async () => {
-    if (!canSave) return;
+    if (!titleOk || !amountOk) return;
+    if (!imageOk || !codeOk) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "Adicione a imagem do QR Code e o código PIX para continuar.",
+        variant: "destructive",
+      });
+      return;
+    }
     setSaving(true);
     try {
-      let qr_image_url: string | null = null;
-
-      if (source === "upload" && file) {
-        const blob = await compressToWebP(file);
-        const fileName = `${crypto.randomUUID()}.webp`;
-        const filePath = `${weddingId}/pix/${fileName}`;
-        const { error: upErr } = await supabase.storage
-          .from("wedding-photos")
-          .upload(filePath, blob, { contentType: "image/webp" });
-        if (upErr) throw upErr;
-        const { data } = supabase.storage.from("wedding-photos").getPublicUrl(filePath);
-        qr_image_url = data.publicUrl;
-      }
+      const blob = await compressToWebP(file!);
+      const fileName = `${crypto.randomUUID()}.webp`;
+      const filePath = `${weddingId}/pix/${fileName}`;
+      const { error: upErr } = await supabase.storage
+        .from("wedding-photos")
+        .upload(filePath, blob, { contentType: "image/webp" });
+      if (upErr) throw upErr;
+      const { data: pub } = supabase.storage.from("wedding-photos").getPublicUrl(filePath);
 
       const payload = {
         wedding_id: weddingId,
@@ -138,8 +154,8 @@ const PixGiftDialog = ({ open, onOpenChange, weddingId, onCreated, itemsCount }:
         display_order: itemsCount,
         gift_kind: "pix_manual",
         pix_mode: pixMode,
-        pix_copy_paste_code: source === "code" ? pixCode.trim() : null,
-        qr_image_url,
+        pix_copy_paste_code: pixCode.trim(),
+        qr_image_url: pub.publicUrl,
         suggested_amount: pixMode === "fixed" ? parseFloat(amount) : null,
       };
 
@@ -166,13 +182,13 @@ const PixGiftDialog = ({ open, onOpenChange, weddingId, onCreated, itemsCount }:
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <QrCode className="w-5 h-5" /> Novo Presente PIX
           </DialogTitle>
           <DialogDescription>
-            Etapa {step} de 3 — {step === 1 ? "Tipo do PIX" : step === 2 ? "Informações" : "QR Code"}
+            Etapa {step} de 2 — {step === 1 ? "Tipo do PIX" : "Informações do Presente"}
           </DialogDescription>
         </DialogHeader>
 
@@ -197,109 +213,86 @@ const PixGiftDialog = ({ open, onOpenChange, weddingId, onCreated, itemsCount }:
         )}
 
         {step === 2 && (
-          <div className="space-y-4">
-            <div>
-              <Label>Título *</Label>
-              <Input
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Ex: PIX – Lua de Mel"
-              />
-            </div>
-            <div>
-              <Label>Descrição</Label>
-              <Textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Mensagem opcional para os convidados"
-              />
-            </div>
-            {pixMode === "fixed" && (
+          <div className="space-y-5">
+            <div className="space-y-3">
               <div>
-                <Label>Valor sugerido (R$) *</Label>
+                <Label>Título *</Label>
                 <Input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  placeholder="100.00"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Ex: PIX – Lua de Mel"
                 />
               </div>
-            )}
-          </div>
-        )}
-
-        {step === 3 && (
-          <div className="space-y-4">
-            <Label>Origem do QR Code</Label>
-            <RadioGroup value={source} onValueChange={(v) => setSource(v as Source)}>
-              <div className="flex items-center gap-2 p-3 border rounded-md">
-                <RadioGroupItem value="upload" id="src-upload" />
-                <Label htmlFor="src-upload" className="font-normal cursor-pointer">
-                  Upload de imagem do QR Code
-                </Label>
-              </div>
-              <div className="flex items-center gap-2 p-3 border rounded-md">
-                <RadioGroupItem value="code" id="src-code" />
-                <Label htmlFor="src-code" className="font-normal cursor-pointer">
-                  Código PIX (Copia e Cola)
-                </Label>
-              </div>
-            </RadioGroup>
-
-            {source === "upload" && (
-              <div className="space-y-2">
-                <input
-                  ref={fileRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(e) => handleFile(e.target.files?.[0] || null)}
+              <div>
+                <Label>Descrição</Label>
+                <Textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Mensagem opcional para os convidados"
                 />
-                <Button type="button" variant="outline" onClick={() => fileRef.current?.click()}>
-                  <Upload className="w-4 h-4 mr-2" />
-                  {file ? "Trocar imagem" : "Selecionar imagem"}
-                </Button>
-                <p className="text-xs text-muted-foreground">Máx. 2 MB. Convertido para WebP automaticamente.</p>
-                {preview && (
-                  <img src={preview} alt="Pré-visualização do QR Code" className="w-48 h-48 object-contain border rounded-md bg-white" />
-                )}
               </div>
-            )}
-
-            {source === "code" && (
-              <div className="space-y-3">
+              {pixMode === "fixed" && (
                 <div>
-                  <Label>Código PIX *</Label>
-                  <Textarea
-                    value={pixCode}
-                    onChange={(e) => setPixCode(e.target.value)}
-                    placeholder="Cole aqui o código PIX Copia e Cola"
-                    rows={4}
+                  <Label>Valor sugerido (R$) *</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    placeholder="100.00"
                   />
                 </div>
-                {pixCode.trim().length > 0 && (
-                  <div className="flex flex-col items-center gap-3 p-4 border rounded-md bg-white">
-                    <QRCodeCanvas value={pixCode.trim()} size={192} includeMargin />
-                    <div className="hidden">
-                      <QRCodeSVG value={pixCode.trim()} size={192} />
-                    </div>
-                    <Button type="button" variant="outline" size="sm" onClick={handleCopy}>
-                      <Copy className="w-4 h-4 mr-2" />
-                      Copiar código
-                    </Button>
-                  </div>
-                )}
+              )}
+            </div>
+
+            <div className="space-y-2 border-t pt-4">
+              <Label>Imagem do QR Code *</Label>
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => handleFile(e.target.files?.[0] || null)}
+              />
+              <Button type="button" variant="outline" onClick={() => fileRef.current?.click()}>
+                <Upload className="w-4 h-4 mr-2" />
+                {file ? "Trocar imagem" : "Selecionar imagem"}
+              </Button>
+              <p className="text-xs text-muted-foreground">
+                Máx. 2 MB. Convertido para WebP automaticamente.
+              </p>
+              {preview && (
+                <img
+                  src={preview}
+                  alt="Pré-visualização do QR Code"
+                  className="w-48 h-48 object-contain border rounded-md bg-white"
+                />
+              )}
+            </div>
+
+            <div className="space-y-2 border-t pt-4">
+              <div className="flex items-center justify-between">
+                <Label>Código PIX (Copia e Cola) *</Label>
+                <Button type="button" variant="outline" size="sm" onClick={handlePaste}>
+                  <ClipboardPaste className="w-4 h-4 mr-2" />
+                  Colar
+                </Button>
               </div>
-            )}
+              <Textarea
+                value={pixCode}
+                onChange={(e) => setPixCode(e.target.value)}
+                placeholder="Cole aqui o código PIX Copia e Cola"
+                rows={4}
+              />
+            </div>
           </div>
         )}
 
         <DialogFooter className="flex justify-between gap-2">
           <div>
             {step > 1 && (
-              <Button variant="outline" onClick={() => setStep((s) => (s - 1) as 1 | 2 | 3)} disabled={saving}>
+              <Button variant="outline" onClick={() => setStep(1)} disabled={saving}>
                 Voltar
               </Button>
             )}
@@ -308,16 +301,13 @@ const PixGiftDialog = ({ open, onOpenChange, weddingId, onCreated, itemsCount }:
             <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={saving}>
               Cancelar
             </Button>
-            {step < 3 && (
-              <Button
-                onClick={() => setStep((s) => (s + 1) as 1 | 2 | 3)}
-                disabled={(step === 1 && !canAdvance1) || (step === 2 && !canAdvance2)}
-              >
+            {step === 1 && (
+              <Button onClick={() => setStep(2)} disabled={!canAdvance1}>
                 Continuar
               </Button>
             )}
-            {step === 3 && (
-              <Button onClick={handleSave} disabled={!canSave || saving}>
+            {step === 2 && (
+              <Button onClick={handleSave} disabled={saving}>
                 {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 Salvar PIX
               </Button>
