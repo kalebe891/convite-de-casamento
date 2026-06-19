@@ -638,8 +638,13 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
                               <Gift className="h-4 w-4 text-primary shrink-0" />
                             </button>
                           </PopoverTrigger>
-                          <PopoverContent side="top" className="w-auto max-w-[250px] p-3 text-sm">
-                            🎁 {guestGifts[guest.id]}
+                          <PopoverContent side="top" className="w-auto max-w-[280px] p-3 text-sm">
+                            <p className="font-semibold mb-1">Presente:</p>
+                            <ul className="list-disc pl-5 space-y-0.5">
+                              {guestGifts[guest.id].split(', ').map((g, i) => (
+                                <li key={i}>{g}</li>
+                              ))}
+                            </ul>
                           </PopoverContent>
                         </Popover>
                       )}
