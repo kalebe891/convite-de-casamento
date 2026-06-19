@@ -317,6 +317,38 @@ export type Database = {
           },
         ]
       }
+      gift_pix_selections: {
+        Row: {
+          created_at: string
+          gift_item_id: string
+          guest_id: string
+          id: string
+          wedding_id: string
+        }
+        Insert: {
+          created_at?: string
+          gift_item_id: string
+          guest_id: string
+          id?: string
+          wedding_id: string
+        }
+        Update: {
+          created_at?: string
+          gift_item_id?: string
+          guest_id?: string
+          id?: string
+          wedding_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gift_pix_selections_gift_item_id_fkey"
+            columns: ["gift_item_id"]
+            isOneToOne: false
+            referencedRelation: "gift_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       guests: {
         Row: {
           archived_at: string | null
