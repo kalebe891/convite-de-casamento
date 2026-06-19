@@ -134,24 +134,41 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
       setGuests(data || []);
     }
 
-    // Fetch gift associations
+    // Fetch gift associations (presentes tradicionais)
     const { data: giftsData } = await supabase
       .from("gift_items")
-      .select("gift_name, selected_by_guest_id")
+      .select("gift_name, gift_kind, selected_by_guest_id")
       .eq("wedding_id", weddingId)
       .not("selected_by_guest_id", "is", null);
 
+    // Fetch PIX selections (intenção de contribuição PIX)
+    const { data: pixData } = await supabase
+      .from("gift_pix_selections")
+      .select("guest_id, gift_item:gift_items(gift_name)")
+      .eq("wedding_id", weddingId);
+
+    const map: Record<string, string[]> = {};
     if (giftsData) {
-      const map: Record<string, string> = {};
       for (const g of giftsData) {
-        if (g.selected_by_guest_id) {
-          map[g.selected_by_guest_id] = map[g.selected_by_guest_id]
-            ? `${map[g.selected_by_guest_id]}, ${g.gift_name}`
-            : g.gift_name;
-        }
+        if (!g.selected_by_guest_id) continue;
+        const label = g.gift_kind === 'pix' ? `PIX – ${g.gift_name}` : g.gift_name;
+        (map[g.selected_by_guest_id] ||= []).push(label);
       }
-      setGuestGifts(map);
     }
+    if (pixData) {
+      for (const row of pixData as any[]) {
+        const name = row.gift_item?.gift_name;
+        if (!row.guest_id || !name) continue;
+        const label = `PIX – ${name}`;
+        const list = (map[row.guest_id] ||= []);
+        if (!list.includes(label)) list.push(label);
+      }
+    }
+    const flat: Record<string, string> = {};
+    for (const [gid, arr] of Object.entries(map)) {
+      flat[gid] = arr.join(", ");
+    }
+    setGuestGifts(flat);
   };
 
   useEffect(() => {
@@ -621,8 +638,13 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
                               <Gift className="h-4 w-4 text-primary shrink-0" />
                             </button>
                           </PopoverTrigger>
-                          <PopoverContent side="top" className="w-auto max-w-[250px] p-3 text-sm">
-                            🎁 {guestGifts[guest.id]}
+                          <PopoverContent side="top" className="w-auto max-w-[280px] p-3 text-sm">
+                            <p className="font-semibold mb-1">Presente:</p>
+                            <ul className="list-disc pl-5 space-y-0.5">
+                              {guestGifts[guest.id].split(', ').map((g, i) => (
+                                <li key={i}>{g}</li>
+                              ))}
+                            </ul>
                           </PopoverContent>
                         </Popover>
                       )}

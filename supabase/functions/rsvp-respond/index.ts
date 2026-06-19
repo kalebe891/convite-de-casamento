@@ -11,6 +11,8 @@ interface RespondRequest {
   plus_one?: boolean;
   dietary_restrictions?: string;
   message?: string;
+  gift_item_id?: string | null;
+  pix_item_ids?: string[];
 }
 
 // Sanitize user input to prevent XSS and script injection
@@ -84,7 +86,12 @@ Deno.serve(async (req) => {
 
     // Parse e validação do body
     const body = await req.json();
-    const { token, attending, plus_one, dietary_restrictions, message } = body as RespondRequest;
+    const { token, attending, plus_one, dietary_restrictions, message, gift_item_id, pix_item_ids } = body as RespondRequest;
+    const safePixIds: string[] = Array.isArray(pix_item_ids)
+      ? Array.from(new Set(pix_item_ids.filter((v) => typeof v === 'string' && /^[0-9a-f-]{36}$/i.test(v))))
+      : [];
+    const safeGiftId: string | null =
+      typeof gift_item_id === 'string' && /^[0-9a-f-]{36}$/i.test(gift_item_id) ? gift_item_id : null;
 
     // Validação de entrada básica
     if (!token || typeof token !== 'string' || token.trim().length === 0) {
@@ -139,7 +146,7 @@ Deno.serve(async (req) => {
     // Buscar convite
     const { data: invitation, error: fetchError } = await supabase
       .from('invitations')
-      .select('id, guest_name, responded_at')
+      .select('id, guest_id, guest_name, responded_at, wedding_id')
       .eq('unique_code', token)
       .single();
 
@@ -183,8 +190,52 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Presente agora é selecionado via Edge Function separada (select-gift)
-    // Não precisamos processar selected_gift_id aqui
+    // Presente tradicional: usa RPC claim_gift (sem alterar regras existentes)
+    if (attending && safeGiftId && invitation.guest_id) {
+      try {
+        const { data: claimResult, error: claimError } = await supabase.rpc('claim_gift', {
+          p_gift_id: safeGiftId,
+          p_guest_id: invitation.guest_id,
+          p_allow_multiple: false,
+        });
+        if (claimError) {
+          console.error('[rsvp-respond] Erro ao reservar presente:', claimError);
+        } else {
+          console.log('[rsvp-respond] Resultado claim_gift:', claimResult);
+        }
+      } catch (e) {
+        console.error('[rsvp-respond] Exceção em claim_gift:', e);
+      }
+    }
+
+    // PIX: registrar intenção de contribuição (lote). Validação dupla:
+    // 1) gift_items são do mesmo wedding do convite; 2) são do tipo 'pix'.
+    if (attending && safePixIds.length > 0 && invitation.guest_id && invitation.wedding_id) {
+      const { data: validPix, error: pixFetchError } = await supabase
+        .from('gift_items')
+        .select('id')
+        .eq('wedding_id', invitation.wedding_id)
+        .eq('gift_kind', 'pix')
+        .in('id', safePixIds);
+
+      if (pixFetchError) {
+        console.error('[rsvp-respond] Erro ao validar PIX:', pixFetchError);
+      } else if (validPix && validPix.length > 0) {
+        const rows = validPix.map((p) => ({
+          wedding_id: invitation.wedding_id,
+          guest_id: invitation.guest_id,
+          gift_item_id: p.id,
+        }));
+        const { error: pixInsertError } = await supabase
+          .from('gift_pix_selections')
+          .upsert(rows, { onConflict: 'guest_id,gift_item_id', ignoreDuplicates: true });
+        if (pixInsertError) {
+          console.error('[rsvp-respond] Erro ao registrar PIX:', pixInsertError);
+        } else {
+          console.log('[rsvp-respond] PIX registrados:', rows.length);
+        }
+      }
+    }
 
     console.log('[rsvp-respond] Resposta registrada com sucesso:', invitation.guest_name, '- Confirmado:', attending);
 

@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Heart, HeartOff, Loader2, Gift, ExternalLink } from "lucide-react";
+import { Heart, HeartOff, Loader2, Gift, ExternalLink, Copy, QrCode } from "lucide-react";
 import { z } from "zod";
 import HeroSection from "@/components/wedding/HeroSection";
 import EventsSection from "@/components/wedding/EventsSection";
@@ -47,6 +47,16 @@ interface GiftItem {
   description: string | null;
   link: string | null;
   selected_by_guest_id: string | null;
+  gift_kind?: string | null;
+}
+
+interface PixGiftItem {
+  id: string;
+  gift_name: string;
+  description: string | null;
+  suggested_amount: number | null;
+  pix_copy_paste_code: string | null;
+  qr_image_url: string | null;
 }
 
 const Invitation = () => {
@@ -69,6 +79,9 @@ const Invitation = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [savingGift, setSavingGift] = useState(false);
   const [hasExistingGift, setHasExistingGift] = useState(false);
+  const [pixGifts, setPixGifts] = useState<PixGiftItem[]>([]);
+  const [selectedPixIds, setSelectedPixIds] = useState<string[]>([]);
+  const [confirmedPixDetails, setConfirmedPixDetails] = useState<PixGiftItem[]>([]);
 
   // Fetch wedding data once invitation is resolved (uses invitation.wedding_id)
   useEffect(() => {
@@ -151,30 +164,68 @@ const Invitation = () => {
       setLoadingGifts(true);
       const { data, error } = await supabase
         .from("gift_items")
-        .select("id, gift_name, description, link, selected_by_guest_id")
+        .select("id, gift_name, description, link, selected_by_guest_id, gift_kind, suggested_amount, pix_copy_paste_code, qr_image_url, is_public")
         .eq("wedding_id", weddingDetails.id)
-        .or(`selected_by_guest_id.is.null,selected_by_guest_id.eq.${invitationData.guest_id}`)
+        .eq("is_public", true)
         .order("display_order");
 
       if (error) {
         console.error("Error fetching gifts:", error);
       } else {
-        setGifts(data || []);
-        
-        // Set already selected gift
-        const alreadySelected = data?.find(g => g.selected_by_guest_id === invitationData.guest_id);
+        const all = data || [];
+        const traditional = all.filter((g: any) => (g.gift_kind ?? 'traditional') !== 'pix');
+        const pix = all.filter((g: any) => g.gift_kind === 'pix');
+
+        // Tradicional: respeitar regra de visibilidade (livre ou meu)
+        const traditionalVisible = traditional.filter((g: any) =>
+          !g.selected_by_guest_id || g.selected_by_guest_id === invitationData.guest_id
+        );
+        setGifts(traditionalVisible as GiftItem[]);
+
+        setPixGifts(pix.map((g: any) => ({
+          id: g.id,
+          gift_name: g.gift_name,
+          description: g.description,
+          suggested_amount: g.suggested_amount,
+          pix_copy_paste_code: g.pix_copy_paste_code,
+          qr_image_url: g.qr_image_url,
+        })));
+
+        const alreadySelected = traditional.find((g: any) => g.selected_by_guest_id === invitationData.guest_id);
         if (alreadySelected) {
           setSelectedGiftId(alreadySelected.id);
           setHasExistingGift(true);
         } else {
           setHasExistingGift(false);
         }
+
+        // Buscar PIX já confirmados anteriormente para este convidado (caso já respondeu)
+        const { data: existingPix } = await supabase
+          .from("gift_pix_selections")
+          .select("gift_item_id")
+          .eq("guest_id", invitationData.guest_id);
+        if (existingPix && existingPix.length > 0) {
+          const ids = existingPix.map((r: any) => r.gift_item_id);
+          setSelectedPixIds(ids);
+          setConfirmedPixDetails(
+            pix
+              .filter((g: any) => ids.includes(g.id))
+              .map((g: any) => ({
+                id: g.id,
+                gift_name: g.gift_name,
+                description: g.description,
+                suggested_amount: g.suggested_amount,
+                pix_copy_paste_code: g.pix_copy_paste_code,
+                qr_image_url: g.qr_image_url,
+              }))
+          );
+        }
       }
       setLoadingGifts(false);
     };
 
     fetchGifts();
-  }, [weddingDetails?.id, invitationData?.id]);
+  }, [weddingDetails?.id, invitationData?.id, invitationData?.guest_id]);
 
   const handleRSVPResponse = async (attending: boolean) => {
     if (!invitation_code || !invitationData) return;
@@ -183,7 +234,15 @@ const Invitation = () => {
       const validatedData = rsvpResponseSchema.parse(formData);
       setSubmitting(true);
 
-      // First, respond to RSVP
+      // Submeter RSVP + presente tradicional + PIX em payload único
+      const payload = {
+        token: invitation_code,
+        attending,
+        message: validatedData.message || undefined,
+        gift_item_id: attending ? (selectedGiftId || null) : null,
+        pix_item_ids: attending ? selectedPixIds : [],
+      };
+
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/rsvp-respond`,
         {
@@ -192,11 +251,7 @@ const Invitation = () => {
             'Content-Type': 'application/json',
             'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
           },
-          body: JSON.stringify({
-            token: invitation_code,
-            attending,
-            message: validatedData.message || undefined,
-          }),
+          body: JSON.stringify(payload),
         }
       );
 
@@ -205,23 +260,9 @@ const Invitation = () => {
         throw new Error(errorData.error || 'Erro ao processar resposta');
       }
 
-      // Then, save gift selection if attending and gift selected
-      if (attending && selectedGiftId) {
-        await fetch(
-          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/select-gift`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-            },
-            body: JSON.stringify({
-              guest_id: invitationData.guest_id,
-              gift_id: selectedGiftId,
-            }),
-          }
-        );
-      }
+      // Capturar detalhes dos PIX confirmados para exibir na tela de sucesso
+      const confirmedPix = pixGifts.filter((p) => selectedPixIds.includes(p.id));
+      setConfirmedPixDetails(confirmedPix);
 
       // Update local state to show final status
       setInvitationData({
@@ -233,15 +274,19 @@ const Invitation = () => {
 
       toast({
         title: attending ? "Presença confirmada!" : "Resposta registrada",
-        description: attending 
-          ? "Obrigado por confirmar! Você será redirecionado em instantes..."
+        description: attending
+          ? (confirmedPix.length > 0
+              ? "Obrigado por confirmar! Veja abaixo os PIX selecionados."
+              : "Obrigado por confirmar! Você será redirecionado em instantes...")
           : "Sentiremos sua falta 💔 Você será redirecionado em instantes...",
       });
 
-      // Redirecionar após 7 segundos
-      setTimeout(() => {
-        window.location.href = "https://convite-de-casamento.lovable.app/";
-      }, 7000);
+      // Sem auto-redirect quando há PIX para o convidado copiar
+      if (confirmedPix.length === 0) {
+        setTimeout(() => {
+          window.location.href = "https://convite-de-casamento.lovable.app/";
+        }, 7000);
+      }
     } catch (error) {
       console.error('[Invitation] Erro ao responder RSVP:', error);
       if (error instanceof z.ZodError) {
@@ -261,6 +306,24 @@ const Invitation = () => {
       setSubmitting(false);
     }
   };
+
+  const handleCopyPix = async (code: string | null) => {
+    if (!code) {
+      toast({ title: "Código indisponível", variant: "destructive" });
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(code);
+      toast({ title: "Código PIX copiado." });
+    } catch {
+      toast({
+        title: "Não foi possível copiar automaticamente. Copie o código manualmente.",
+        variant: "destructive",
+      });
+    }
+  };
+
+
 
   const handleSaveGiftChange = async () => {
     if (!invitationData || !invitationData.responded_at) return;
@@ -397,6 +460,55 @@ const Invitation = () => {
                   </div>
                 </CardContent>
               )}
+              {invitationData.attending && confirmedPixDetails.length > 0 && (
+                <CardContent className="space-y-4 border-t pt-6">
+                  <h3 className="text-xl font-serif font-semibold flex items-center gap-2">
+                    <QrCode className="w-5 h-5 text-primary" /> Suas contribuições PIX
+                  </h3>
+                  <div className="space-y-6">
+                    {confirmedPixDetails.map((pix) => (
+                      <div key={pix.id} className="rounded-lg border p-4 space-y-3">
+                        <div>
+                          <p className="font-semibold text-lg">PIX – {pix.gift_name}</p>
+                          {pix.description && (
+                            <p className="text-sm text-muted-foreground">{pix.description}</p>
+                          )}
+                          {pix.suggested_amount != null && (
+                            <p className="text-sm text-primary mt-1">
+                              Sugestão: R$ {Number(pix.suggested_amount).toFixed(2).replace('.', ',')}
+                            </p>
+                          )}
+                        </div>
+                        {pix.qr_image_url && (
+                          <div className="flex justify-center">
+                            <img
+                              src={pix.qr_image_url}
+                              alt={`QR Code PIX para ${pix.gift_name}`}
+                              className="w-48 h-48 object-contain bg-white rounded-md border"
+                              loading="lazy"
+                            />
+                          </div>
+                        )}
+                        {pix.pix_copy_paste_code && (
+                          <>
+                            <div className="bg-muted rounded-md p-2 text-xs font-mono break-all max-h-32 overflow-y-auto">
+                              {pix.pix_copy_paste_code}
+                            </div>
+                            <Button
+                              type="button"
+                              variant="default"
+                              className="w-full"
+                              onClick={() => handleCopyPix(pix.pix_copy_paste_code)}
+                            >
+                              <Copy className="w-4 h-4 mr-2" /> Copiar código PIX
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              )}
             </Card>
           </div>
         </section>
@@ -435,6 +547,57 @@ const Invitation = () => {
                   {formData.message.length}/1000 caracteres
                 </p>
               </div>
+
+              {pixGifts.length > 0 && (
+                <div className="space-y-3 border-t pt-6">
+                  <div>
+                    <h3 className="text-lg font-semibold flex items-center gap-2">
+                      <QrCode className="w-5 h-5 text-primary" /> Contribuições PIX
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      Opcional. Você pode selecionar quantos quiser.
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    {pixGifts.map((pix) => {
+                      const checked = selectedPixIds.includes(pix.id);
+                      return (
+                        <label
+                          key={pix.id}
+                          className={`flex items-start gap-3 rounded-lg border p-3 cursor-pointer transition-all ${
+                            checked ? "border-primary bg-primary/5" : "hover:border-primary/50"
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={(e) => {
+                              setSelectedPixIds((prev) =>
+                                e.target.checked
+                                  ? [...prev, pix.id]
+                                  : prev.filter((id) => id !== pix.id)
+                              );
+                            }}
+                            className="mt-1 h-4 w-4 accent-primary"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium">{pix.gift_name}</p>
+                            {pix.description && (
+                              <p className="text-sm text-muted-foreground">{pix.description}</p>
+                            )}
+                            {pix.suggested_amount != null && (
+                              <p className="text-sm text-primary mt-1">
+                                Sugestão: R$ {Number(pix.suggested_amount).toFixed(2).replace('.', ',')}
+                              </p>
+                            )}
+                          </div>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
 
               <div className="grid grid-cols-2 gap-4 pt-4">
                 <Button 
