@@ -307,6 +307,21 @@ const Invitation = () => {
     }
   };
 
+  const handleCopyPix = async (code: string | null) => {
+    if (!code) {
+      toast({ title: "Código indisponível", variant: "destructive" });
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(code);
+      toast({ title: "Código PIX copiado." });
+    } catch {
+      toast({
+        title: "Não foi possível copiar automaticamente. Copie o código manualmente.",
+        variant: "destructive",
+      });
+    }
+
   const handleSaveGiftChange = async () => {
     if (!invitationData || !invitationData.responded_at) return;
 
