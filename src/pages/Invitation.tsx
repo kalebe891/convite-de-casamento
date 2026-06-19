@@ -481,6 +481,57 @@ const Invitation = () => {
                 </p>
               </div>
 
+              {pixGifts.length > 0 && (
+                <div className="space-y-3 border-t pt-6">
+                  <div>
+                    <h3 className="text-lg font-semibold flex items-center gap-2">
+                      <QrCode className="w-5 h-5 text-primary" /> Contribuições PIX
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      Opcional. Você pode selecionar quantos quiser.
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    {pixGifts.map((pix) => {
+                      const checked = selectedPixIds.includes(pix.id);
+                      return (
+                        <label
+                          key={pix.id}
+                          className={`flex items-start gap-3 rounded-lg border p-3 cursor-pointer transition-all ${
+                            checked ? "border-primary bg-primary/5" : "hover:border-primary/50"
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={(e) => {
+                              setSelectedPixIds((prev) =>
+                                e.target.checked
+                                  ? [...prev, pix.id]
+                                  : prev.filter((id) => id !== pix.id)
+                              );
+                            }}
+                            className="mt-1 h-4 w-4 accent-primary"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium">{pix.gift_name}</p>
+                            {pix.description && (
+                              <p className="text-sm text-muted-foreground">{pix.description}</p>
+                            )}
+                            {pix.suggested_amount != null && (
+                              <p className="text-sm text-primary mt-1">
+                                Sugestão: R$ {Number(pix.suggested_amount).toFixed(2).replace('.', ',')}
+                              </p>
+                            )}
+                          </div>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+
               <div className="grid grid-cols-2 gap-4 pt-4">
                 <Button 
                   onClick={() => handleRSVPResponse(true)}
