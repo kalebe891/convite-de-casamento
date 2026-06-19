@@ -321,6 +321,9 @@ const Invitation = () => {
         variant: "destructive",
       });
     }
+  };
+
+
 
   const handleSaveGiftChange = async () => {
     if (!invitationData || !invitationData.responded_at) return;
