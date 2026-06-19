@@ -69,6 +69,9 @@ const Invitation = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [savingGift, setSavingGift] = useState(false);
   const [hasExistingGift, setHasExistingGift] = useState(false);
+  const [pixGifts, setPixGifts] = useState<PixGiftItem[]>([]);
+  const [selectedPixIds, setSelectedPixIds] = useState<string[]>([]);
+  const [confirmedPixDetails, setConfirmedPixDetails] = useState<PixGiftItem[]>([]);
 
   // Fetch wedding data once invitation is resolved (uses invitation.wedding_id)
   useEffect(() => {
