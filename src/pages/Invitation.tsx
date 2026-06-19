@@ -47,6 +47,16 @@ interface GiftItem {
   description: string | null;
   link: string | null;
   selected_by_guest_id: string | null;
+  gift_kind?: string | null;
+}
+
+interface PixGiftItem {
+  id: string;
+  gift_name: string;
+  description: string | null;
+  suggested_amount: number | null;
+  pix_copy_paste_code: string | null;
+  qr_image_url: string | null;
 }
 
 const Invitation = () => {
