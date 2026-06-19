@@ -234,7 +234,15 @@ const Invitation = () => {
       const validatedData = rsvpResponseSchema.parse(formData);
       setSubmitting(true);
 
-      // First, respond to RSVP
+      // Submeter RSVP + presente tradicional + PIX em payload único
+      const payload = {
+        token: invitation_code,
+        attending,
+        message: validatedData.message || undefined,
+        gift_item_id: attending ? (selectedGiftId || null) : null,
+        pix_item_ids: attending ? selectedPixIds : [],
+      };
+
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/rsvp-respond`,
         {
@@ -243,11 +251,7 @@ const Invitation = () => {
             'Content-Type': 'application/json',
             'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
           },
-          body: JSON.stringify({
-            token: invitation_code,
-            attending,
-            message: validatedData.message || undefined,
-          }),
+          body: JSON.stringify(payload),
         }
       );
 
@@ -256,23 +260,9 @@ const Invitation = () => {
         throw new Error(errorData.error || 'Erro ao processar resposta');
       }
 
-      // Then, save gift selection if attending and gift selected
-      if (attending && selectedGiftId) {
-        await fetch(
-          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/select-gift`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-            },
-            body: JSON.stringify({
-              guest_id: invitationData.guest_id,
-              gift_id: selectedGiftId,
-            }),
-          }
-        );
-      }
+      // Capturar detalhes dos PIX confirmados para exibir na tela de sucesso
+      const confirmedPix = pixGifts.filter((p) => selectedPixIds.includes(p.id));
+      setConfirmedPixDetails(confirmedPix);
 
       // Update local state to show final status
       setInvitationData({
@@ -284,15 +274,19 @@ const Invitation = () => {
 
       toast({
         title: attending ? "Presença confirmada!" : "Resposta registrada",
-        description: attending 
-          ? "Obrigado por confirmar! Você será redirecionado em instantes..."
+        description: attending
+          ? (confirmedPix.length > 0
+              ? "Obrigado por confirmar! Veja abaixo os PIX selecionados."
+              : "Obrigado por confirmar! Você será redirecionado em instantes...")
           : "Sentiremos sua falta 💔 Você será redirecionado em instantes...",
       });
 
-      // Redirecionar após 7 segundos
-      setTimeout(() => {
-        window.location.href = "https://convite-de-casamento.lovable.app/";
-      }, 7000);
+      // Sem auto-redirect quando há PIX para o convidado copiar
+      if (confirmedPix.length === 0) {
+        setTimeout(() => {
+          window.location.href = "https://convite-de-casamento.lovable.app/";
+        }, 7000);
+      }
     } catch (error) {
       console.error('[Invitation] Erro ao responder RSVP:', error);
       if (error instanceof z.ZodError) {
