@@ -164,30 +164,68 @@ const Invitation = () => {
       setLoadingGifts(true);
       const { data, error } = await supabase
         .from("gift_items")
-        .select("id, gift_name, description, link, selected_by_guest_id")
+        .select("id, gift_name, description, link, selected_by_guest_id, gift_kind, suggested_amount, pix_copy_paste_code, qr_image_url, is_public")
         .eq("wedding_id", weddingDetails.id)
-        .or(`selected_by_guest_id.is.null,selected_by_guest_id.eq.${invitationData.guest_id}`)
+        .eq("is_public", true)
         .order("display_order");
 
       if (error) {
         console.error("Error fetching gifts:", error);
       } else {
-        setGifts(data || []);
-        
-        // Set already selected gift
-        const alreadySelected = data?.find(g => g.selected_by_guest_id === invitationData.guest_id);
+        const all = data || [];
+        const traditional = all.filter((g: any) => (g.gift_kind ?? 'traditional') !== 'pix');
+        const pix = all.filter((g: any) => g.gift_kind === 'pix');
+
+        // Tradicional: respeitar regra de visibilidade (livre ou meu)
+        const traditionalVisible = traditional.filter((g: any) =>
+          !g.selected_by_guest_id || g.selected_by_guest_id === invitationData.guest_id
+        );
+        setGifts(traditionalVisible as GiftItem[]);
+
+        setPixGifts(pix.map((g: any) => ({
+          id: g.id,
+          gift_name: g.gift_name,
+          description: g.description,
+          suggested_amount: g.suggested_amount,
+          pix_copy_paste_code: g.pix_copy_paste_code,
+          qr_image_url: g.qr_image_url,
+        })));
+
+        const alreadySelected = traditional.find((g: any) => g.selected_by_guest_id === invitationData.guest_id);
         if (alreadySelected) {
           setSelectedGiftId(alreadySelected.id);
           setHasExistingGift(true);
         } else {
           setHasExistingGift(false);
         }
+
+        // Buscar PIX já confirmados anteriormente para este convidado (caso já respondeu)
+        const { data: existingPix } = await supabase
+          .from("gift_pix_selections")
+          .select("gift_item_id")
+          .eq("guest_id", invitationData.guest_id);
+        if (existingPix && existingPix.length > 0) {
+          const ids = existingPix.map((r: any) => r.gift_item_id);
+          setSelectedPixIds(ids);
+          setConfirmedPixDetails(
+            pix
+              .filter((g: any) => ids.includes(g.id))
+              .map((g: any) => ({
+                id: g.id,
+                gift_name: g.gift_name,
+                description: g.description,
+                suggested_amount: g.suggested_amount,
+                pix_copy_paste_code: g.pix_copy_paste_code,
+                qr_image_url: g.qr_image_url,
+              }))
+          );
+        }
       }
       setLoadingGifts(false);
     };
 
     fetchGifts();
-  }, [weddingDetails?.id, invitationData?.id]);
+  }, [weddingDetails?.id, invitationData?.id, invitationData?.guest_id]);
 
   const handleRSVPResponse = async (attending: boolean) => {
     if (!invitation_code || !invitationData) return;
