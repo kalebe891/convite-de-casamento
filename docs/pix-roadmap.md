@@ -1,8 +1,17 @@
 # PIX QR Code — Roadmap & Débito Técnico
 
-Versão atual: **1.23.02**
+Versão atual: **1.23.03**
 
-## Estado atual (1.23.02)
+## Exibição pública + visibilidade independente (1.23.03)
+- Novo campo `show_pix_section boolean NOT NULL DEFAULT true` em `wedding_details` (backfill = true). `WeddingContext` usa `select("*")` e já expõe o campo automaticamente.
+- Admin (`/admin/presentes` → "Visibilidade da Seção de Presentes") agora possui **dois toggles independentes**: `show_gifts_section` (presentes tradicionais) e `show_pix_section` (PIX QR Code). `hide_reserved_gifts` mantido. Cada toggle dispara `logAdminAction` próprio.
+- Seção pública PIX renderiza apenas se `wedding.show_pix_section === true && pixItems.length > 0` — toggle ligado sem itens **não** exibe a seção vazia.
+- Card PIX público usa botão dedicado **"Ver QR Code"** (ícone `QrCode`) e abre modal Shadcn `Dialog` com: título `PIX • <nome>`, descrição (se houver), imagem QR clicável, textarea read-only com o código Copia e Cola e botão **"Copiar código PIX"**.
+- Clique direto no QR Code copia o código via `navigator.clipboard.writeText` em `try/catch` (toast sucesso/falha via `sonner`). Sem libs externas.
+- Presentes tradicionais permanecem intactos: card, botão "Ver Presente", modal/drawer de seleção, `claim_gift`, RSVP, Edge Function `rsvp-respond`, `gift_pix_selections`, `PixGiftDialog` admin e `ThemeRenderer` não foram alterados. Nenhuma integração bancária.
+
+## Estado anterior (1.23.02)
+
 
 ### Cadastro administrativo (1.23.01)
 - Cadastro de presente PIX em modal de **2 etapas**:

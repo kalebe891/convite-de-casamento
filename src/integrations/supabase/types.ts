@@ -865,6 +865,7 @@ export type Database = {
           show_buffet_section: boolean | null
           show_gifts_section: boolean | null
           show_guest_list_public: boolean | null
+          show_pix_section: boolean
           show_playlist_section: boolean | null
           show_rsvp_status_public: boolean | null
           show_timeline_section: boolean | null
@@ -896,6 +897,7 @@ export type Database = {
           show_buffet_section?: boolean | null
           show_gifts_section?: boolean | null
           show_guest_list_public?: boolean | null
+          show_pix_section?: boolean
           show_playlist_section?: boolean | null
           show_rsvp_status_public?: boolean | null
           show_timeline_section?: boolean | null
@@ -927,6 +929,7 @@ export type Database = {
           show_buffet_section?: boolean | null
           show_gifts_section?: boolean | null
           show_guest_list_public?: boolean | null
+          show_pix_section?: boolean
           show_playlist_section?: boolean | null
           show_rsvp_status_public?: boolean | null
           show_timeline_section?: boolean | null

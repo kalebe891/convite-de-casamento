@@ -32,6 +32,7 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
   const [items, setItems] = useState<any[]>([]);
   const [invitations, setInvitations] = useState<any[]>([]);
   const [showGiftsSection, setShowGiftsSection] = useState<boolean>(true);
+  const [showPixSection, setShowPixSection] = useState<boolean>(true);
   const [hideReservedGifts, setHideReservedGifts] = useState<boolean>(false);
   const [newItem, setNewItem] = useState({ 
     gift_name: "", 
@@ -53,6 +54,7 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
   useEffect(() => {
     if (wedding) {
       setShowGiftsSection(wedding.show_gifts_section ?? true);
+      setShowPixSection((wedding as any).show_pix_section ?? true);
       setHideReservedGifts(wedding.hide_reserved_gifts ?? false);
     }
   }, [wedding]);
@@ -269,6 +271,27 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
     }
   };
 
+  const handleTogglePixSection = async (newValue: boolean) => {
+    if (!permissions.canPublish) {
+      toast({ title: "Sem permissão", description: "Você não tem permissão para publicar/ocultar seções", variant: "destructive" });
+      return;
+    }
+    if (!weddingId) return;
+
+    const { error } = await supabase
+      .from("wedding_details")
+      .update({ show_pix_section: newValue } as any)
+      .eq("id", weddingId);
+
+    if (error) {
+      toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
+    } else {
+      toast({ title: "Atualizado", description: `Seção PIX ${newValue ? 'exibida' : 'oculta'} na página inicial` });
+      await logAdminAction({ action: "update", tableName: "wedding_details", recordId: weddingId, newData: { show_pix_section: newValue }, affectedName: "Seção PIX" });
+      setShowPixSection(newValue);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <Card>
@@ -278,10 +301,17 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium">Exibir seção "Lista de Presentes" na página inicial</p>
-              <p className="text-sm text-muted-foreground">Controla se toda a seção de presentes aparece na página inicial</p>
+              <p className="font-medium">Exibir seção de presentes na página inicial</p>
+              <p className="text-sm text-muted-foreground">Controla a exibição dos presentes tradicionais (com link externo)</p>
             </div>
             <Switch checked={showGiftsSection} onCheckedChange={handleToggleGiftsSection} disabled={!permissions.canPublish} />
+          </div>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium">Exibir seção "PIX QR Code" na página inicial</p>
+              <p className="text-sm text-muted-foreground">A seção PIX só aparece quando ativa E existir ao menos um PIX cadastrado</p>
+            </div>
+            <Switch checked={showPixSection} onCheckedChange={handleTogglePixSection} disabled={!permissions.canPublish} />
           </div>
           <div className="flex items-center justify-between">
             <div>
