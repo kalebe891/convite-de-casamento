@@ -54,6 +54,7 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
   useEffect(() => {
     if (wedding) {
       setShowGiftsSection(wedding.show_gifts_section ?? true);
+      setShowPixSection((wedding as any).show_pix_section ?? true);
       setHideReservedGifts(wedding.hide_reserved_gifts ?? false);
     }
   }, [wedding]);
