@@ -32,6 +32,7 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
   const [items, setItems] = useState<any[]>([]);
   const [invitations, setInvitations] = useState<any[]>([]);
   const [showGiftsSection, setShowGiftsSection] = useState<boolean>(true);
+  const [showPixSection, setShowPixSection] = useState<boolean>(true);
   const [hideReservedGifts, setHideReservedGifts] = useState<boolean>(false);
   const [newItem, setNewItem] = useState({ 
     gift_name: "", 
