@@ -142,11 +142,16 @@ const GiftsSection = ({ weddingId }: GiftsSectionProps) => {
   const [loading, setLoading] = useState(true);
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE.desktop);
   const [pixDialogItem, setPixDialogItem] = useState<GiftItem | null>(null);
+  const [liveSettings, setLiveSettings] = useState<{
+    show_gifts_section?: boolean | null;
+    show_pix_section?: boolean | null;
+    hide_reserved_gifts?: boolean | null;
+  } | null>(null);
   const isMobile = useIsMobile();
 
-  const showGiftsSection = wedding?.show_gifts_section ?? true;
-  const showPixSection = wedding?.show_pix_section ?? true;
-  const hideReserved = wedding?.hide_reserved_gifts ?? false;
+  const showGiftsSection = liveSettings?.show_gifts_section ?? wedding?.show_gifts_section ?? true;
+  const showPixSection = liveSettings?.show_pix_section ?? wedding?.show_pix_section ?? true;
+  const hideReserved = liveSettings?.hide_reserved_gifts ?? wedding?.hide_reserved_gifts ?? false;
 
   useEffect(() => {
     const width = window.innerWidth;
@@ -186,14 +191,29 @@ const GiftsSection = ({ weddingId }: GiftsSectionProps) => {
       setLoading(false);
     };
 
+    const fetchWeddingSettings = async () => {
+      const { data } = await supabase
+        .from("wedding_details")
+        .select("show_gifts_section, show_pix_section, hide_reserved_gifts")
+        .eq("id", weddingId)
+        .maybeSingle();
+      if (data) setLiveSettings(data);
+    };
+
     fetchData();
+    fetchWeddingSettings();
 
     const channel = supabase
-      .channel("public-gifts")
+      .channel(`public-gifts-${weddingId}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "gift_items", filter: `wedding_id=eq.${weddingId}` },
         () => fetchData()
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "wedding_details", filter: `id=eq.${weddingId}` },
+        () => fetchWeddingSettings()
       )
       .subscribe();
 
