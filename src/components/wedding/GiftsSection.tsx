@@ -1,21 +1,13 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Gift, ExternalLink, Check, QrCode, Copy } from "lucide-react";
+import { Gift, ExternalLink, Check, QrCode } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { motion } from "framer-motion";
 import { useWedding } from "@/contexts/WeddingContext";
-import { toast } from "sonner";
+import PixQrViewerDialog from "@/components/shared/PixQrViewerDialog";
 
 interface GiftsSectionProps {
   weddingId: string | null;
@@ -224,15 +216,6 @@ const GiftsSection = ({ weddingId }: GiftsSectionProps) => {
   const hasMore = visibleCount < traditionalGifts.length;
   const skeletonCount = isMobile ? 4 : 8;
 
-  const handleCopyPix = async (code: string) => {
-    try {
-      await navigator.clipboard.writeText(code);
-      toast.success("Código PIX copiado.");
-    } catch {
-      toast.error("Não foi possível copiar automaticamente. Copie o código manualmente.");
-    }
-  };
-
   return (
     <section className="py-16 sm:py-20 bg-muted/30">
       <div className="container mx-auto px-4 space-y-16">
@@ -333,55 +316,11 @@ const GiftsSection = ({ weddingId }: GiftsSectionProps) => {
         )}
       </div>
 
-      <Dialog open={!!pixDialogItem} onOpenChange={(open) => !open && setPixDialogItem(null)}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>PIX • {pixDialogItem?.gift_name}</DialogTitle>
-            {pixDialogItem?.description && (
-              <DialogDescription>{pixDialogItem.description}</DialogDescription>
-            )}
-          </DialogHeader>
-          {pixDialogItem && (
-            <div className="space-y-4">
-              {pixDialogItem.qr_image_url && (
-                <button
-                  type="button"
-                  onClick={() =>
-                    pixDialogItem.pix_copy_paste_code &&
-                    handleCopyPix(pixDialogItem.pix_copy_paste_code)
-                  }
-                  className="block w-full rounded-xl overflow-hidden border border-border bg-white p-4 transition-transform hover:scale-[1.01] focus:outline-none focus:ring-2 focus:ring-primary"
-                  aria-label="Copiar código PIX"
-                  title="Clique para copiar o código PIX"
-                >
-                  <img
-                    src={pixDialogItem.qr_image_url}
-                    alt={`QR Code PIX ${pixDialogItem.gift_name}`}
-                    className="mx-auto max-h-64 object-contain"
-                  />
-                </button>
-              )}
-              {pixDialogItem.pix_copy_paste_code && (
-                <>
-                  <Textarea
-                    readOnly
-                    value={pixDialogItem.pix_copy_paste_code}
-                    className="font-mono text-xs h-28"
-                    onFocus={(e) => e.currentTarget.select()}
-                  />
-                  <Button
-                    className="w-full"
-                    onClick={() => handleCopyPix(pixDialogItem.pix_copy_paste_code!)}
-                  >
-                    <Copy className="w-4 h-4 mr-2" />
-                    Copiar código PIX
-                  </Button>
-                </>
-              )}
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      <PixQrViewerDialog
+        open={!!pixDialogItem}
+        onOpenChange={(open) => !open && setPixDialogItem(null)}
+        pix={pixDialogItem}
+      />
     </section>
   );
 };

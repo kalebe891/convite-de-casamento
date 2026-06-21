@@ -14,6 +14,7 @@ import { Trash2, Plus, Pencil, X, PackageCheck, AlertTriangle, QrCode } from "lu
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { getSafeErrorMessage } from "@/lib/errorHandling";
 import PixGiftDialog from "./PixGiftDialog";
+import PixQrViewerDialog from "@/components/shared/PixQrViewerDialog";
 import { logAdminAction } from "@/lib/adminLogger";
 
 interface GiftManagerProps {
@@ -42,6 +43,7 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
   });
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isPixOpen, setIsPixOpen] = useState(false);
+  const [pixViewerItem, setPixViewerItem] = useState<any | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editItem, setEditItem] = useState({
     gift_name: "",
@@ -499,6 +501,11 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
                     </div>
                     <div className="flex items-center gap-2">
                       <Switch checked={item.is_public} onCheckedChange={(checked) => handleTogglePublic(item.id, checked)} disabled={!permissions.canPublish} />
+                      {(item.gift_kind === "pix" || item.gift_kind === "pix_manual") && (item.qr_image_url || item.pix_copy_paste_code) && (
+                        <Button variant="outline" size="icon" onClick={() => setPixViewerItem(item)} title="Ver QR Code">
+                          <QrCode className="w-4 h-4" />
+                        </Button>
+                      )}
                       <Button variant="outline" size="icon" onClick={() => handleOpenEdit(item)}>
                         <Pencil className="w-4 h-4" />
                       </Button>
@@ -513,6 +520,12 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
           )}
         </CardContent>
       </Card>
+
+      <PixQrViewerDialog
+        open={!!pixViewerItem}
+        onOpenChange={(open) => !open && setPixViewerItem(null)}
+        pix={pixViewerItem}
+      />
     </div>
   );
 };
