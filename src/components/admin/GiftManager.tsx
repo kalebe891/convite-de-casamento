@@ -501,7 +501,7 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
                     </div>
                     <div className="flex items-center gap-2">
                       <Switch checked={item.is_public} onCheckedChange={(checked) => handleTogglePublic(item.id, checked)} disabled={!permissions.canPublish} />
-                      {(item.gift_kind === "pix" || item.gift_kind === "pix_manual") && (item.qr_image_url || item.pix_copy_paste_code) && (
+                      {item.gift_kind === "pix_manual" && (item.qr_image_url || item.pix_copy_paste_code) && (
                         <Button variant="outline" size="icon" onClick={() => setPixViewerItem(item)} title="Ver QR Code">
                           <QrCode className="w-4 h-4" />
                         </Button>
