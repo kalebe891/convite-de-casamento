@@ -151,7 +151,7 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
     if (giftsData) {
       for (const g of giftsData) {
         if (!g.selected_by_guest_id) continue;
-        const label = g.gift_kind === 'pix' ? `PIX – ${g.gift_name}` : g.gift_name;
+        const label = g.gift_kind === 'pix_manual' ? `PIX – ${g.gift_name}` : g.gift_name;
         (map[g.selected_by_guest_id] ||= []).push(label);
       }
     }
