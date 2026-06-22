@@ -44,7 +44,7 @@ interface GuestsManagerProps {
 const GuestsManager = ({ permissions }: GuestsManagerProps) => {
   const { weddingId, wedding } = useWedding();
   const [guests, setGuests] = useState<Guest[]>([]);
-  const [guestGifts, setGuestGifts] = useState<Record<string, string>>({});
+  const [guestGifts, setGuestGifts] = useState<Record<string, { traditional: string[]; pix: string[] }>>({});
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isWhatsAppOpen, setIsWhatsAppOpen] = useState(false);
@@ -147,28 +147,28 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
       .select("guest_id, gift_item:gift_items(gift_name)")
       .eq("wedding_id", weddingId);
 
-    const map: Record<string, string[]> = {};
+    const map: Record<string, { traditional: string[]; pix: string[] }> = {};
+    const ensure = (gid: string) => (map[gid] ||= { traditional: [], pix: [] });
     if (giftsData) {
       for (const g of giftsData) {
         if (!g.selected_by_guest_id) continue;
-        const label = g.gift_kind === 'pix_manual' ? `PIX – ${g.gift_name}` : g.gift_name;
-        (map[g.selected_by_guest_id] ||= []).push(label);
+        const entry = ensure(g.selected_by_guest_id);
+        if (g.gift_kind === 'pix_manual') {
+          if (!entry.pix.includes(g.gift_name)) entry.pix.push(g.gift_name);
+        } else {
+          if (!entry.traditional.includes(g.gift_name)) entry.traditional.push(g.gift_name);
+        }
       }
     }
     if (pixData) {
       for (const row of pixData as any[]) {
         const name = row.gift_item?.gift_name;
         if (!row.guest_id || !name) continue;
-        const label = `PIX – ${name}`;
-        const list = (map[row.guest_id] ||= []);
-        if (!list.includes(label)) list.push(label);
+        const entry = ensure(row.guest_id);
+        if (!entry.pix.includes(name)) entry.pix.push(name);
       }
     }
-    const flat: Record<string, string> = {};
-    for (const [gid, arr] of Object.entries(map)) {
-      flat[gid] = arr.join(", ");
-    }
-    setGuestGifts(flat);
+    setGuestGifts(map);
   };
 
   useEffect(() => {
@@ -631,20 +631,34 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
                   <TableCell className="font-medium">
                     <div className="flex items-center gap-2">
                       {guest.name}
-                      {guestGifts[guest.id] && (
+                      {guestGifts[guest.id] && (guestGifts[guest.id].traditional.length > 0 || guestGifts[guest.id].pix.length > 0) && (
                         <Popover>
                           <PopoverTrigger asChild>
                             <button type="button" className="p-1 rounded-md hover:bg-muted transition-colors">
                               <Gift className="h-4 w-4 text-primary shrink-0" />
                             </button>
                           </PopoverTrigger>
-                          <PopoverContent side="top" className="w-auto max-w-[280px] p-3 text-sm">
-                            <p className="font-semibold mb-1">Presente:</p>
-                            <ul className="list-disc pl-5 space-y-0.5">
-                              {guestGifts[guest.id].split(', ').map((g, i) => (
-                                <li key={i}>{g}</li>
-                              ))}
-                            </ul>
+                          <PopoverContent side="top" className="w-auto max-w-[280px] p-3 text-sm space-y-2">
+                            {guestGifts[guest.id].traditional.length > 0 && (
+                              <div>
+                                <p className="font-semibold mb-1">Presente:</p>
+                                <ul className="list-disc pl-5 space-y-0.5">
+                                  {guestGifts[guest.id].traditional.map((g, i) => (
+                                    <li key={`t-${i}`}>{g}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                            {guestGifts[guest.id].pix.length > 0 && (
+                              <div>
+                                <p className="font-semibold mb-1">PIX:</p>
+                                <ul className="list-disc pl-5 space-y-0.5">
+                                  {guestGifts[guest.id].pix.map((g, i) => (
+                                    <li key={`p-${i}`}>{g}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
                           </PopoverContent>
                         </Popover>
                       )}
