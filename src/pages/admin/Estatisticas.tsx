@@ -19,12 +19,20 @@ const Estatisticas = () => {
     giftsReceived: 0,
   });
 
+  const [pixStats, setPixStats] = useState<PixStat[]>([]);
+
   useEffect(() => {
     if (!weddingId) return;
     const fetchStats = async () => {
-      const [{ data: guests }, { data: gifts }] = await Promise.all([
+      const [{ data: guests }, { data: gifts }, { data: pixGifts }, { data: pixSelections }] = await Promise.all([
         supabase.from('guests').select('*').eq('wedding_id', weddingId),
         supabase.from('gift_items').select('id, selected_by_guest_id, is_purchased').eq('wedding_id', weddingId),
+        supabase
+          .from('gift_items')
+          .select('id, gift_name, display_order, created_at')
+          .eq('wedding_id', weddingId)
+          .eq('gift_kind', 'pix_manual'),
+        supabase.from('gift_pix_selections').select('gift_item_id').eq('wedding_id', weddingId),
       ]);
 
       const allGuests = guests || [];
@@ -35,7 +43,17 @@ const Estatisticas = () => {
       const checkedIn = allGuests.filter(g => g.checked_in_at !== null).length;
       const giftsReserved = allGifts.filter(g => g.selected_by_guest_id !== null).length;
       const giftsReceived = allGifts.filter(g => g.is_purchased === true).length;
-      
+
+      // PIX aggregation: catalog = gift_items(pix_manual), counts = gift_pix_selections (LEFT JOIN)
+      const counts = new Map<string, number>();
+      (pixSelections || []).forEach(s => {
+        if (s.gift_item_id) counts.set(s.gift_item_id, (counts.get(s.gift_item_id) || 0) + 1);
+      });
+      const pixRows: PixStat[] = (pixGifts || [])
+        .map(g => ({ id: g.id, gift_name: g.gift_name, selections: counts.get(g.id) || 0 }))
+        .sort((a, b) => b.selections - a.selections || a.gift_name.localeCompare(b.gift_name));
+      setPixStats(pixRows);
+
       setStats({
         totalGuests: allGuests.length,
         pending,
@@ -53,6 +71,7 @@ const Estatisticas = () => {
 
   return (
     <div className="space-y-6">
+
       <div>
         <h1 className="text-3xl font-serif font-bold">Estatísticas</h1>
         <p className="text-muted-foreground mt-2">
