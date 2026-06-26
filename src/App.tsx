@@ -72,6 +72,7 @@ const App = () => (
           <Route path="/" element={<LandingHome />} />
           <Route path="/casamento" element={<WeddingLanding />} />
           <Route path="/aniversario" element={<EventTypeLanding />} />
+          <Route path="/blog/penteados-madrinha" element={<PenteadosMadrinha />} />
 
           {/* Atalhos para o Master Admin */}
           <Route path="/casamento/admin" element={<Navigate to="/admin" replace />} />
