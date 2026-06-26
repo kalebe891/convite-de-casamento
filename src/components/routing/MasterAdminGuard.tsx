@@ -1,6 +1,7 @@
 import { ReactNode, useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useAuthorization } from "@/hooks/useAuthorization";
 import { supabase } from "@/integrations/supabase/client";
 import { buildTenantAdminUrl } from "@/lib/eventType";
 
@@ -18,7 +19,8 @@ interface Props {
  *  4. Autenticado sem vínculo  -> /acesso-negado
  */
 const MasterAdminGuard = ({ children }: Props) => {
-  const { user, role, loading } = useAuth();
+  const { user, loading } = useAuth();
+  const { canAccessMasterAdmin } = useAuthorization();
   const [resolving, setResolving] = useState(false);
   const [redirectTo, setRedirectTo] = useState<string | null>(null);
 
@@ -30,7 +32,7 @@ const MasterAdminGuard = ({ children }: Props) => {
       return;
     }
 
-    if (role === "admin") {
+    if (canAccessMasterAdmin) {
       setRedirectTo(null);
       return;
     }
