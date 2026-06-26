@@ -32,6 +32,7 @@ import Checkin from "./pages/admin/Checkin";
 import Logs from "./pages/admin/Logs";
 import Eventos from "./pages/admin/Eventos";
 import MasterDashboard from "./pages/admin/MasterDashboard";
+import PenteadosMadrinha from "./pages/blog/PenteadosMadrinha";
 
 const queryClient = new QueryClient();
 
@@ -71,6 +72,7 @@ const App = () => (
           <Route path="/" element={<LandingHome />} />
           <Route path="/casamento" element={<WeddingLanding />} />
           <Route path="/aniversario" element={<EventTypeLanding />} />
+          <Route path="/blog/penteados-madrinha" element={<PenteadosMadrinha />} />
 
           {/* Atalhos para o Master Admin */}
           <Route path="/casamento/admin" element={<Navigate to="/admin" replace />} />
