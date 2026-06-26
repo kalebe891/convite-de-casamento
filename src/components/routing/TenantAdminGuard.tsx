@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
 import { Navigate } from "react-router-dom";
 import { useWedding } from "@/contexts/WeddingContext";
+import { useAuthorization } from "@/hooks/useAuthorization";
 import NotFound from "@/pages/NotFound";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -44,7 +45,8 @@ const DemoExpiredScreen = () => (
 );
 
 const TenantAdminGuard = ({ children }: Props) => {
-  const { loading, error, weddingId, wedding } = useWedding();
+  const { loading, error, weddingId } = useWedding();
+  const { isDemoExpired } = useAuthorization();
 
   if (loading) {
     return (
@@ -74,7 +76,8 @@ const TenantAdminGuard = ({ children }: Props) => {
 
   // Bloqueio único: demo expirada (is_demo=true + tenant_status='archived').
   // Preserva todos os dados; apenas impede o uso administrativo.
-  if (wedding?.is_demo && wedding?.tenant_status === "archived") {
+  // Centralizado em useAuthorization() desde a Etapa 1.24.00.
+  if (isDemoExpired) {
     return <DemoExpiredScreen />;
   }
 
