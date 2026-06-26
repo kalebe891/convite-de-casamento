@@ -252,6 +252,34 @@ const Estatisticas = () => {
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <div>
+            <CardTitle>Estatísticas PIX</CardTitle>
+            <CardDescription className="mt-2">
+              Quantidade de seleções registradas por presente PIX (intenções, sem confirmação financeira)
+            </CardDescription>
+          </div>
+          <QrCode className="h-8 w-8 text-primary" />
+        </CardHeader>
+        <CardContent>
+          {pixStats.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Nenhum presente PIX cadastrado.</p>
+          ) : (
+            <ul className="divide-y">
+              {pixStats.map(p => (
+                <li key={p.id} className="flex items-center justify-between py-2">
+                  <span className="text-sm font-medium">{p.gift_name}</span>
+                  <span className="text-sm text-muted-foreground">
+                    Selecionado {p.selections} {p.selections === 1 ? 'vez' : 'vezes'}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };
