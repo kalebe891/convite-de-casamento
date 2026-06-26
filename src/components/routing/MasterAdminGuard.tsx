@@ -96,7 +96,7 @@ const MasterAdminGuard = ({ children }: Props) => {
     return () => {
       cancelled = true;
     };
-  }, [user, role, loading]);
+  }, [user, canAccessMasterAdmin, loading]);
 
   if (loading || resolving) {
     return (
