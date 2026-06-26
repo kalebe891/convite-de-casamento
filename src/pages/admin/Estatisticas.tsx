@@ -1,8 +1,10 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart3, Users, CheckCircle, XCircle, UserCheck, Gift, PackageCheck } from "lucide-react";
+import { BarChart3, Users, CheckCircle, XCircle, UserCheck, Gift, PackageCheck, QrCode } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useWedding } from "@/contexts/WeddingContext";
+
+type PixStat = { id: string; gift_name: string; selections: number };
 
 const Estatisticas = () => {
   const { weddingId } = useWedding();
