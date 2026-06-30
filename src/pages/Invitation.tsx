@@ -84,6 +84,75 @@ const Invitation = () => {
   const [pixGifts, setPixGifts] = useState<PixGiftItem[]>([]);
   const [selectedPixIds, setSelectedPixIds] = useState<string[]>([]);
   const [confirmedPixDetails, setConfirmedPixDetails] = useState<PixGiftItem[]>([]);
+  const [qrViewerOpen, setQrViewerOpen] = useState(false);
+  const [qrViewerData, setQrViewerData] = useState<PixQrViewerData | null>(null);
+  const redirectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const REDIRECT_URL = "https://convite-de-casamento.lovable.app/";
+  const REDIRECT_DELAY_MS = 7000;
+
+  const cancelRedirectTimer = () => {
+    if (redirectTimerRef.current) {
+      clearTimeout(redirectTimerRef.current);
+      redirectTimerRef.current = null;
+    }
+  };
+
+  const startRedirectTimer = () => {
+    cancelRedirectTimer();
+    redirectTimerRef.current = setTimeout(() => {
+      window.location.href = REDIRECT_URL;
+    }, REDIRECT_DELAY_MS);
+  };
+
+  useEffect(() => () => cancelRedirectTimer(), []);
+
+  const openQrViewer = (pix: PixGiftItem) => {
+    cancelRedirectTimer();
+    setQrViewerData({
+      gift_name: pix.gift_name,
+      description: pix.description,
+      qr_image_url: pix.qr_image_url,
+      pix_copy_paste_code: pix.pix_copy_paste_code,
+    });
+    setQrViewerOpen(true);
+  };
+
+  const handleQrViewerOpenChange = (open: boolean) => {
+    setQrViewerOpen(open);
+    if (!open) {
+      // Reinicia o timer apenas se o RSVP já foi confirmado
+      if (invitationData?.responded_at && invitationData.attending) {
+        startRedirectTimer();
+      }
+    } else {
+      cancelRedirectTimer();
+    }
+  };
+
+  const handleTogglePix = async (pix: PixGiftItem, checked: boolean) => {
+    setSelectedPixIds((prev) =>
+      checked ? [...prev, pix.id] : prev.filter((id) => id !== pix.id)
+    );
+    if (!checked) return;
+
+    // Auto-copy + oferecer visualização do QR
+    let copied = false;
+    if (pix.pix_copy_paste_code) {
+      try {
+        await navigator.clipboard.writeText(pix.pix_copy_paste_code);
+        copied = true;
+      } catch {
+        copied = false;
+      }
+    }
+    sonnerToast(copied ? "QR Code PIX copiado." : "Não foi possível copiar automaticamente.", {
+      description: pix.qr_image_url ? "Deseja visualizar o QR Code?" : undefined,
+      action: pix.qr_image_url
+        ? { label: "Ver QR Code", onClick: () => openQrViewer(pix) }
+        : undefined,
+    });
+  };
 
   // Fetch wedding data once invitation is resolved (uses invitation.wedding_id)
   useEffect(() => {
