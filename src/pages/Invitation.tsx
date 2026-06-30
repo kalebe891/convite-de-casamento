@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { toast as sonnerToast } from "sonner";
 import { Heart, HeartOff, Loader2, Gift, ExternalLink, Copy, QrCode } from "lucide-react";
 import { z } from "zod";
 import HeroSection from "@/components/wedding/HeroSection";
@@ -23,6 +24,7 @@ import {
 } from "@/components/ui/drawer";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
+import PixQrViewerDialog, { type PixQrViewerData } from "@/components/shared/PixQrViewerDialog";
 
 const rsvpResponseSchema = z.object({
   message: z.string().trim().max(1000).optional().or(z.literal("")),
@@ -82,6 +84,75 @@ const Invitation = () => {
   const [pixGifts, setPixGifts] = useState<PixGiftItem[]>([]);
   const [selectedPixIds, setSelectedPixIds] = useState<string[]>([]);
   const [confirmedPixDetails, setConfirmedPixDetails] = useState<PixGiftItem[]>([]);
+  const [qrViewerOpen, setQrViewerOpen] = useState(false);
+  const [qrViewerData, setQrViewerData] = useState<PixQrViewerData | null>(null);
+  const redirectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const REDIRECT_URL = "https://convite-de-casamento.lovable.app/";
+  const REDIRECT_DELAY_MS = 7000;
+
+  const cancelRedirectTimer = () => {
+    if (redirectTimerRef.current) {
+      clearTimeout(redirectTimerRef.current);
+      redirectTimerRef.current = null;
+    }
+  };
+
+  const startRedirectTimer = () => {
+    cancelRedirectTimer();
+    redirectTimerRef.current = setTimeout(() => {
+      window.location.href = REDIRECT_URL;
+    }, REDIRECT_DELAY_MS);
+  };
+
+  useEffect(() => () => cancelRedirectTimer(), []);
+
+  const openQrViewer = (pix: PixGiftItem) => {
+    cancelRedirectTimer();
+    setQrViewerData({
+      gift_name: pix.gift_name,
+      description: pix.description,
+      qr_image_url: pix.qr_image_url,
+      pix_copy_paste_code: pix.pix_copy_paste_code,
+    });
+    setQrViewerOpen(true);
+  };
+
+  const handleQrViewerOpenChange = (open: boolean) => {
+    setQrViewerOpen(open);
+    if (!open) {
+      // Reinicia o timer apenas se o RSVP já foi confirmado
+      if (invitationData?.responded_at && invitationData.attending) {
+        startRedirectTimer();
+      }
+    } else {
+      cancelRedirectTimer();
+    }
+  };
+
+  const handleTogglePix = async (pix: PixGiftItem, checked: boolean) => {
+    setSelectedPixIds((prev) =>
+      checked ? [...prev, pix.id] : prev.filter((id) => id !== pix.id)
+    );
+    if (!checked) return;
+
+    // Auto-copy + oferecer visualização do QR
+    let copied = false;
+    if (pix.pix_copy_paste_code) {
+      try {
+        await navigator.clipboard.writeText(pix.pix_copy_paste_code);
+        copied = true;
+      } catch {
+        copied = false;
+      }
+    }
+    sonnerToast(copied ? "QR Code PIX copiado." : "Não foi possível copiar automaticamente.", {
+      description: pix.qr_image_url ? "Deseja visualizar o QR Code?" : undefined,
+      action: pix.qr_image_url
+        ? { label: "Ver QR Code", onClick: () => openQrViewer(pix) }
+        : undefined,
+    });
+  };
 
   // Fetch wedding data once invitation is resolved (uses invitation.wedding_id)
   useEffect(() => {
@@ -281,12 +352,8 @@ const Invitation = () => {
           : "Sentiremos sua falta 💔 Você será redirecionado em instantes...",
       });
 
-      // Sem auto-redirect quando há PIX para o convidado copiar
-      if (confirmedPix.length === 0) {
-        setTimeout(() => {
-          window.location.href = "https://convite-de-casamento.lovable.app/";
-        }, 7000);
-      }
+      // Inicia o timer; será pausado se o convidado abrir um QR Code
+      startRedirectTimer();
     } catch (error) {
       console.error('[Invitation] Erro ao responder RSVP:', error);
       if (error instanceof z.ZodError) {
@@ -465,45 +532,31 @@ const Invitation = () => {
                   <h3 className="text-xl font-serif font-semibold flex items-center gap-2">
                     <QrCode className="w-5 h-5 text-primary" /> Suas contribuições PIX
                   </h3>
-                  <div className="space-y-6">
+                  <p className="text-sm text-muted-foreground">
+                    Deseja visualizar novamente {confirmedPixDetails.length > 1 ? "os QR Codes PIX" : "o QR Code PIX"}?
+                  </p>
+                  <div className="space-y-3">
                     {confirmedPixDetails.map((pix) => (
-                      <div key={pix.id} className="rounded-lg border p-4 space-y-3">
-                        <div>
-                          <p className="font-semibold text-lg">PIX – {pix.gift_name}</p>
-                          {pix.description && (
-                            <p className="text-sm text-muted-foreground">{pix.description}</p>
-                          )}
+                      <div
+                        key={pix.id}
+                        className="rounded-lg border p-3 flex items-center justify-between gap-3"
+                      >
+                        <div className="min-w-0">
+                          <p className="font-medium truncate">PIX – {pix.gift_name}</p>
                           {pix.suggested_amount != null && (
-                            <p className="text-sm text-primary mt-1">
+                            <p className="text-xs text-primary">
                               Sugestão: R$ {Number(pix.suggested_amount).toFixed(2).replace('.', ',')}
                             </p>
                           )}
                         </div>
-                        {pix.qr_image_url && (
-                          <div className="flex justify-center">
-                            <img
-                              src={pix.qr_image_url}
-                              alt={`QR Code PIX para ${pix.gift_name}`}
-                              className="w-48 h-48 object-contain bg-white rounded-md border"
-                              loading="lazy"
-                            />
-                          </div>
-                        )}
-                        {pix.pix_copy_paste_code && (
-                          <>
-                            <div className="bg-muted rounded-md p-2 text-xs font-mono break-all max-h-32 overflow-y-auto">
-                              {pix.pix_copy_paste_code}
-                            </div>
-                            <Button
-                              type="button"
-                              variant="default"
-                              className="w-full"
-                              onClick={() => handleCopyPix(pix.pix_copy_paste_code)}
-                            >
-                              <Copy className="w-4 h-4 mr-2" /> Copiar código PIX
-                            </Button>
-                          </>
-                        )}
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => openQrViewer(pix)}
+                        >
+                          <QrCode className="w-4 h-4 mr-2" /> Ver QR Code
+                        </Button>
                       </div>
                     ))}
                   </div>
@@ -572,11 +625,7 @@ const Invitation = () => {
                             type="checkbox"
                             checked={checked}
                             onChange={(e) => {
-                              setSelectedPixIds((prev) =>
-                                e.target.checked
-                                  ? [...prev, pix.id]
-                                  : prev.filter((id) => id !== pix.id)
-                              );
+                              void handleTogglePix(pix, e.target.checked);
                             }}
                             className="mt-1 h-4 w-4 accent-primary"
                           />
@@ -825,6 +874,12 @@ const Invitation = () => {
           </DrawerContent>
         </Drawer>
       )}
+
+      <PixQrViewerDialog
+        open={qrViewerOpen}
+        onOpenChange={handleQrViewerOpenChange}
+        pix={qrViewerData}
+      />
     </div>
   );
 };
