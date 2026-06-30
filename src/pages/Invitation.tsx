@@ -352,12 +352,8 @@ const Invitation = () => {
           : "Sentiremos sua falta 💔 Você será redirecionado em instantes...",
       });
 
-      // Sem auto-redirect quando há PIX para o convidado copiar
-      if (confirmedPix.length === 0) {
-        setTimeout(() => {
-          window.location.href = "https://convite-de-casamento.lovable.app/";
-        }, 7000);
-      }
+      // Inicia o timer; será pausado se o convidado abrir um QR Code
+      startRedirectTimer();
     } catch (error) {
       console.error('[Invitation] Erro ao responder RSVP:', error);
       if (error instanceof z.ZodError) {
