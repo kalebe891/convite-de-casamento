@@ -21,6 +21,7 @@ import { themeRegistry, DEFAULT_THEME_ID, type TenantThemeId } from "@/themes/re
 import { logAdminAction } from "@/lib/adminLogger";
 import { buildTenantAdminUrl } from "@/lib/eventType";
 import { cn } from "@/lib/utils";
+import ThemePreview from "./ThemePreview";
 
 interface Props {
   open: boolean;
