@@ -874,6 +874,12 @@ const Invitation = () => {
           </DrawerContent>
         </Drawer>
       )}
+
+      <PixQrViewerDialog
+        open={qrViewerOpen}
+        onOpenChange={handleQrViewerOpenChange}
+        pix={qrViewerData}
+      />
     </div>
   );
 };
