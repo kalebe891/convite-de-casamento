@@ -80,9 +80,9 @@ const comparativo = [
     bg: "bg-primary/5",
     icon: CheckCircle2,
     iconColor: "text-primary",
-    headline: "Taxa única de utilização. 100% do valor dos presentes vai direto para você, sem intermediários. Zero comissões ocultas.",
+    headline: "Valor unico de utilização. 100% do valor dos presentes vai direto para você, sem intermediários. Zero comissões ocultas.",
     points: [
-      { ok: true, text: "Taxa única de utilização" },
+      { ok: true, text: "Valor unico de utilização" },
       { ok: true, text: "Sem comissão sobre presentes" },
       { ok: true, text: "Transparência desde o início" },
       { ok: true, text: "Acesso garantido por 365 dias (renovável)" },
@@ -116,8 +116,8 @@ const LandingHome = () => {
             <h1 className="mt-6 font-serif text-[2.5rem] font-semibold leading-[1.08] tracking-tight text-foreground sm:text-5xl md:text-6xl">
               Convites digitais premium e gestão inteligente para o seu evento.
             </h1>
-            <p className="mx-auto mt-5 max-w-2xl text-base text-muted-foreground sm:mt-6 sm:text-lg">
-              A plataforma que substitui as gráficas, elimina as taxas sobre seus presentes e centraliza confirmações e gestão de convidados em um único painel.
+            <p className="mx-auto mt-5 max-w-2xl text-base text-muted-foreground sm:mt-6 sm:text-lg whitespace-pre-line">
+              A plataforma criada para substitui a gráfica e as planilhas!{"\n"}&nbsp;Sem taxas sobre seus presentes com&nbsp;gestão&nbsp;centralizada de confirmações de presença e de convidados em um único painel.
             </p>
             <div className="mt-8 flex flex-col items-stretch justify-center gap-3 sm:mt-10 sm:flex-row sm:items-center">
               <Link to="/casamento" className="sm:w-auto">
@@ -137,7 +137,7 @@ const LandingHome = () => {
                 }}
               >
                 <Button size="lg" variant="outline" className="w-full sm:w-auto">
-                  Ver temas
+                  Eventos
                 </Button>
               </a>
             </div>
