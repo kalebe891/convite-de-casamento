@@ -21,6 +21,7 @@ import { themeRegistry, DEFAULT_THEME_ID, type TenantThemeId } from "@/themes/re
 import { logAdminAction } from "@/lib/adminLogger";
 import { buildTenantAdminUrl } from "@/lib/eventType";
 import { cn } from "@/lib/utils";
+import ThemePreview from "./ThemePreview";
 
 interface Props {
   open: boolean;
@@ -290,7 +291,6 @@ export default function DemoSignupDialog({ open, onOpenChange, currentThemeId }:
             <Label>Tema</Label>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {Object.values(themeRegistry).map((t) => {
-                const preview = THEME_PREVIEWS[t.id];
                 const selected = themeId === t.id;
                 return (
                   <button
@@ -299,29 +299,12 @@ export default function DemoSignupDialog({ open, onOpenChange, currentThemeId }:
                     onClick={() => setThemeId(t.id)}
                     aria-pressed={selected}
                     className={cn(
-                      "group relative rounded-md border overflow-hidden text-left transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                      selected
-                        ? "border-primary ring-2 ring-primary/60"
-                        : "border-border hover:border-primary/50",
+                      "group relative rounded-md text-left transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                      selected ? "ring-2 ring-primary" : "",
                     )}
                   >
-                    <div
-                      className="h-16 px-2 flex items-center justify-between"
-                      style={{ background: preview.bg, color: preview.fg }}
-                    >
-                      <span
-                        style={{ fontFamily: preview.font }}
-                        className="text-2xl leading-none"
-                      >
-                        {preview.sample}
-                      </span>
-                      <span
-                        className="h-6 w-6 rounded-full border"
-                        style={{ background: preview.accent, borderColor: preview.fg + "33" }}
-                        aria-hidden
-                      />
-                    </div>
-                    <div className="px-2 py-1.5 text-xs font-medium bg-background">
+                    <ThemePreview themeId={t.id} selected={selected} />
+                    <div className="px-1 pt-1.5 text-[11px] font-medium text-foreground">
                       {t.label}
                     </div>
                   </button>
