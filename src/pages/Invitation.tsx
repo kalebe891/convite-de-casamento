@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -6,7 +6,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Heart, HeartOff, Loader2, Gift, ExternalLink, Copy, QrCode } from "lucide-react";
+import { toast as sonnerToast } from "sonner";
+import { Heart, HeartOff, Loader2, Gift, ExternalLink, QrCode } from "lucide-react";
 import { z } from "zod";
 import HeroSection from "@/components/wedding/HeroSection";
 import EventsSection from "@/components/wedding/EventsSection";
@@ -23,6 +24,7 @@ import {
 } from "@/components/ui/drawer";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
+import PixQrViewerDialog, { type PixQrViewerData } from "@/components/shared/PixQrViewerDialog";
 
 const rsvpResponseSchema = z.object({
   message: z.string().trim().max(1000).optional().or(z.literal("")),
