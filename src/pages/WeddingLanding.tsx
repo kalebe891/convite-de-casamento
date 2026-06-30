@@ -133,7 +133,7 @@ const WeddingLanding = () => {
                     ?.scrollIntoView({ behavior: "smooth", block: "start" });
                 }}
               >
-                <Button size="lg" variant="outline" className="w-full sm:w-auto">Ver temas</Button>
+                <Button size="lg" variant="outline" className="w-full sm:w-auto">Eventos</Button>
               </a>
             </div>
           </div>
@@ -341,7 +341,7 @@ const WeddingLanding = () => {
                   ?.scrollIntoView({ behavior: "smooth", block: "start" });
               }}
             >
-              <Button size="lg" variant="outline" className="w-full sm:w-auto">Ver temas</Button>
+              <Button size="lg" variant="outline" className="w-full sm:w-auto">Eventos</Button>
             </a>
           </div>
         </div>
