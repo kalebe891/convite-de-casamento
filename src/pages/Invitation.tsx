@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { toast as sonnerToast } from "sonner";
-import { Heart, HeartOff, Loader2, Gift, ExternalLink, QrCode } from "lucide-react";
+import { Heart, HeartOff, Loader2, Gift, ExternalLink, Copy, QrCode } from "lucide-react";
 import { z } from "zod";
 import HeroSection from "@/components/wedding/HeroSection";
 import EventsSection from "@/components/wedding/EventsSection";
