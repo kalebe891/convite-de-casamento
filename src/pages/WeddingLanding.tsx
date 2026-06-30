@@ -112,7 +112,7 @@ const WeddingLanding = () => {
             </span>
             <h1 className="mt-6 font-serif text-[2.5rem] font-semibold leading-[1.05] tracking-tight sm:text-5xl md:text-6xl whitespace-pre-line">
               Convite digital Premium{"\n"}
-              para o seu <em className="font-serif italic text-primary">casamento</em>.
+              para o <em className="font-serif italic text-primary">seu casamento</em>.
             </h1>
             <p className="mt-5 max-w-xl text-base text-muted-foreground sm:mt-6 sm:text-lg">
               Uma plataforma completa para criar a página do casamento, enviar o convite, receber confirmações e
