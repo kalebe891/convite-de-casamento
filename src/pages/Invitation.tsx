@@ -532,45 +532,31 @@ const Invitation = () => {
                   <h3 className="text-xl font-serif font-semibold flex items-center gap-2">
                     <QrCode className="w-5 h-5 text-primary" /> Suas contribuições PIX
                   </h3>
-                  <div className="space-y-6">
+                  <p className="text-sm text-muted-foreground">
+                    Deseja visualizar novamente {confirmedPixDetails.length > 1 ? "os QR Codes PIX" : "o QR Code PIX"}?
+                  </p>
+                  <div className="space-y-3">
                     {confirmedPixDetails.map((pix) => (
-                      <div key={pix.id} className="rounded-lg border p-4 space-y-3">
-                        <div>
-                          <p className="font-semibold text-lg">PIX – {pix.gift_name}</p>
-                          {pix.description && (
-                            <p className="text-sm text-muted-foreground">{pix.description}</p>
-                          )}
+                      <div
+                        key={pix.id}
+                        className="rounded-lg border p-3 flex items-center justify-between gap-3"
+                      >
+                        <div className="min-w-0">
+                          <p className="font-medium truncate">PIX – {pix.gift_name}</p>
                           {pix.suggested_amount != null && (
-                            <p className="text-sm text-primary mt-1">
+                            <p className="text-xs text-primary">
                               Sugestão: R$ {Number(pix.suggested_amount).toFixed(2).replace('.', ',')}
                             </p>
                           )}
                         </div>
-                        {pix.qr_image_url && (
-                          <div className="flex justify-center">
-                            <img
-                              src={pix.qr_image_url}
-                              alt={`QR Code PIX para ${pix.gift_name}`}
-                              className="w-48 h-48 object-contain bg-white rounded-md border"
-                              loading="lazy"
-                            />
-                          </div>
-                        )}
-                        {pix.pix_copy_paste_code && (
-                          <>
-                            <div className="bg-muted rounded-md p-2 text-xs font-mono break-all max-h-32 overflow-y-auto">
-                              {pix.pix_copy_paste_code}
-                            </div>
-                            <Button
-                              type="button"
-                              variant="default"
-                              className="w-full"
-                              onClick={() => handleCopyPix(pix.pix_copy_paste_code)}
-                            >
-                              <Copy className="w-4 h-4 mr-2" /> Copiar código PIX
-                            </Button>
-                          </>
-                        )}
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => openQrViewer(pix)}
+                        >
+                          <QrCode className="w-4 h-4 mr-2" /> Ver QR Code
+                        </Button>
                       </div>
                     ))}
                   </div>
