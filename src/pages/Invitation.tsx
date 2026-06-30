@@ -625,11 +625,7 @@ const Invitation = () => {
                             type="checkbox"
                             checked={checked}
                             onChange={(e) => {
-                              setSelectedPixIds((prev) =>
-                                e.target.checked
-                                  ? [...prev, pix.id]
-                                  : prev.filter((id) => id !== pix.id)
-                              );
+                              void handleTogglePix(pix, e.target.checked);
                             }}
                             className="mt-1 h-4 w-4 accent-primary"
                           />
