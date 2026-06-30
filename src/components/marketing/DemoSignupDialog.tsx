@@ -237,7 +237,7 @@ export default function DemoSignupDialog({ open, onOpenChange, currentThemeId }:
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="demo-hosts">Nome dos anfitriões</Label>
+            <Label htmlFor="demo-hosts">Nome dos noivos</Label>
             <Input
               id="demo-hosts"
               placeholder="Ex.: Ana e João"
