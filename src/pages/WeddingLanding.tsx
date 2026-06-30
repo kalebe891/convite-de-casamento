@@ -40,7 +40,7 @@ const features = [
     n: "03",
     Icon: Gift,
     title: "Lista de presentes",
-    text: "Itens, cotas e PIX integrados, sem depender de outras plataformas.",
+    text: "Presentes e PIX QR Code sem depender de outras plataformas.",
   },
   {
     n: "04",
@@ -58,7 +58,7 @@ const features = [
     n: "06",
     Icon: UsersRound,
     title: "Equipe e permissões",
-    text: "Cerimonialistas e colaboradores com acessos controlados por papel.",
+    text: "Cadastre usuários e personalize as permissões de acesso por papel (ex: cerimonialista, recepcionista).",
   },
 ];
 
@@ -110,10 +110,9 @@ const WeddingLanding = () => {
               <Heart className="h-3.5 w-3.5" />
               Convite de casamento
             </span>
-            <h1 className="mt-6 font-serif text-[2.5rem] font-semibold leading-[1.05] tracking-tight sm:text-5xl md:text-6xl">
-              Páginas e convites digitais
-              <br />
-              feitos para o <em className="font-serif italic text-primary">seu casamento</em>.
+            <h1 className="mt-6 font-serif text-[2.5rem] font-semibold leading-[1.05] tracking-tight sm:text-5xl md:text-6xl whitespace-pre-line">
+              Convite digital Premium{"\n"}
+              para o <em className="font-serif italic text-primary">seu casamento</em>.
             </h1>
             <p className="mt-5 max-w-xl text-base text-muted-foreground sm:mt-6 sm:text-lg">
               Uma plataforma completa para criar a página do casamento, enviar o convite, receber confirmações e
