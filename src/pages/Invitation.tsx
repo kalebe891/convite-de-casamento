@@ -305,6 +305,7 @@ const Invitation = () => {
   }, [weddingDetails?.id, invitationData?.id, invitationData?.guest_id]);
 
   const handleRSVPResponse = async (attending: boolean) => {
+    console.log("[DIAG 1.24.03] RSVP submit", { attending, selectedGiftId, selectedPixIds });
     if (!invitation_code || !invitationData) return;
 
     try {
