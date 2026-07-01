@@ -68,14 +68,14 @@ const Invitation = () => {
   const { invitation_code } = useParams<{ invitation_code?: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  // [DIAG 1.24.03] Instrumentação temporária
-  console.log("[DIAG 1.24.03] Invitation mounted", { invitation_code, path: window.location.pathname });
 
-  const [weddingDetails, setWeddingDetails] = useState(null);
+  const [weddingDetails, setWeddingDetails] = useState<any>(null);
   const [events, setEvents] = useState([]);
   const [invitationData, setInvitationData] = useState<InvitationData | null>(null);
-  const [loadingInvitation, setLoadingInvitation] = useState(false);
-  const [invitationError, setInvitationError] = useState<string | null>(null);
+  const [pageStatus, setPageStatus] = useState<PageStatus>(invitation_code ? "loading" : "error");
+  const [invitationError, setInvitationError] = useState<string | null>(
+    invitation_code ? null : "Convite não encontrado ou expirado. Entre em contato com os anfitriões."
+  );
   const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     message: "",
@@ -93,8 +93,16 @@ const Invitation = () => {
   const [qrViewerData, setQrViewerData] = useState<PixQrViewerData | null>(null);
   const redirectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const REDIRECT_URL = "https://convite-de-casamento.lovable.app/";
   const REDIRECT_DELAY_MS = 7000;
+
+  // Constrói a URL de redirecionamento a partir do tenant real (event_type + slug).
+  // Reutiliza `buildTenantPublicUrl`, que já normaliza `event_type` do banco -> segmento de URL.
+  // Fallback seguro: window.location.origin.
+  const resolveRedirectUrl = (): string => {
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const tenantPath = buildTenantPublicUrl(weddingDetails);
+    return tenantPath ? `${origin}${tenantPath}` : origin || "/";
+  };
 
   const cancelRedirectTimer = () => {
     if (redirectTimerRef.current) {
@@ -105,10 +113,9 @@ const Invitation = () => {
 
   const startRedirectTimer = () => {
     cancelRedirectTimer();
-    console.log("[DIAG 1.24.03] Redirect timer started", { destination: REDIRECT_URL, delayMs: REDIRECT_DELAY_MS });
+    const destination = resolveRedirectUrl();
     redirectTimerRef.current = setTimeout(() => {
-      console.log("[DIAG 1.24.03] Redirect fired -> ", REDIRECT_URL);
-      window.location.href = REDIRECT_URL;
+      window.location.href = destination;
     }, REDIRECT_DELAY_MS);
   };
 
