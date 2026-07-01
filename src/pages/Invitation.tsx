@@ -145,7 +145,6 @@ const Invitation = () => {
   };
 
   const handleTogglePix = async (pix: PixGiftItem, checked: boolean) => {
-    console.log("[DIAG 1.24.03] PIX toggled", { pix_id: pix.id, checked });
     setSelectedPixIds((prev) =>
       checked ? [...prev, pix.id] : prev.filter((id) => id !== pix.id)
     );
