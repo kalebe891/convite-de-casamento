@@ -471,7 +471,7 @@ const Invitation = () => {
   const renderRSVPSection = () => {
     if (!invitation_code) return null;
 
-    if (loadingInvitation) {
+    if (pageStatus === "loading") {
       return (
         <section className="py-20 bg-muted/50">
           <div className="container mx-auto px-4">
@@ -486,19 +486,19 @@ const Invitation = () => {
       );
     }
 
-    if (invitationError || !invitationData) {
+    if (pageStatus === "error" || !invitationData) {
       return (
         <section className="py-20 bg-muted/50">
           <div className="container mx-auto px-4">
             <Card className="max-w-2xl mx-auto shadow-elegant border-destructive">
               <CardHeader>
                 <CardTitle className="text-3xl font-serif text-center text-destructive">
-                  Convite Inválido
+                  Convite não encontrado
                 </CardTitle>
               </CardHeader>
               <CardContent className="text-center space-y-4">
                 <p className="text-muted-foreground">
-                  {invitationError || "Não foi possível encontrar este convite."}
+                  {invitationError || "Convite não encontrado ou expirado. Entre em contato com os anfitriões."}
                 </p>
                 <Button onClick={() => navigate("/")} variant="outline">
                   Voltar para página inicial
