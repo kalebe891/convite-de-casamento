@@ -198,9 +198,13 @@ const Invitation = () => {
   // Fetch invitation data
   useEffect(() => {
     const fetchInvitationData = async () => {
-      if (!invitation_code) return;
+      if (!invitation_code) {
+        setPageStatus("error");
+        setInvitationError("Convite não encontrado ou expirado. Entre em contato com os anfitriões.");
+        return;
+      }
 
-      setLoadingInvitation(true);
+      setPageStatus("loading");
       setInvitationError(null);
 
       try {
@@ -214,8 +218,7 @@ const Invitation = () => {
         );
 
         if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Convite não encontrado');
+          throw new Error("invalid_token");
         }
 
         const data: InvitationData = await response.json();
@@ -227,11 +230,11 @@ const Invitation = () => {
             message: data.message || "",
           });
         }
+        setPageStatus("success");
       } catch (error) {
         console.error('[Invitation] Erro ao buscar convite:', error);
-        setInvitationError(error instanceof Error ? error.message : 'Erro ao buscar convite');
-      } finally {
-        setLoadingInvitation(false);
+        setInvitationError("Convite não encontrado ou expirado. Entre em contato com os anfitriões.");
+        setPageStatus("error");
       }
     };
 
