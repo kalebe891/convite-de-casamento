@@ -65,6 +65,8 @@ const Invitation = () => {
   const { invitation_code } = useParams<{ invitation_code?: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  // [DIAG 1.24.03] Instrumentação temporária
+  console.log("[DIAG 1.24.03] Invitation mounted", { invitation_code, path: window.location.pathname });
 
   const [weddingDetails, setWeddingDetails] = useState(null);
   const [events, setEvents] = useState([]);
@@ -100,7 +102,9 @@ const Invitation = () => {
 
   const startRedirectTimer = () => {
     cancelRedirectTimer();
+    console.log("[DIAG 1.24.03] Redirect timer started", { destination: REDIRECT_URL, delayMs: REDIRECT_DELAY_MS });
     redirectTimerRef.current = setTimeout(() => {
+      console.log("[DIAG 1.24.03] Redirect fired -> ", REDIRECT_URL);
       window.location.href = REDIRECT_URL;
     }, REDIRECT_DELAY_MS);
   };
@@ -108,6 +112,7 @@ const Invitation = () => {
   useEffect(() => () => cancelRedirectTimer(), []);
 
   const openQrViewer = (pix: PixGiftItem) => {
+    console.log("[DIAG 1.24.03] QR dialog opened", { pix_id: pix.id });
     cancelRedirectTimer();
     setQrViewerData({
       gift_name: pix.gift_name,
@@ -131,6 +136,7 @@ const Invitation = () => {
   };
 
   const handleTogglePix = async (pix: PixGiftItem, checked: boolean) => {
+    console.log("[DIAG 1.24.03] PIX toggled", { pix_id: pix.id, checked });
     setSelectedPixIds((prev) =>
       checked ? [...prev, pix.id] : prev.filter((id) => id !== pix.id)
     );
@@ -299,6 +305,7 @@ const Invitation = () => {
   }, [weddingDetails?.id, invitationData?.id, invitationData?.guest_id]);
 
   const handleRSVPResponse = async (attending: boolean) => {
+    console.log("[DIAG 1.24.03] RSVP submit", { attending, selectedGiftId, selectedPixIds });
     if (!invitation_code || !invitationData) return;
 
     try {
