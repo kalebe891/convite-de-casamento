@@ -122,7 +122,6 @@ const Invitation = () => {
   useEffect(() => () => cancelRedirectTimer(), []);
 
   const openQrViewer = (pix: PixGiftItem) => {
-    console.log("[DIAG 1.24.03] QR dialog opened", { pix_id: pix.id });
     cancelRedirectTimer();
     setQrViewerData({
       gift_name: pix.gift_name,
