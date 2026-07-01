@@ -65,6 +65,8 @@ const Invitation = () => {
   const { invitation_code } = useParams<{ invitation_code?: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  // [DIAG 1.24.03] Instrumentação temporária
+  console.log("[DIAG 1.24.03] Invitation mounted", { invitation_code, path: window.location.pathname });
 
   const [weddingDetails, setWeddingDetails] = useState(null);
   const [events, setEvents] = useState([]);
