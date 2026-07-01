@@ -25,6 +25,9 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
 import PixQrViewerDialog, { type PixQrViewerData } from "@/components/shared/PixQrViewerDialog";
+import { buildTenantPublicUrl } from "@/lib/eventType";
+
+type PageStatus = "loading" | "success" | "error";
 
 const rsvpResponseSchema = z.object({
   message: z.string().trim().max(1000).optional().or(z.literal("")),
