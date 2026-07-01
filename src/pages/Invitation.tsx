@@ -25,6 +25,9 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
 import PixQrViewerDialog, { type PixQrViewerData } from "@/components/shared/PixQrViewerDialog";
+import { buildTenantPublicUrl } from "@/lib/eventType";
+
+type PageStatus = "loading" | "success" | "error";
 
 const rsvpResponseSchema = z.object({
   message: z.string().trim().max(1000).optional().or(z.literal("")),
@@ -65,14 +68,14 @@ const Invitation = () => {
   const { invitation_code } = useParams<{ invitation_code?: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  // [DIAG 1.24.03] Instrumentação temporária
-  console.log("[DIAG 1.24.03] Invitation mounted", { invitation_code, path: window.location.pathname });
 
-  const [weddingDetails, setWeddingDetails] = useState(null);
+  const [weddingDetails, setWeddingDetails] = useState<any>(null);
   const [events, setEvents] = useState([]);
   const [invitationData, setInvitationData] = useState<InvitationData | null>(null);
-  const [loadingInvitation, setLoadingInvitation] = useState(false);
-  const [invitationError, setInvitationError] = useState<string | null>(null);
+  const [pageStatus, setPageStatus] = useState<PageStatus>(invitation_code ? "loading" : "error");
+  const [invitationError, setInvitationError] = useState<string | null>(
+    invitation_code ? null : "Convite não encontrado ou expirado. Entre em contato com os anfitriões."
+  );
   const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     message: "",
@@ -90,8 +93,16 @@ const Invitation = () => {
   const [qrViewerData, setQrViewerData] = useState<PixQrViewerData | null>(null);
   const redirectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const REDIRECT_URL = "https://convite-de-casamento.lovable.app/";
   const REDIRECT_DELAY_MS = 7000;
+
+  // Constrói a URL de redirecionamento a partir do tenant real (event_type + slug).
+  // Reutiliza `buildTenantPublicUrl`, que já normaliza `event_type` do banco -> segmento de URL.
+  // Fallback seguro: window.location.origin.
+  const resolveRedirectUrl = (): string => {
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const tenantPath = buildTenantPublicUrl(weddingDetails);
+    return tenantPath ? `${origin}${tenantPath}` : origin || "/";
+  };
 
   const cancelRedirectTimer = () => {
     if (redirectTimerRef.current) {
@@ -102,17 +113,15 @@ const Invitation = () => {
 
   const startRedirectTimer = () => {
     cancelRedirectTimer();
-    console.log("[DIAG 1.24.03] Redirect timer started", { destination: REDIRECT_URL, delayMs: REDIRECT_DELAY_MS });
+    const destination = resolveRedirectUrl();
     redirectTimerRef.current = setTimeout(() => {
-      console.log("[DIAG 1.24.03] Redirect fired -> ", REDIRECT_URL);
-      window.location.href = REDIRECT_URL;
+      window.location.href = destination;
     }, REDIRECT_DELAY_MS);
   };
 
   useEffect(() => () => cancelRedirectTimer(), []);
 
   const openQrViewer = (pix: PixGiftItem) => {
-    console.log("[DIAG 1.24.03] QR dialog opened", { pix_id: pix.id });
     cancelRedirectTimer();
     setQrViewerData({
       gift_name: pix.gift_name,
@@ -136,7 +145,6 @@ const Invitation = () => {
   };
 
   const handleTogglePix = async (pix: PixGiftItem, checked: boolean) => {
-    console.log("[DIAG 1.24.03] PIX toggled", { pix_id: pix.id, checked });
     setSelectedPixIds((prev) =>
       checked ? [...prev, pix.id] : prev.filter((id) => id !== pix.id)
     );
@@ -190,9 +198,13 @@ const Invitation = () => {
   // Fetch invitation data
   useEffect(() => {
     const fetchInvitationData = async () => {
-      if (!invitation_code) return;
+      if (!invitation_code) {
+        setPageStatus("error");
+        setInvitationError("Convite não encontrado ou expirado. Entre em contato com os anfitriões.");
+        return;
+      }
 
-      setLoadingInvitation(true);
+      setPageStatus("loading");
       setInvitationError(null);
 
       try {
@@ -206,8 +218,7 @@ const Invitation = () => {
         );
 
         if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Convite não encontrado');
+          throw new Error("invalid_token");
         }
 
         const data: InvitationData = await response.json();
@@ -219,11 +230,11 @@ const Invitation = () => {
             message: data.message || "",
           });
         }
+        setPageStatus("success");
       } catch (error) {
         console.error('[Invitation] Erro ao buscar convite:', error);
-        setInvitationError(error instanceof Error ? error.message : 'Erro ao buscar convite');
-      } finally {
-        setLoadingInvitation(false);
+        setInvitationError("Convite não encontrado ou expirado. Entre em contato com os anfitriões.");
+        setPageStatus("error");
       }
     };
 
@@ -305,7 +316,7 @@ const Invitation = () => {
   }, [weddingDetails?.id, invitationData?.id, invitationData?.guest_id]);
 
   const handleRSVPResponse = async (attending: boolean) => {
-    console.log("[DIAG 1.24.03] RSVP submit", { attending, selectedGiftId, selectedPixIds });
+    
     if (!invitation_code || !invitationData) return;
 
     try {
@@ -460,7 +471,7 @@ const Invitation = () => {
   const renderRSVPSection = () => {
     if (!invitation_code) return null;
 
-    if (loadingInvitation) {
+    if (pageStatus === "loading") {
       return (
         <section className="py-20 bg-muted/50">
           <div className="container mx-auto px-4">
@@ -475,19 +486,19 @@ const Invitation = () => {
       );
     }
 
-    if (invitationError || !invitationData) {
+    if (pageStatus === "error" || !invitationData) {
       return (
         <section className="py-20 bg-muted/50">
           <div className="container mx-auto px-4">
             <Card className="max-w-2xl mx-auto shadow-elegant border-destructive">
               <CardHeader>
                 <CardTitle className="text-3xl font-serif text-center text-destructive">
-                  Convite Inválido
+                  Convite não encontrado
                 </CardTitle>
               </CardHeader>
               <CardContent className="text-center space-y-4">
                 <p className="text-muted-foreground">
-                  {invitationError || "Não foi possível encontrar este convite."}
+                  {invitationError || "Convite não encontrado ou expirado. Entre em contato com os anfitriões."}
                 </p>
                 <Button onClick={() => navigate("/")} variant="outline">
                   Voltar para página inicial
