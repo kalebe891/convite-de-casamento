@@ -146,12 +146,18 @@ const Invitation = () => {
   };
 
   const handleTogglePix = async (pix: PixGiftItem, checked: boolean) => {
-    setSelectedPixIds((prev) =>
-      checked ? [...prev, pix.id] : prev.filter((id) => id !== pix.id)
-    );
-    if (!checked) return;
+    setSelectedPixIds((prev) => {
+      const set = new Set(prev);
+      if (checked) set.add(pix.id);
+      else set.delete(pix.id);
+      return Array.from(set);
+    });
+    if (!checked) {
+      sonnerToast(`PIX "${pix.gift_name}" removido da seleção.`);
+      return;
+    }
 
-    // Auto-copy + oferecer visualização do QR
+    // Auto-copy código PIX + oferecer visualização do QR
     let copied = false;
     if (pix.pix_copy_paste_code) {
       try {
@@ -161,12 +167,16 @@ const Invitation = () => {
         copied = false;
       }
     }
-    sonnerToast(copied ? "QR Code PIX copiado." : "Não foi possível copiar automaticamente.", {
-      description: pix.qr_image_url ? "Deseja visualizar o QR Code?" : undefined,
-      action: pix.qr_image_url
-        ? { label: "Ver QR Code", onClick: () => openQrViewer(pix) }
-        : undefined,
-    });
+    sonnerToast.success(
+      copied ? "Código PIX copiado." : `PIX "${pix.gift_name}" selecionado.`,
+      {
+        description: pix.qr_image_url ? "Deseja visualizar o QR Code?" : undefined,
+        action: pix.qr_image_url
+          ? { label: "Ver QR Code", onClick: () => openQrViewer(pix) }
+          : undefined,
+        duration: 6000,
+      }
+    );
   };
 
   // Fetch wedding data once invitation is resolved (uses invitation.wedding_id)
