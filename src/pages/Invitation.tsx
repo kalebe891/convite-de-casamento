@@ -23,6 +23,7 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import PixQrViewerDialog, { type PixQrViewerData } from "@/components/shared/PixQrViewerDialog";
 import { buildTenantPublicUrl } from "@/lib/eventType";
@@ -145,12 +146,18 @@ const Invitation = () => {
   };
 
   const handleTogglePix = async (pix: PixGiftItem, checked: boolean) => {
-    setSelectedPixIds((prev) =>
-      checked ? [...prev, pix.id] : prev.filter((id) => id !== pix.id)
-    );
-    if (!checked) return;
+    setSelectedPixIds((prev) => {
+      const set = new Set(prev);
+      if (checked) set.add(pix.id);
+      else set.delete(pix.id);
+      return Array.from(set);
+    });
+    if (!checked) {
+      sonnerToast(`PIX "${pix.gift_name}" removido da seleção.`);
+      return;
+    }
 
-    // Auto-copy + oferecer visualização do QR
+    // Auto-copy código PIX + oferecer visualização do QR
     let copied = false;
     if (pix.pix_copy_paste_code) {
       try {
@@ -160,12 +167,16 @@ const Invitation = () => {
         copied = false;
       }
     }
-    sonnerToast(copied ? "QR Code PIX copiado." : "Não foi possível copiar automaticamente.", {
-      description: pix.qr_image_url ? "Deseja visualizar o QR Code?" : undefined,
-      action: pix.qr_image_url
-        ? { label: "Ver QR Code", onClick: () => openQrViewer(pix) }
-        : undefined,
-    });
+    sonnerToast.success(
+      copied ? "Código PIX copiado." : `PIX "${pix.gift_name}" selecionado.`,
+      {
+        description: pix.qr_image_url ? "Deseja visualizar o QR Code?" : undefined,
+        action: pix.qr_image_url
+          ? { label: "Ver QR Code", onClick: () => openQrViewer(pix) }
+          : undefined,
+        duration: 6000,
+      }
+    );
   };
 
   // Fetch wedding data once invitation is resolved (uses invitation.wedding_id)
@@ -633,22 +644,27 @@ const Invitation = () => {
                     {pixGifts.map((pix) => {
                       const checked = selectedPixIds.includes(pix.id);
                       return (
-                        <label
+                        <div
                           key={pix.id}
-                          className={`flex items-start gap-3 rounded-lg border p-3 cursor-pointer transition-all ${
+                          className={`flex items-start gap-3 rounded-lg border p-3 transition-all ${
                             checked ? "border-primary bg-primary/5" : "hover:border-primary/50"
                           }`}
                         >
-                          <input
-                            type="checkbox"
+                          <Checkbox
+                            id={`pix-${pix.id}`}
                             checked={checked}
-                            onChange={(e) => {
-                              void handleTogglePix(pix, e.target.checked);
+                            onCheckedChange={(v) => {
+                              void handleTogglePix(pix, v === true);
                             }}
-                            className="mt-1 h-4 w-4 accent-primary"
+                            className="mt-1"
                           />
                           <div className="flex-1 min-w-0">
-                            <p className="font-medium">{pix.gift_name}</p>
+                            <Label
+                              htmlFor={`pix-${pix.id}`}
+                              className="font-medium cursor-pointer"
+                            >
+                              {pix.gift_name}
+                            </Label>
                             {pix.description && (
                               <p className="text-sm text-muted-foreground">{pix.description}</p>
                             )}
@@ -657,8 +673,19 @@ const Invitation = () => {
                                 Sugestão: R$ {Number(pix.suggested_amount).toFixed(2).replace('.', ',')}
                               </p>
                             )}
+                            {checked && pix.qr_image_url && (
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                className="mt-2"
+                                onClick={() => openQrViewer(pix)}
+                              >
+                                <QrCode className="w-4 h-4 mr-2" /> Ver QR Code
+                              </Button>
+                            )}
                           </div>
-                        </label>
+                        </div>
                       );
                     })}
                   </div>
