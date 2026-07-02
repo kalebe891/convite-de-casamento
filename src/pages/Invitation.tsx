@@ -23,6 +23,7 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import PixQrViewerDialog, { type PixQrViewerData } from "@/components/shared/PixQrViewerDialog";
 import { buildTenantPublicUrl } from "@/lib/eventType";
