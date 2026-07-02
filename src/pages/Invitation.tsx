@@ -644,22 +644,27 @@ const Invitation = () => {
                     {pixGifts.map((pix) => {
                       const checked = selectedPixIds.includes(pix.id);
                       return (
-                        <label
+                        <div
                           key={pix.id}
-                          className={`flex items-start gap-3 rounded-lg border p-3 cursor-pointer transition-all ${
+                          className={`flex items-start gap-3 rounded-lg border p-3 transition-all ${
                             checked ? "border-primary bg-primary/5" : "hover:border-primary/50"
                           }`}
                         >
-                          <input
-                            type="checkbox"
+                          <Checkbox
+                            id={`pix-${pix.id}`}
                             checked={checked}
-                            onChange={(e) => {
-                              void handleTogglePix(pix, e.target.checked);
+                            onCheckedChange={(v) => {
+                              void handleTogglePix(pix, v === true);
                             }}
-                            className="mt-1 h-4 w-4 accent-primary"
+                            className="mt-1"
                           />
                           <div className="flex-1 min-w-0">
-                            <p className="font-medium">{pix.gift_name}</p>
+                            <Label
+                              htmlFor={`pix-${pix.id}`}
+                              className="font-medium cursor-pointer"
+                            >
+                              {pix.gift_name}
+                            </Label>
                             {pix.description && (
                               <p className="text-sm text-muted-foreground">{pix.description}</p>
                             )}
@@ -668,8 +673,19 @@ const Invitation = () => {
                                 Sugestão: R$ {Number(pix.suggested_amount).toFixed(2).replace('.', ',')}
                               </p>
                             )}
+                            {checked && pix.qr_image_url && (
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                className="mt-2"
+                                onClick={() => openQrViewer(pix)}
+                              >
+                                <QrCode className="w-4 h-4 mr-2" /> Ver QR Code
+                              </Button>
+                            )}
                           </div>
-                        </label>
+                        </div>
                       );
                     })}
                   </div>
