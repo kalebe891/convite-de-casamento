@@ -27,6 +27,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import PixQrViewerDialog, { type PixQrViewerData } from "@/components/shared/PixQrViewerDialog";
 import { buildTenantPublicUrl } from "@/lib/eventType";
+import { isPixGift } from "@/lib/giftKind";
 
 type PageStatus = "loading" | "success" | "error";
 
@@ -287,8 +288,15 @@ const Invitation = () => {
         console.error("Error fetching gifts:", error);
       } else {
         const all = data || [];
-        const traditional = all.filter((g: any) => (g.gift_kind ?? 'traditional') !== 'pix');
-        const pix = all.filter((g: any) => g.gift_kind === 'pix');
+        const traditional = all.filter((g: any) => !isPixGift(g));
+        const pix = all.filter((g: any) => isPixGift(g));
+
+        // [DIAG 1.24.07] — remover após validação
+        console.log(
+          "[DIAG 1.24.07]",
+          all.map((g: any) => ({ id: g.id, gift_kind: g.gift_kind, name: g.gift_name }))
+        );
+        console.log("[DIAG 1.24.07]", { traditional: traditional.length, pix: pix.length });
 
         // Tradicional: respeitar regra de visibilidade (livre ou meu)
         const traditionalVisible = traditional.filter((g: any) =>
