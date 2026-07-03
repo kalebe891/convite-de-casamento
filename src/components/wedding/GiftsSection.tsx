@@ -8,6 +8,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { motion } from "framer-motion";
 import { useWedding } from "@/contexts/WeddingContext";
 import PixQrViewerDialog from "@/components/shared/PixQrViewerDialog";
+import { isPixGift } from "@/lib/giftKind";
 
 interface GiftsSectionProps {
   weddingId: string | null;
@@ -223,9 +224,9 @@ const GiftsSection = ({ weddingId }: GiftsSectionProps) => {
   }, [weddingId]);
 
   const traditionalGifts = allGifts
-    .filter((g) => (g.gift_kind ?? "traditional") !== "pix_manual")
+    .filter((g) => !isPixGift(g))
     .filter((g) => (hideReserved ? !g.selected_by_guest_id : true));
-  const pixGifts = allGifts.filter((g) => g.gift_kind === "pix_manual");
+  const pixGifts = allGifts.filter((g) => isPixGift(g));
 
   const shouldShowTraditionalSection = showGiftsSection;
   const shouldShowPixSection = showPixSection && pixGifts.length > 0;
