@@ -8,6 +8,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { motion } from "framer-motion";
 import { useWedding } from "@/contexts/WeddingContext";
 import PixQrViewerDialog from "@/components/shared/PixQrViewerDialog";
+import { isPixGift } from "@/lib/giftKind";
 
 interface GiftsSectionProps {
   weddingId: string | null;
