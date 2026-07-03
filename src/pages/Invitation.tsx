@@ -94,6 +94,20 @@ const Invitation = () => {
   const [qrViewerData, setQrViewerData] = useState<PixQrViewerData | null>(null);
   const redirectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // [DIAG 1.24.06] — instrumentação temporária (remover após validação)
+  useEffect(() => {
+    console.log("[DIAG 1.24.06] Invitation.tsx MOUNTED at", window.location.pathname);
+  }, []);
+  useEffect(() => {
+    console.log("[DIAG 1.24.06] selectedPixIds =", selectedPixIds);
+  }, [selectedPixIds]);
+  useEffect(() => {
+    console.log("[DIAG 1.24.06] confirmedPixDetails =", confirmedPixDetails);
+  }, [confirmedPixDetails]);
+  useEffect(() => {
+    console.log("[DIAG 1.24.06] selectedGiftId =", selectedGiftId);
+  }, [selectedGiftId]);
+
   const REDIRECT_DELAY_MS = 7000;
 
   // Constrói a URL de redirecionamento a partir do tenant real (event_type + slug).
