@@ -689,15 +689,18 @@ const Invitation = () => {
                               </p>
                             )}
                             {checked && pix.qr_image_url && (
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="outline"
-                                className="mt-2"
-                                onClick={() => openQrViewer(pix)}
-                              >
-                                <QrCode className="w-4 h-4 mr-2" /> Ver QR Code
-                              </Button>
+                              <>
+                                {(() => { console.log("[DIAG 1.24.06] Ver QR Code button rendered for", pix.id); return null; })()}
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="outline"
+                                  className="mt-2"
+                                  onClick={() => openQrViewer(pix)}
+                                >
+                                  <QrCode className="w-4 h-4 mr-2" /> Ver QR Code
+                                </Button>
+                              </>
                             )}
                           </div>
                         </div>
