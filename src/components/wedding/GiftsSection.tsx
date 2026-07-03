@@ -223,9 +223,9 @@ const GiftsSection = ({ weddingId }: GiftsSectionProps) => {
   }, [weddingId]);
 
   const traditionalGifts = allGifts
-    .filter((g) => (g.gift_kind ?? "traditional") !== "pix_manual")
+    .filter((g) => !isPixGift(g))
     .filter((g) => (hideReserved ? !g.selected_by_guest_id : true));
-  const pixGifts = allGifts.filter((g) => g.gift_kind === "pix_manual");
+  const pixGifts = allGifts.filter((g) => isPixGift(g));
 
   const shouldShowTraditionalSection = showGiftsSection;
   const shouldShowPixSection = showPixSection && pixGifts.length > 0;
