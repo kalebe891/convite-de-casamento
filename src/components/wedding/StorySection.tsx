@@ -59,24 +59,32 @@ const StorySection = ({ weddingDetails }: StorySectionProps) => {
           Nossa História
         </motion.h2>
         
-        <div className="grid md:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7 }}
-          >
-            {!secondaryPhoto ? (
-              <SkeletonImage className="w-full h-[500px]" />
-            ) : (
-              <img
-                src={secondaryPhoto}
-                alt="Casal"
-                className="rounded-lg shadow-elegant w-full h-auto object-cover"
-              />
-            )}
-          </motion.div>
-          
+        <div
+          className={
+            secondaryPhoto || photoLoading
+              ? "grid md:grid-cols-2 gap-12 items-center max-w-6xl mx-auto"
+              : "max-w-3xl mx-auto"
+          }
+        >
+          {(secondaryPhoto || photoLoading) && (
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7 }}
+            >
+              {photoLoading && !secondaryPhoto ? (
+                <SkeletonImage className="w-full h-[500px]" />
+              ) : secondaryPhoto ? (
+                <img
+                  src={secondaryPhoto}
+                  alt="Casal"
+                  className="rounded-lg shadow-elegant w-full h-auto object-cover"
+                />
+              ) : null}
+            </motion.div>
+          )}
+
           <motion.div
             className="space-y-6"
             initial={{ opacity: 0, x: 30 }}
@@ -84,12 +92,12 @@ const StorySection = ({ weddingDetails }: StorySectionProps) => {
             viewport={{ once: true }}
             transition={{ duration: 0.7, delay: 0.2 }}
           >
-            <p className="text-lg text-muted-foreground leading-relaxed whitespace-pre-line">
-              {weddingDetails?.story || 
+            <p className="text-lg text-muted-foreground leading-relaxed whitespace-pre-line text-center md:text-left">
+              {weddingDetails?.story ||
                 "Desde o momento em que nos conhecemos, soubemos que algo especial havia começado. Entre risadas, aventuras e inúmeras memórias, nosso amor cresceu mais forte a cada dia.\n\nAgora, cercados por nossos entes queridos, estamos prontos para começar a maior aventura de todas – passar para sempre juntos."}
             </p>
             {weddingDetails?.couple_message && (
-              <div className="pt-6">
+              <div className="pt-6 text-center md:text-left">
                 <p className="text-2xl font-serif text-foreground italic">
                   "{weddingDetails.couple_message}"
                 </p>
