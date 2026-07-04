@@ -210,12 +210,15 @@ Deno.serve(async (req) => {
 
     // PIX: registrar intenção de contribuição (lote). Validação dupla:
     // 1) gift_items são do mesmo wedding do convite; 2) são do tipo 'pix'.
+    console.log('[DIAG 1.24.08] pix_item_ids', safePixIds);
     if (attending && safePixIds.length > 0 && invitation.guest_id && invitation.wedding_id) {
+      // gift_kind canônico no banco é 'pix_manual' (não 'pix'). Filtro anterior
+      // rejeitava 100% dos PIX e nada era gravado em gift_pix_selections.
       const { data: validPix, error: pixFetchError } = await supabase
         .from('gift_items')
         .select('id')
         .eq('wedding_id', invitation.wedding_id)
-        .eq('gift_kind', 'pix')
+        .in('gift_kind', ['pix_manual', 'pix'])
         .in('id', safePixIds);
 
       if (pixFetchError) {
@@ -226,14 +229,17 @@ Deno.serve(async (req) => {
           guest_id: invitation.guest_id,
           gift_item_id: p.id,
         }));
-        const { error: pixInsertError } = await supabase
+        const { data: inserted, error: pixInsertError } = await supabase
           .from('gift_pix_selections')
-          .upsert(rows, { onConflict: 'guest_id,gift_item_id', ignoreDuplicates: true });
+          .upsert(rows, { onConflict: 'guest_id,gift_item_id', ignoreDuplicates: true })
+          .select('id');
         if (pixInsertError) {
           console.error('[rsvp-respond] Erro ao registrar PIX:', pixInsertError);
         } else {
-          console.log('[rsvp-respond] PIX registrados:', rows.length);
+          console.log('[DIAG 1.24.08] insert count', inserted?.length ?? 0, '/ rows sent:', rows.length);
         }
+      } else {
+        console.warn('[DIAG 1.24.08] Nenhum PIX válido encontrado para os IDs:', safePixIds);
       }
     }
 
