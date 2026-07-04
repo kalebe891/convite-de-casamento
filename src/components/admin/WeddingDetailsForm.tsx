@@ -102,14 +102,31 @@ const WeddingDetailsForm = ({ permissions }: WeddingDetailsFormProps) => {
         invitation_message: formData.invitationMessage,
       };
 
-      const { error } = await supabase
+      const { data: updated, error } = await supabase
         .from("wedding_details")
         .update(weddingData)
-        .eq("id", weddingId);
+        .eq("id", weddingId)
+        .select("*")
+        .maybeSingle();
 
       if (error) throw error;
 
-      toast({ title: "Sucesso!", description: "Detalhes salvos com sucesso." });
+      if (updated) {
+        setFormData({
+          brideName: updated.bride_name || "",
+          groomName: updated.groom_name || "",
+          weddingDate: updated.wedding_date || "",
+          venueName: updated.venue_name || "",
+          story: updated.story || "",
+          coupleMessage: updated.couple_message || "",
+          invitationMessage: (updated as any).invitation_message || "",
+        });
+      }
+
+      toast({
+        title: "Sucesso!",
+        description: "Detalhes salvos. Recarregue a página pública para ver as alterações.",
+      });
     } catch (error: any) {
       toast({
         title: "Erro",
