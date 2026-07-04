@@ -210,12 +210,15 @@ Deno.serve(async (req) => {
 
     // PIX: registrar intenção de contribuição (lote). Validação dupla:
     // 1) gift_items são do mesmo wedding do convite; 2) são do tipo 'pix'.
+    console.log('[DIAG 1.24.08] pix_item_ids', safePixIds);
     if (attending && safePixIds.length > 0 && invitation.guest_id && invitation.wedding_id) {
+      // gift_kind canônico no banco é 'pix_manual' (não 'pix'). Filtro anterior
+      // rejeitava 100% dos PIX e nada era gravado em gift_pix_selections.
       const { data: validPix, error: pixFetchError } = await supabase
         .from('gift_items')
         .select('id')
         .eq('wedding_id', invitation.wedding_id)
-        .eq('gift_kind', 'pix')
+        .in('gift_kind', ['pix_manual', 'pix'])
         .in('id', safePixIds);
 
       if (pixFetchError) {
