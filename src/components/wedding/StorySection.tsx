@@ -9,10 +9,15 @@ interface StorySectionProps {
 
 const StorySection = ({ weddingDetails }: StorySectionProps) => {
   const [secondaryPhoto, setSecondaryPhoto] = useState<string | null>(null);
+  const [photoLoading, setPhotoLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const fetchSecondaryPhoto = async () => {
-      if (!weddingDetails?.id) return;
+      if (!weddingDetails?.id) {
+        setPhotoLoading(false);
+        return;
+      }
+      setPhotoLoading(true);
 
       const { data } = await supabase
         .from("photos")
@@ -21,9 +26,8 @@ const StorySection = ({ weddingDetails }: StorySectionProps) => {
         .eq("is_secondary", true)
         .maybeSingle();
 
-      if (data) {
-        setSecondaryPhoto(data.photo_url);
-      }
+      setSecondaryPhoto(data?.photo_url ?? null);
+      setPhotoLoading(false);
     };
 
     fetchSecondaryPhoto();
