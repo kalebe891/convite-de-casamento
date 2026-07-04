@@ -229,14 +229,17 @@ Deno.serve(async (req) => {
           guest_id: invitation.guest_id,
           gift_item_id: p.id,
         }));
-        const { error: pixInsertError } = await supabase
+        const { data: inserted, error: pixInsertError } = await supabase
           .from('gift_pix_selections')
-          .upsert(rows, { onConflict: 'guest_id,gift_item_id', ignoreDuplicates: true });
+          .upsert(rows, { onConflict: 'guest_id,gift_item_id', ignoreDuplicates: true })
+          .select('id');
         if (pixInsertError) {
           console.error('[rsvp-respond] Erro ao registrar PIX:', pixInsertError);
         } else {
-          console.log('[rsvp-respond] PIX registrados:', rows.length);
+          console.log('[DIAG 1.24.08] insert count', inserted?.length ?? 0, '/ rows sent:', rows.length);
         }
+      } else {
+        console.warn('[DIAG 1.24.08] Nenhum PIX válido encontrado para os IDs:', safePixIds);
       }
     }
 
