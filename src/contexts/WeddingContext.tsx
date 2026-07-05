@@ -297,6 +297,42 @@ export const WeddingProvider = ({ mode, children }: ProviderProps) => {
     [userWeddings]
   );
 
+  // ---- Realtime: keep wedding_details in sync across tabs (server-side filtered) ----
+  useEffect(() => {
+    if (!activeId) return;
+
+    const channel = supabase
+      .channel(`wedding_details:${activeId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "wedding_details",
+          filter: `id=eq.${activeId}`,
+        },
+        (payload) => {
+          const next = payload.new as Partial<WeddingDetails> | null;
+          if (!next) return;
+          setWedding((prev) => (prev ? { ...prev, ...next } : (next as WeddingDetails)));
+          setUserWeddings((prev) =>
+            prev.map((uw) =>
+              uw.wedding_id === activeId && uw.wedding
+                ? { ...uw, wedding: { ...uw.wedding, ...next } }
+                : uw
+            )
+          );
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [activeId]);
+
+
+
   const value: WeddingContextType = {
     mode,
     weddingId: activeId,
