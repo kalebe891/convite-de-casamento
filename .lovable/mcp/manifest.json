@@ -1,0 +1,72 @@
+{
+  "version": 1,
+  "sdk_version": "0.20.0",
+  "path": "/mcp",
+  "auth": {
+    "type": "none"
+  },
+  "mcp": {
+    "server": {
+      "name": "convite-de-evento-mcp",
+      "version": "0.1.0",
+      "title": "Convite de Evento MCP"
+    },
+    "tools": [
+      {
+        "name": "list_public_showcase_events",
+        "title": "List public showcase events",
+        "description": "List published wedding/event pages that opted into the public showcase. Returns event type, slug, couple/host names, event date and venue.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "limit": {
+              "default": 20,
+              "description": "Maximum number of events to return.",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_event_details",
+        "title": "Get event details",
+        "description": "Fetch the public details of a wedding/event page by its event_type (e.g. 'casamento', 'aniversario') and slug. Returns couple names, date, venue, story and public message.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "event_type": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Event type segment from the URL, e.g. 'casamento' or 'aniversario'."
+            },
+            "slug": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Unique event slug from the URL."
+            }
+          },
+          "required": [
+            "event_type",
+            "slug"
+          ]
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
