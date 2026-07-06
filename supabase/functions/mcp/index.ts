@@ -8,7 +8,7 @@ import { defineMcp } from "npm:@lovable.dev/mcp-js@0.20.0";
 // src/lib/mcp/tools/list-public-showcase-events.ts
 import { createClient } from "npm:@supabase/supabase-js@^2.81.1";
 import { defineTool } from "npm:@lovable.dev/mcp-js@0.20.0";
-import { z } from "npm:zod@^4.4.3";
+import { z } from "npm:zod@^3.23.8";
 var list_public_showcase_events_default = defineTool({
   name: "list_public_showcase_events",
   title: "List public showcase events",
@@ -42,7 +42,7 @@ var list_public_showcase_events_default = defineTool({
 // src/lib/mcp/tools/get-event-details.ts
 import { createClient as createClient2 } from "npm:@supabase/supabase-js@^2.81.1";
 import { defineTool as defineTool2 } from "npm:@lovable.dev/mcp-js@0.20.0";
-import { z as z2 } from "npm:zod@^4.4.3";
+import { z as z2 } from "npm:zod@^3.23.8";
 var get_event_details_default = defineTool2({
   name: "get_event_details",
   title: "Get event details",
