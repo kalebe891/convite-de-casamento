@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { WeddingProvider } from "./contexts/WeddingContext";
+import { AuthProvider } from "./contexts/AuthContext";
 import ThemeRenderer from "./themes/ThemeRenderer";
 import Invitation from "./pages/Invitation";
 import Auth from "./pages/Auth";
