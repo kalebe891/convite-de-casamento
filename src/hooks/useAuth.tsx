@@ -1,7 +1,6 @@
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { User, Session } from "@supabase/supabase-js";
+import { useAuthContext } from "@/contexts/AuthContext";
 import { useOptionalWedding } from "@/contexts/WeddingContext";
+import type { User, Session } from "@supabase/supabase-js";
 
 export type UserRole = string | null;
 
@@ -13,78 +12,27 @@ interface AuthState {
   isAdmin: boolean;
 }
 
+/**
+ * useAuth — consumidor do AuthContext global (Etapa 1.24.13).
+ *
+ * Toda a lógica (getSession, onAuthStateChange, fetchUserRole) vive
+ * em `AuthProvider`. Este hook apenas lê o contexto e aplica o override
+ * de role por tenant (compat com Etapas anteriores), sem estado próprio.
+ */
 export const useAuth = (): AuthState => {
+  const { user, session, role, loading } = useAuthContext();
   const weddingContext = useOptionalWedding();
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [role, setRole] = useState<UserRole>(null);
-  const [loading, setLoading] = useState(true);
 
   const tenantRole =
     weddingContext?.mode === "tenant-admin" && weddingContext.weddingId
       ? weddingContext.userWeddings.find(
-          (link) => link.user_id === user?.id && link.wedding_id === weddingContext.weddingId
+          (link) =>
+            link.user_id === user?.id &&
+            link.wedding_id === weddingContext.weddingId
         )?.role ?? null
       : null;
 
   const effectiveRole = tenantRole ?? role;
-
-  useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        // Defer role fetching with setTimeout to avoid deadlock
-        if (session?.user) {
-          setTimeout(() => {
-            fetchUserRole(session.user.id);
-          }, 0);
-        } else {
-          setRole(null);
-          setLoading(false);
-        }
-      }
-    );
-
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        fetchUserRole(session.user.id);
-      } else {
-        setLoading(false);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const fetchUserRole = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", userId);
-
-      if (error) {
-        console.error("❌ [useAuth] Error fetching user role:", error);
-        setRole(null);
-      } else {
-        const roles = (data || []).map((item) => item.role as string);
-        const userRole = roles.includes("admin") ? "admin" : roles[0] ?? null;
-        setRole(userRole);
-      }
-    } catch (error) {
-      console.error("❌ [useAuth] Exception fetching user role:", error);
-      setRole(null);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return {
     user,

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { Permission, MenuKey } from "@/lib/permissions";
@@ -69,25 +69,28 @@ export const usePermissions = (): PermissionsState => {
     }
   };
 
-  const hasPermission = (
-    menuKey: MenuKey,
-    type: "view" | "add" | "edit" | "delete" | "publish"
-  ): boolean => {
-    if (role === "admin") {
-      return true;
-    }
+  const hasPermission = useCallback(
+    (
+      menuKey: MenuKey,
+      type: "view" | "add" | "edit" | "delete" | "publish"
+    ): boolean => {
+      if (role === "admin") {
+        return true;
+      }
 
-    if (!initialized || loading || !role) {
-      return false;
-    }
+      if (!initialized || loading || !role) {
+        return false;
+      }
 
-    const permission = permissions.find((p) => p.menu_key === menuKey);
-    if (!permission) {
-      return false;
-    }
+      const permission = permissions.find((p) => p.menu_key === menuKey);
+      if (!permission) {
+        return false;
+      }
 
-    return permission[`can_${type}`] || false;
-  };
+      return permission[`can_${type}`] || false;
+    },
+    [role, initialized, loading, permissions]
+  );
 
   return {
     permissions,
