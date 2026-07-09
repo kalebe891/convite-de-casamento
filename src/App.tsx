@@ -67,6 +67,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <AuthProvider>
         <ScrollToTop />
         <Routes>
           {/* ===== Rotas estáticas / institucionais ===== */}
