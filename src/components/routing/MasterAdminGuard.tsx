@@ -21,9 +21,28 @@ interface Props {
  */
 const MasterAdminGuard = ({ children }: Props) => {
   const { user, loading } = useAuth();
-  const { canAccessMasterAdmin } = useAuthorization();
+  const { canAccessMasterAdmin, loading: authzLoading } = useAuthorization();
   const [resolving, setResolving] = useState(false);
   const [redirectTo, setRedirectTo] = useState<string | null>(null);
+
+  const mountedAtRef = useRef<number>(0);
+  const loggedReadyRef = useRef(false);
+  if (mountedAtRef.current === 0) {
+    mountedAtRef.current = performance.now();
+    diag("MasterAdminGuard", "mounted");
+  }
+
+  useEffect(() => {
+    diag(
+      "MasterAdminGuard",
+      `state authLoading=${loading} authzLoading=${authzLoading} hasUser=${!!user} canAccessMasterAdmin=${canAccessMasterAdmin} resolving=${resolving}`
+    );
+    if (!loading && !authzLoading && !loggedReadyRef.current) {
+      const elapsed = Math.round(performance.now() - mountedAtRef.current);
+      diag("MasterAdminGuard", `auth+authz ready after mount (${elapsed}ms)`);
+      loggedReadyRef.current = true;
+    }
+  }, [loading, authzLoading, user, canAccessMasterAdmin, resolving]);
 
   useEffect(() => {
     if (loading) return;
@@ -34,6 +53,7 @@ const MasterAdminGuard = ({ children }: Props) => {
     }
 
     if (canAccessMasterAdmin) {
+      diag("MasterAdminGuard", "granting access — rendering children");
       setRedirectTo(null);
       return;
     }
