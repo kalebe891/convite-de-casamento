@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { Permission, MenuKey } from "@/lib/permissions";
 import { devLog } from "@/lib/devLog";
+import { diag, diagTimer } from "@/lib/diag";
 
 interface PermissionsState {
   permissions: Permission[];
