@@ -361,21 +361,17 @@ const Invitation = () => {
         pix_item_ids: attending ? selectedPixIds : [],
       };
 
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/rsvp-respond`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-          },
-          body: JSON.stringify(payload),
-        }
+      const { data: rsvpResult, error: rsvpError } = await supabase.functions.invoke(
+        'rsvp-respond',
+        { body: payload }
       );
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Erro ao processar resposta');
+      if (rsvpError) {
+        const message =
+          (rsvpResult && (rsvpResult as { error?: string }).error) ||
+          rsvpError.message ||
+          'Erro ao processar resposta';
+        throw new Error(message);
       }
 
       // Capturar detalhes dos PIX confirmados para exibir na tela de sucesso
