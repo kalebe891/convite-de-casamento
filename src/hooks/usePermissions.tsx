@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { Permission, MenuKey } from "@/lib/permissions";
 import { devLog } from "@/lib/devLog";
+import { diag, diagTimer } from "@/lib/diag";
 
 interface PermissionsState {
   permissions: Permission[];
@@ -44,6 +45,7 @@ export const usePermissions = (): PermissionsState => {
       return;
     }
 
+    const done = diagTimer("usePermissions", `fetch admin_permissions role=${role}`);
     try {
       devLog('🔍 [usePermissions] Fetching permissions for role:', role);
       const { data, error } = await supabase
@@ -59,11 +61,13 @@ export const usePermissions = (): PermissionsState => {
         devLog('✅ [usePermissions] Permissions fetched:', perms.length, 'items');
         devLog('📋 [usePermissions] Permission details:', perms.map(p => `${p.menu_key}:${p.can_view}`).join(', '));
         setPermissions(perms);
+        diag("usePermissions", `permissions loaded (${perms.length})`);
       }
     } catch (error) {
       console.error("❌ [usePermissions] Exception in fetchPermissions:", error);
       setPermissions([]);
     } finally {
+      done();
       setLoading(false);
       setInitialized(true);
     }

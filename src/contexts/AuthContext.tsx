@@ -9,6 +9,7 @@ import {
 } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
+import { diag, diagTimer } from "@/lib/diag";
 
 export type UserRole = string | null;
 
@@ -45,9 +46,16 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const inFlightRoleFetchRef = useRef<Promise<void> | null>(null);
 
   const fetchUserRole = useCallback(async (userId: string) => {
-    if (lastFetchedUserIdRef.current === userId) return;
-    if (inFlightRoleFetchRef.current) return inFlightRoleFetchRef.current;
+    if (lastFetchedUserIdRef.current === userId) {
+      diag("AuthProvider", `fetchUserRole skipped (cached) for ${userId}`);
+      return;
+    }
+    if (inFlightRoleFetchRef.current) {
+      diag("AuthProvider", "fetchUserRole already in-flight, awaiting");
+      return inFlightRoleFetchRef.current;
+    }
 
+    const done = diagTimer("AuthProvider", `fetchUserRole(${userId})`);
     const p = (async () => {
       try {
         const { data, error } = await supabase
@@ -62,6 +70,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           const roles = (data || []).map((item) => item.role as string);
           const userRole = roles.includes("admin") ? "admin" : roles[0] ?? null;
           setRole(userRole);
+          diag("AuthProvider", `role resolved = ${userRole ?? "null"}`);
         }
         lastFetchedUserIdRef.current = userId;
       } catch (err) {
@@ -69,6 +78,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         setRole(null);
       } finally {
         inFlightRoleFetchRef.current = null;
+        done();
       }
     })();
 
@@ -78,12 +88,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   useEffect(() => {
     let mounted = true;
+    diag("AuthProvider", "mounted");
 
     // Listener único (registrado ANTES de getSession, como recomendado pelo Supabase).
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+    } = supabase.auth.onAuthStateChange((event, nextSession) => {
       if (!mounted) return;
+      diag("AuthProvider", `onAuthStateChange event=${event} hasUser=${!!nextSession?.user}`);
       setSession(nextSession);
       setUser(nextSession?.user ?? null);
 
@@ -100,8 +112,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     });
 
     // getSession único.
+    const doneGetSession = diagTimer("AuthProvider", "getSession");
     supabase.auth.getSession().then(async ({ data: { session: initial } }) => {
+      doneGetSession();
       if (!mounted) return;
+      diag("AuthProvider", `initial session hasUser=${!!initial?.user}`);
       setSession(initial);
       setUser(initial?.user ?? null);
 
@@ -109,7 +124,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         await fetchUserRole(initial.user.id);
       }
 
-      if (mounted) setLoading(false);
+      if (mounted) {
+        diag("AuthProvider", "loading=false (initial resolve complete)");
+        setLoading(false);
+      }
     });
 
     return () => {
