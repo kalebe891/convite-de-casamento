@@ -46,9 +46,16 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const inFlightRoleFetchRef = useRef<Promise<void> | null>(null);
 
   const fetchUserRole = useCallback(async (userId: string) => {
-    if (lastFetchedUserIdRef.current === userId) return;
-    if (inFlightRoleFetchRef.current) return inFlightRoleFetchRef.current;
+    if (lastFetchedUserIdRef.current === userId) {
+      diag("AuthProvider", `fetchUserRole skipped (cached) for ${userId}`);
+      return;
+    }
+    if (inFlightRoleFetchRef.current) {
+      diag("AuthProvider", "fetchUserRole already in-flight, awaiting");
+      return inFlightRoleFetchRef.current;
+    }
 
+    const done = diagTimer("AuthProvider", `fetchUserRole(${userId})`);
     const p = (async () => {
       try {
         const { data, error } = await supabase
@@ -63,6 +70,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           const roles = (data || []).map((item) => item.role as string);
           const userRole = roles.includes("admin") ? "admin" : roles[0] ?? null;
           setRole(userRole);
+          diag("AuthProvider", `role resolved = ${userRole ?? "null"}`);
         }
         lastFetchedUserIdRef.current = userId;
       } catch (err) {
@@ -70,6 +78,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         setRole(null);
       } finally {
         inFlightRoleFetchRef.current = null;
+        done();
       }
     })();
 
