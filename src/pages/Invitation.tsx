@@ -235,20 +235,15 @@ const Invitation = () => {
       setInvitationError(null);
 
       try {
-        const response = await fetch(
-          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/rsvp-view?token=${encodeURIComponent(invitation_code)}`,
-          {
-            headers: {
-              'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-            },
-          }
+        const { data, error } = await supabase.functions.invoke<InvitationData>(
+          `rsvp-view?token=${encodeURIComponent(invitation_code)}`,
+          { method: 'GET' }
         );
 
-        if (!response.ok) {
-          throw new Error("invalid_token");
+        if (error || !data) {
+          throw new Error('invalid_token');
         }
 
-        const data: InvitationData = await response.json();
         setInvitationData(data);
 
         // Pre-fill form with existing data if available
