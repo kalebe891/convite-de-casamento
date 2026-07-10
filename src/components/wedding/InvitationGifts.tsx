@@ -86,29 +86,22 @@ const InvitationGifts = ({ weddingId, guestId }: InvitationGiftsProps) => {
     setSelecting(true);
 
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/select-gift`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-          },
-          body: JSON.stringify({
-            guest_id: guestId,
-            gift_id: newGiftId,
-          }),
-        }
-      );
+      const { data: result, error } = await supabase.functions.invoke('select-gift', {
+        body: {
+          guest_id: guestId,
+          gift_id: newGiftId,
+        },
+      });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Erro ao selecionar presente');
+      if (error) {
+        const message =
+          (result && (result as { error?: string }).error) ||
+          error.message ||
+          'Erro ao selecionar presente';
+        throw new Error(message);
       }
 
-      const result = await response.json();
-
-      if (result.cleared) {
+      if (result?.cleared) {
         setSelectedGift("");
         toast({
           title: "Presente desmarcado",
