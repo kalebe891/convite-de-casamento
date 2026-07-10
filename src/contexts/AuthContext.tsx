@@ -88,12 +88,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   useEffect(() => {
     let mounted = true;
+    diag("AuthProvider", "mounted");
 
     // Listener único (registrado ANTES de getSession, como recomendado pelo Supabase).
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+    } = supabase.auth.onAuthStateChange((event, nextSession) => {
       if (!mounted) return;
+      diag("AuthProvider", `onAuthStateChange event=${event} hasUser=${!!nextSession?.user}`);
       setSession(nextSession);
       setUser(nextSession?.user ?? null);
 
@@ -110,8 +112,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     });
 
     // getSession único.
+    const doneGetSession = diagTimer("AuthProvider", "getSession");
     supabase.auth.getSession().then(async ({ data: { session: initial } }) => {
+      doneGetSession();
       if (!mounted) return;
+      diag("AuthProvider", `initial session hasUser=${!!initial?.user}`);
       setSession(initial);
       setUser(initial?.user ?? null);
 
@@ -119,7 +124,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         await fetchUserRole(initial.user.id);
       }
 
-      if (mounted) setLoading(false);
+      if (mounted) {
+        diag("AuthProvider", "loading=false (initial resolve complete)");
+        setLoading(false);
+      }
     });
 
     return () => {
