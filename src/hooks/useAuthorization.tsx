@@ -73,6 +73,16 @@ export const useAuthorization = (): AuthorizationState => {
   const canManageUsers =
     canAccessAdmin && hasPermission("usuarios", "edit");
 
+  const prevRef = useRef<string>("");
+  useEffect(() => {
+    const snap = `loading=${loading} authLoading=${authLoading} permsLoading=${permsLoading} initialized=${initialized} weddingLoading=${!!weddingContext?.loading} canAccessMasterAdmin=${canAccessMasterAdmin} isGlobalAdmin=${isGlobalAdmin}`;
+    if (snap !== prevRef.current) {
+      prevRef.current = snap;
+      diag("useAuthorization", snap);
+    }
+  });
+
+
   return {
     loading,
     isAuthenticated,
