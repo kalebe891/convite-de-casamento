@@ -1,9 +1,10 @@
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useEffect, useRef, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useAuthorization } from "@/hooks/useAuthorization";
 import { supabase } from "@/integrations/supabase/client";
 import { buildTenantAdminUrl } from "@/lib/eventType";
+import { diag, diagTimer } from "@/lib/diag";
 
 interface Props {
   children: ReactNode;
