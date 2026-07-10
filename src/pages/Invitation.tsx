@@ -441,36 +441,42 @@ const Invitation = () => {
     try {
       setSavingGift(true);
       
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/select-gift`,
+      const { data: giftResult, error: giftError } = await supabase.functions.invoke(
+        'select-gift',
         {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+          body: {
+            guest_id: invitationData.guest_id,
+            gift_id: selectedGiftId || null,
           },
-           body: JSON.stringify({
-              guest_id: invitationData.guest_id,
-              gift_id: selectedGiftId || null,
-            }),
         }
       );
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        
-        // Verificar se é erro 403 (já tem presente)
-        if (response.status === 403) {
+      if (giftError) {
+        // Tentar extrair status/mensagem do Response embutido em FunctionsHttpError
+        const ctx = (giftError as { context?: Response }).context;
+        let status: number | undefined;
+        let errMessage: string | undefined;
+        if (ctx && typeof ctx.json === 'function') {
+          try {
+            const body = await ctx.json();
+            errMessage = body?.error;
+            status = ctx.status;
+          } catch {
+            status = ctx.status;
+          }
+        }
+
+        if (status === 403) {
           toast({
             title: "Alteração não permitida",
-            description: errorData.error || "Você já selecionou um presente. Para alterar, solicite um novo link.",
+            description: errMessage || "Você já selecionou um presente. Para alterar, solicite um novo link.",
             variant: "destructive",
           });
           setDrawerOpen(false);
           return;
         }
-        
-        throw new Error(errorData.error || 'Erro ao salvar presente');
+
+        throw new Error(errMessage || giftError.message || 'Erro ao salvar presente');
       }
 
       toast({
