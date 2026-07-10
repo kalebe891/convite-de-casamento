@@ -176,6 +176,7 @@ export default function MasterDashboard() {
   };
 
   useEffect(() => {
+    diag("MasterDashboard", "mounted — dispatching load()");
     load();
   }, []);
 
