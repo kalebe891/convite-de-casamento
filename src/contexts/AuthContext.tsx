@@ -9,6 +9,7 @@ import {
 } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
+import { diag, diagTimer } from "@/lib/diag";
 
 export type UserRole = string | null;
 
