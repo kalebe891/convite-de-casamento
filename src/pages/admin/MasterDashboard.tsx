@@ -21,7 +21,7 @@ import CreateEventDialog from "@/components/admin/CreateEventDialog";
 import DeleteTenantDialog from "@/components/admin/DeleteTenantDialog";
 import TenantViewToggle, { type TenantViewMode } from "@/components/admin/TenantViewToggle";
 import TenantTable from "@/components/admin/TenantTable";
-import { diag, diagTimer } from "@/lib/diag";
+import { diag, diagTimer, diagCount } from "@/lib/diag";
 
 const VIEW_STORAGE_KEY = "master_tenant_view";
 
