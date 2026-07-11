@@ -90,7 +90,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   useEffect(() => {
     let mounted = true;
-    diag("AuthProvider", "mounted");
+    diagCount("AuthProvider", "MOUNT effect");
+    diag("AuthProvider", "mounted — stack: " + new Error().stack?.split("\n").slice(2, 5).join(" | "));
 
     // Listener único (registrado ANTES de getSession, como recomendado pelo Supabase).
     const {
