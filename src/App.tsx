@@ -36,6 +36,9 @@ import MasterDashboard from "./pages/admin/MasterDashboard";
 import PenteadosMadrinha from "./pages/blog/PenteadosMadrinha";
 import { diagCount, diag } from "./lib/diag";
 import { useEffect } from "react";
+import { installAuthEventDiag } from "./lib/diagAuthEvents";
+
+installAuthEventDiag();
 
 const queryClient = new QueryClient();
 
