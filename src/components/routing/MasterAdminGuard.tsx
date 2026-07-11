@@ -5,6 +5,7 @@ import { useAuthorization } from "@/hooks/useAuthorization";
 import { supabase } from "@/integrations/supabase/client";
 import { buildTenantAdminUrl } from "@/lib/eventType";
 import { diag, diagTimer } from "@/lib/diag";
+import DiagLoading from "@/components/diag/DiagLoading";
 
 interface Props {
   children: ReactNode;
@@ -121,9 +122,9 @@ const MasterAdminGuard = ({ children }: Props) => {
 
   if (loading || resolving) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <DiagLoading source={`MasterAdminGuard[loading=${loading} resolving=${resolving}]`} className="min-h-screen flex items-center justify-center bg-background">
         <p className="text-muted-foreground">Carregando...</p>
-      </div>
+      </DiagLoading>
     );
   }
 
