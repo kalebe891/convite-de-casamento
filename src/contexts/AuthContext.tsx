@@ -140,9 +140,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   return (
     <AuthContext.Provider value={{ user, session, role, loading }}>
       {loading ? (
-        <div className="min-h-screen flex items-center justify-center bg-background">
+        <DiagLoading source="AuthProvider[loading-splash]" className="min-h-screen flex items-center justify-center bg-background">
           <p className="text-muted-foreground">Carregando...</p>
-        </div>
+        </DiagLoading>
       ) : (
         children
       )}
