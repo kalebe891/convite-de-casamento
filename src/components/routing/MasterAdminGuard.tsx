@@ -122,9 +122,9 @@ const MasterAdminGuard = ({ children }: Props) => {
 
   if (loading || resolving) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <DiagLoading source={`MasterAdminGuard[loading=${loading} resolving=${resolving}]`} className="min-h-screen flex items-center justify-center bg-background">
         <p className="text-muted-foreground">Carregando...</p>
-      </div>
+      </DiagLoading>
     );
   }
 
