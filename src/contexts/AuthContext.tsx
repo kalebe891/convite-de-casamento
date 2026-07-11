@@ -136,6 +136,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     return () => {
       mounted = false;
       subscription.unsubscribe();
+      diag("AuthProvider", "UNMOUNTED (effect cleanup) — parent recreated the provider");
     };
   }, [fetchUserRole]);
 
