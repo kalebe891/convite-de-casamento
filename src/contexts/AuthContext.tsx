@@ -10,6 +10,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
 import { diag, diagTimer } from "@/lib/diag";
+import DiagLoading from "@/components/diag/DiagLoading";
 
 export type UserRole = string | null;
 
