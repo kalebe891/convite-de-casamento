@@ -95,6 +95,11 @@ function statusLabel(s: EventStatus | null) {
 }
 
 export default function MasterDashboard() {
+  diagCount("MasterDashboard", "render");
+  useEffect(() => {
+    diag("MasterDashboard", "MOUNTED");
+    return () => diag("MasterDashboard", "UNMOUNTED");
+  }, []);
   const navigate = useNavigate();
   const [weddings, setWeddings] = useState<Wedding[]>([]);
   const [counts, setCounts] = useState<Record<string, Counts>>({});
