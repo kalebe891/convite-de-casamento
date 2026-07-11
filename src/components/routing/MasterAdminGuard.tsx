@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useAuthorization } from "@/hooks/useAuthorization";
 import { supabase } from "@/integrations/supabase/client";
 import { buildTenantAdminUrl } from "@/lib/eventType";
-import { diag, diagTimer } from "@/lib/diag";
+import { diag, diagTimer, diagCount } from "@/lib/diag";
 import DiagLoading from "@/components/diag/DiagLoading";
 
 interface Props {
@@ -21,6 +21,7 @@ interface Props {
  *  4. Autenticado sem vínculo  -> /acesso-negado
  */
 const MasterAdminGuard = ({ children }: Props) => {
+  diagCount("MasterAdminGuard", "render");
   const { user, loading } = useAuth();
   const { canAccessMasterAdmin, loading: authzLoading } = useAuthorization();
   const [resolving, setResolving] = useState(false);
@@ -30,8 +31,13 @@ const MasterAdminGuard = ({ children }: Props) => {
   const loggedReadyRef = useRef(false);
   if (mountedAtRef.current === 0) {
     mountedAtRef.current = performance.now();
+    diagCount("MasterAdminGuard", "MOUNT");
     diag("MasterAdminGuard", "mounted");
   }
+
+  useEffect(() => {
+    return () => diag("MasterAdminGuard", "UNMOUNTED");
+  }, []);
 
   useEffect(() => {
     diag(

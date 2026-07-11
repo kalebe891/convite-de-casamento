@@ -9,7 +9,7 @@ import {
 } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
-import { diag, diagTimer } from "@/lib/diag";
+import { diag, diagTimer, diagCount } from "@/lib/diag";
 import DiagLoading from "@/components/diag/DiagLoading";
 
 export type UserRole = string | null;
@@ -38,6 +38,7 @@ interface AuthProviderProps {
  *    (evita race: loading=false + user=null → redirect indevido para /auth).
  */
 export const AuthProvider = ({ children }: AuthProviderProps) => {
+  diagCount("AuthProvider", "render");
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [role, setRole] = useState<UserRole>(null);
@@ -89,7 +90,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   useEffect(() => {
     let mounted = true;
-    diag("AuthProvider", "mounted");
+    diagCount("AuthProvider", "MOUNT effect");
+    diag("AuthProvider", "mounted — stack: " + new Error().stack?.split("\n").slice(2, 5).join(" | "));
 
     // Listener único (registrado ANTES de getSession, como recomendado pelo Supabase).
     const {
@@ -134,6 +136,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     return () => {
       mounted = false;
       subscription.unsubscribe();
+      diag("AuthProvider", "UNMOUNTED (effect cleanup) — parent recreated the provider");
     };
   }, [fetchUserRole]);
 

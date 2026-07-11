@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import ThemeToggle from "@/components/ThemeToggle";
 import { useAuth } from "@/hooks/useAuth";
 import { LayoutDashboard, LogOut, ShieldCheck } from "lucide-react";
+import { diag, diagCount } from "@/lib/diag";
 
 /**
  * Layout dedicado do Master Admin global (/admin).
@@ -16,10 +17,16 @@ import { LayoutDashboard, LogOut, ShieldCheck } from "lucide-react";
  * - NÃO renderiza EventSelector ou sidebar de tenant.
  */
 const MasterAdminLayout = () => {
+  diagCount("MasterAdminLayout", "render");
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
   const [userName, setUserName] = useState("");
+
+  useEffect(() => {
+    diag("MasterAdminLayout", "mounted");
+    return () => diag("MasterAdminLayout", "UNMOUNTED");
+  }, []);
 
   useEffect(() => {
     if (!user) return;

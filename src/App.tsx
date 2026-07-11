@@ -34,6 +34,11 @@ import Logs from "./pages/admin/Logs";
 import Eventos from "./pages/admin/Eventos";
 import MasterDashboard from "./pages/admin/MasterDashboard";
 import PenteadosMadrinha from "./pages/blog/PenteadosMadrinha";
+import { diagCount, diag } from "./lib/diag";
+import { useEffect } from "react";
+import { installAuthEventDiag } from "./lib/diagAuthEvents";
+
+installAuthEventDiag();
 
 const queryClient = new QueryClient();
 
@@ -61,7 +66,13 @@ const masterAdminChildren = (
   </>
 );
 
-const App = () => (
+const App = () => {
+  diagCount("App", "render");
+  useEffect(() => {
+    diag("App", "mounted");
+    return () => diag("App", "UNMOUNTED (unexpected — this recreates the whole tree)");
+  }, []);
+  return (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
@@ -134,6 +145,7 @@ const App = () => (
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
-);
+  );
+};
 
 export default App;

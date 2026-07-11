@@ -21,7 +21,7 @@ import CreateEventDialog from "@/components/admin/CreateEventDialog";
 import DeleteTenantDialog from "@/components/admin/DeleteTenantDialog";
 import TenantViewToggle, { type TenantViewMode } from "@/components/admin/TenantViewToggle";
 import TenantTable from "@/components/admin/TenantTable";
-import { diag, diagTimer } from "@/lib/diag";
+import { diag, diagTimer, diagCount } from "@/lib/diag";
 
 const VIEW_STORAGE_KEY = "master_tenant_view";
 
@@ -95,6 +95,11 @@ function statusLabel(s: EventStatus | null) {
 }
 
 export default function MasterDashboard() {
+  diagCount("MasterDashboard", "render");
+  useEffect(() => {
+    diag("MasterDashboard", "MOUNTED");
+    return () => diag("MasterDashboard", "UNMOUNTED");
+  }, []);
   const navigate = useNavigate();
   const [weddings, setWeddings] = useState<Wedding[]>([]);
   const [counts, setCounts] = useState<Record<string, Counts>>({});
