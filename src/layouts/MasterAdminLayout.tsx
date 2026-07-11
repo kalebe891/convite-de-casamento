@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import ThemeToggle from "@/components/ThemeToggle";
 import { useAuth } from "@/hooks/useAuth";
 import { LayoutDashboard, LogOut, ShieldCheck } from "lucide-react";
+import { diag, diagCount } from "@/lib/diag";
 
 /**
  * Layout dedicado do Master Admin global (/admin).
