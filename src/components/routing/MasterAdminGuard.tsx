@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useAuthorization } from "@/hooks/useAuthorization";
 import { supabase } from "@/integrations/supabase/client";
 import { buildTenantAdminUrl } from "@/lib/eventType";
-import { diag, diagTimer } from "@/lib/diag";
+import { diag, diagTimer, diagCount } from "@/lib/diag";
 import DiagLoading from "@/components/diag/DiagLoading";
 
 interface Props {
