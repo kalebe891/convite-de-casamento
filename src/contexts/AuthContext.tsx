@@ -38,6 +38,7 @@ interface AuthProviderProps {
  *    (evita race: loading=false + user=null → redirect indevido para /auth).
  */
 export const AuthProvider = ({ children }: AuthProviderProps) => {
+  diagCount("AuthProvider", "render");
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [role, setRole] = useState<UserRole>(null);
