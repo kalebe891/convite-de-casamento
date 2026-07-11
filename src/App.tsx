@@ -63,7 +63,13 @@ const masterAdminChildren = (
   </>
 );
 
-const App = () => (
+const App = () => {
+  diagCount("App", "render");
+  useEffect(() => {
+    diag("App", "mounted");
+    return () => diag("App", "UNMOUNTED (unexpected — this recreates the whole tree)");
+  }, []);
+  return (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
