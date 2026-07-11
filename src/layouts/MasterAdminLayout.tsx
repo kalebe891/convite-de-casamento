@@ -17,10 +17,16 @@ import { diag, diagCount } from "@/lib/diag";
  * - NÃO renderiza EventSelector ou sidebar de tenant.
  */
 const MasterAdminLayout = () => {
+  diagCount("MasterAdminLayout", "render");
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
   const [userName, setUserName] = useState("");
+
+  useEffect(() => {
+    diag("MasterAdminLayout", "mounted");
+    return () => diag("MasterAdminLayout", "UNMOUNTED");
+  }, []);
 
   useEffect(() => {
     if (!user) return;
