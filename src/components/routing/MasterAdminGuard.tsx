@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useAuthorization } from "@/hooks/useAuthorization";
 import { supabase } from "@/integrations/supabase/client";
 import { buildTenantAdminUrl } from "@/lib/eventType";
-import { diag, diagTimer, diagCount } from "@/lib/diag";
+import { diag, diagTimer, diagCount, diagSnap } from "@/lib/diag";
 import DiagLoading from "@/components/diag/DiagLoading";
 
 interface Props {
@@ -22,10 +22,21 @@ interface Props {
  */
 const MasterAdminGuard = ({ children }: Props) => {
   diagCount("MasterAdminGuard", "render");
-  const { user, loading } = useAuth();
-  const { canAccessMasterAdmin, loading: authzLoading } = useAuthorization();
+  const { user, loading, role } = useAuth();
+  const { canAccessMasterAdmin, isGlobalAdmin, loading: authzLoading } = useAuthorization();
   const [resolving, setResolving] = useState(false);
   const [redirectTo, setRedirectTo] = useState<string | null>(null);
+
+  diagSnap("MasterAdminGuard.render", {
+    authLoading: loading,
+    authzLoading,
+    role: role ?? "null",
+    hasUser: !!user,
+    isGlobalAdmin,
+    canAccessMasterAdmin,
+    resolving,
+    redirectTo: redirectTo ?? "null",
+  });
 
   const mountedAtRef = useRef<number>(0);
   const loggedReadyRef = useRef(false);

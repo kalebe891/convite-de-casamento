@@ -36,3 +36,25 @@ export const diagCount = (scope: string, label: string) => {
   console.log(`[DIAG 1.24.15.02] +${t}ms  [${scope}] ${label} #${counters[key]}`);
   return counters[key];
 };
+
+// Etapa 1.24.15.03 — snapshot com detecção de mudança por chave.
+const snapshots: Record<string, string> = {};
+export const diagSnap = (scope: string, values: Record<string, unknown>) => {
+  const snap = Object.entries(values)
+    .map(([k, v]) => `${k}=${String(v)}`)
+    .join(" ");
+  const t = Math.round(performance.now() - T0);
+  // eslint-disable-next-line no-console
+  console.log(`[DIAG 1.24.15.03] +${t}ms  [${scope}] ${snap}`);
+  const prev = snapshots[scope];
+  if (prev !== undefined && prev !== snap) {
+    const prevMap = Object.fromEntries(prev.split(" ").map((p) => p.split("=")));
+    const changes = Object.entries(values)
+      .filter(([k, v]) => prevMap[k] !== String(v))
+      .map(([k, v]) => `${k}: ${prevMap[k]} → ${v}`)
+      .join(" | ");
+    // eslint-disable-next-line no-console
+    console.log(`[DIAG 1.24.15.03] +${t}ms  [${scope}] CHANGED  ${changes}`);
+  }
+  snapshots[scope] = snap;
+};
