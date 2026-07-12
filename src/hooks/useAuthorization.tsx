@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { useAuth } from "./useAuth";
 import { useOptionalWedding } from "@/contexts/WeddingContext";
 import { usePermissions } from "./usePermissions";
-import { diag } from "@/lib/diag";
+import { diag, diagSnap } from "@/lib/diag";
 
 /**
  * Camada centralizada de autorização do frontend (Etapa 1.24.00).
