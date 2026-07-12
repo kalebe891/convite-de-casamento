@@ -82,6 +82,17 @@ export const useAuthorization = (): AuthorizationState => {
     }
   });
 
+  diagSnap("useAuthorization.compute", {
+    authLoading,
+    permsLoading,
+    initialized,
+    role: role ?? "null",
+    hasUser: !!user,
+    isGlobalAdmin,
+    canAccessMasterAdmin,
+    loadingOut: loading,
+  });
+
 
   return {
     loading,
