@@ -35,12 +35,13 @@ export interface AuthorizationState {
 }
 
 export const useAuthorization = (): AuthorizationState => {
-  const { user, role, loading: authLoading } = useAuth();
+  const { user, role, loading: authLoading, roleLoading } = useAuth();
   const weddingContext = useOptionalWedding();
   const { hasPermission, loading: permsLoading, initialized } = usePermissions();
 
   const loading =
     authLoading ||
+    roleLoading ||
     permsLoading ||
     !initialized ||
     Boolean(weddingContext?.loading);
