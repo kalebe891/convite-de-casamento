@@ -9,6 +9,7 @@ interface AuthState {
   session: Session | null;
   role: UserRole;
   loading: boolean;
+  roleLoading: boolean;
   isAdmin: boolean;
 }
 
