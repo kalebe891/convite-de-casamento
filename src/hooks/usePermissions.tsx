@@ -13,16 +13,16 @@ interface PermissionsState {
 }
 
 export const usePermissions = (): PermissionsState => {
-  const { user, role, loading: authLoading } = useAuth();
+  const { user, role, loading: authLoading, roleLoading } = useAuth();
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [loading, setLoading] = useState(true);
   const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
-    devLog('🔍 [usePermissions] Effect triggered:', { role, authLoading, initialized });
+    devLog('🔍 [usePermissions] Effect triggered:', { role, authLoading, roleLoading, initialized });
 
-    if (authLoading) {
-      devLog('⏳ [usePermissions] Waiting for auth to load');
+    if (authLoading || roleLoading) {
+      devLog('⏳ [usePermissions] Waiting for auth/role to resolve');
       return;
     }
 
@@ -35,7 +35,7 @@ export const usePermissions = (): PermissionsState => {
       setPermissions([]);
       setInitialized(true);
     }
-  }, [role, authLoading]);
+  }, [role, authLoading, roleLoading]);
 
   const fetchPermissions = async () => {
     if (!role) {
