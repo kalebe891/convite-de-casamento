@@ -63,7 +63,7 @@ const MasterAdminGuard = ({ children }: Props) => {
   }, [loading, authzLoading, user, canAccessMasterAdmin, resolving]);
 
   useEffect(() => {
-    if (loading) return;
+    if (loading || authzLoading) return;
 
     if (!user) {
       setRedirectTo("/auth");
