@@ -21,7 +21,7 @@ interface AuthState {
  * de role por tenant (compat com Etapas anteriores), sem estado próprio.
  */
 export const useAuth = (): AuthState => {
-  const { user, session, role, loading } = useAuthContext();
+  const { user, session, role, loading, roleLoading } = useAuthContext();
   const weddingContext = useOptionalWedding();
 
   const tenantRole =
@@ -42,6 +42,7 @@ export const useAuth = (): AuthState => {
     loading:
       loading ||
       Boolean(weddingContext?.mode === "tenant-admin" && weddingContext.loading),
+    roleLoading,
     isAdmin: effectiveRole === "admin",
   };
 };
