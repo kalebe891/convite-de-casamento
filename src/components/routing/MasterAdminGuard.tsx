@@ -135,11 +135,11 @@ const MasterAdminGuard = ({ children }: Props) => {
     return () => {
       cancelled = true;
     };
-  }, [user, canAccessMasterAdmin, loading]);
+  }, [user, canAccessMasterAdmin, loading, authzLoading]);
 
-  if (loading || resolving) {
+  if (loading || authzLoading || resolving) {
     return (
-      <DiagLoading source={`MasterAdminGuard[loading=${loading} resolving=${resolving}]`} className="min-h-screen flex items-center justify-center bg-background">
+      <DiagLoading source={`MasterAdminGuard[loading=${loading} authz=${authzLoading} resolving=${resolving}]`} className="min-h-screen flex items-center justify-center bg-background">
         <p className="text-muted-foreground">Carregando...</p>
       </DiagLoading>
     );
