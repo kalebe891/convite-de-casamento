@@ -1,11 +1,9 @@
-import { ReactNode, useEffect, useRef, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useAuthorization } from "@/hooks/useAuthorization";
 import { supabase } from "@/integrations/supabase/client";
 import { buildTenantAdminUrl } from "@/lib/eventType";
-import { diag, diagTimer, diagCount, diagSnap } from "@/lib/diag";
-import DiagLoading from "@/components/diag/DiagLoading";
 
 interface Props {
   children: ReactNode;
@@ -21,46 +19,10 @@ interface Props {
  *  4. Autenticado sem vínculo  -> /acesso-negado
  */
 const MasterAdminGuard = ({ children }: Props) => {
-  diagCount("MasterAdminGuard", "render");
-  const { user, loading, role } = useAuth();
-  const { canAccessMasterAdmin, isGlobalAdmin, loading: authzLoading } = useAuthorization();
+  const { user, loading } = useAuth();
+  const { canAccessMasterAdmin, loading: authzLoading } = useAuthorization();
   const [resolving, setResolving] = useState(false);
   const [redirectTo, setRedirectTo] = useState<string | null>(null);
-
-  diagSnap("MasterAdminGuard.render", {
-    authLoading: loading,
-    authzLoading,
-    role: role ?? "null",
-    hasUser: !!user,
-    isGlobalAdmin,
-    canAccessMasterAdmin,
-    resolving,
-    redirectTo: redirectTo ?? "null",
-  });
-
-  const mountedAtRef = useRef<number>(0);
-  const loggedReadyRef = useRef(false);
-  if (mountedAtRef.current === 0) {
-    mountedAtRef.current = performance.now();
-    diagCount("MasterAdminGuard", "MOUNT");
-    diag("MasterAdminGuard", "mounted");
-  }
-
-  useEffect(() => {
-    return () => diag("MasterAdminGuard", "UNMOUNTED");
-  }, []);
-
-  useEffect(() => {
-    diag(
-      "MasterAdminGuard",
-      `state authLoading=${loading} authzLoading=${authzLoading} hasUser=${!!user} canAccessMasterAdmin=${canAccessMasterAdmin} resolving=${resolving}`
-    );
-    if (!loading && !authzLoading && !loggedReadyRef.current) {
-      const elapsed = Math.round(performance.now() - mountedAtRef.current);
-      diag("MasterAdminGuard", `auth+authz ready after mount (${elapsed}ms)`);
-      loggedReadyRef.current = true;
-    }
-  }, [loading, authzLoading, user, canAccessMasterAdmin, resolving]);
 
   useEffect(() => {
     if (loading || authzLoading) return;
@@ -71,7 +33,6 @@ const MasterAdminGuard = ({ children }: Props) => {
     }
 
     if (canAccessMasterAdmin) {
-      diag("MasterAdminGuard", "granting access — rendering children");
       setRedirectTo(null);
       return;
     }
@@ -139,9 +100,9 @@ const MasterAdminGuard = ({ children }: Props) => {
 
   if (loading || authzLoading || resolving) {
     return (
-      <DiagLoading source={`MasterAdminGuard[loading=${loading} authz=${authzLoading} resolving=${resolving}]`} className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <p className="text-muted-foreground">Carregando...</p>
-      </DiagLoading>
+      </div>
     );
   }
 
