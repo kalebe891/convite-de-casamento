@@ -95,19 +95,6 @@ const Invitation = () => {
   const [qrViewerData, setQrViewerData] = useState<PixQrViewerData | null>(null);
   const redirectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // [DIAG 1.24.06] — instrumentação temporária (remover após validação)
-  useEffect(() => {
-    console.log("[DIAG 1.24.06] Invitation.tsx MOUNTED at", window.location.pathname);
-  }, []);
-  useEffect(() => {
-    console.log("[DIAG 1.24.06] selectedPixIds =", selectedPixIds);
-  }, [selectedPixIds]);
-  useEffect(() => {
-    console.log("[DIAG 1.24.06] confirmedPixDetails =", confirmedPixDetails);
-  }, [confirmedPixDetails]);
-  useEffect(() => {
-    console.log("[DIAG 1.24.06] selectedGiftId =", selectedGiftId);
-  }, [selectedGiftId]);
 
   const REDIRECT_DELAY_MS = 7000;
 
@@ -161,7 +148,6 @@ const Invitation = () => {
   };
 
   const handleTogglePix = async (pix: PixGiftItem, checked: boolean) => {
-    console.log("[DIAG 1.24.06] handleTogglePix called", { pixId: pix.id, checked });
     setSelectedPixIds((prev) => {
       const set = new Set(prev);
       if (checked) set.add(pix.id);
@@ -286,12 +272,6 @@ const Invitation = () => {
         const traditional = all.filter((g: any) => !isPixGift(g));
         const pix = all.filter((g: any) => isPixGift(g));
 
-        // [DIAG 1.24.07] — remover após validação
-        console.log(
-          "[DIAG 1.24.07]",
-          all.map((g: any) => ({ id: g.id, gift_kind: g.gift_kind, name: g.gift_name }))
-        );
-        console.log("[DIAG 1.24.07]", { traditional: traditional.length, pix: pix.length });
 
         // Tradicional: respeitar regra de visibilidade (livre ou meu)
         const traditionalVisible = traditional.filter((g: any) =>
@@ -695,7 +675,7 @@ const Invitation = () => {
                             )}
                             {checked && pix.qr_image_url && (
                               <>
-                                {(() => { console.log("[DIAG 1.24.06] Ver QR Code button rendered for", pix.id); return null; })()}
+                                
                                 <Button
                                   type="button"
                                   size="sm"
