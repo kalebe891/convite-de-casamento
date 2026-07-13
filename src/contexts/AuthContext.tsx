@@ -9,8 +9,6 @@ import {
 } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
-import { diag, diagTimer, diagCount } from "@/lib/diag";
-import DiagLoading from "@/components/diag/DiagLoading";
 
 export type UserRole = string | null;
 
@@ -46,7 +44,6 @@ interface AuthProviderProps {
  *     `role === null` como "sem permissão" durante a janela transitória.
  */
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-  diagCount("AuthProvider", "render");
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [role, setRole] = useState<UserRole>(null);
@@ -60,16 +57,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const fetchUserRole = useCallback(
     async (userId: string, opts: { force?: boolean } = {}) => {
       if (!opts.force && lastFetchedUserIdRef.current === userId) {
-        diag("AuthProvider", `fetchUserRole skipped (cached) for ${userId}`);
         setRoleLoading(false);
         return;
       }
       if (inFlightRoleFetchRef.current) {
-        diag("AuthProvider", "fetchUserRole already in-flight, awaiting");
         return inFlightRoleFetchRef.current;
       }
 
-      const done = diagTimer("AuthProvider", `fetchUserRole(${userId})`);
       const p = (async () => {
         try {
           const { data, error } = await supabase
@@ -79,27 +73,24 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
           // Se a identidade mudou durante o fetch, descartar resultado.
           if (currentUserIdRef.current !== userId) {
-            diag("AuthProvider", `fetchUserRole result discarded — identity changed`);
             return;
           }
 
           if (error) {
-            console.error("❌ [AuthContext] Error fetching user role:", error);
+            console.error("Error fetching user role:", error);
             setRole(null);
           } else {
             const roles = (data || []).map((item) => item.role as string);
             const userRole = roles.includes("admin") ? "admin" : roles[0] ?? null;
             setRole(userRole);
-            diag("AuthProvider", `role resolved = ${userRole ?? "null"}`);
           }
           lastFetchedUserIdRef.current = userId;
         } catch (err) {
-          console.error("❌ [AuthContext] Exception fetching user role:", err);
+          console.error("Exception fetching user role:", err);
           if (currentUserIdRef.current === userId) setRole(null);
         } finally {
           inFlightRoleFetchRef.current = null;
           if (currentUserIdRef.current === userId) setRoleLoading(false);
-          done();
         }
       })();
 
@@ -111,8 +102,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   useEffect(() => {
     let mounted = true;
-    diagCount("AuthProvider", "MOUNT effect");
-    diag("AuthProvider", "mounted");
 
     const {
       data: { subscription },
@@ -121,11 +110,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       const nextUserId = nextSession?.user?.id ?? null;
       const prevUserId = currentUserIdRef.current;
       const sameIdentity = nextUserId !== null && nextUserId === prevUserId;
-
-      diag(
-        "AuthProvider",
-        `onAuthStateChange event=${event} hasUser=${!!nextUserId} sameIdentity=${sameIdentity}`
-      );
 
       setSession(nextSession);
       setUser(nextSession?.user ?? null);
@@ -142,7 +126,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
       if (!sameIdentity) {
         // Troca de identidade: limpar role anterior antes de resolver a nova.
-        diag("AuthProvider", `identity change ${prevUserId ?? "null"} → ${nextUserId}`);
         currentUserIdRef.current = nextUserId;
         lastFetchedUserIdRef.current = null;
         setRole(null);
@@ -154,9 +137,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       // Mesma identidade (TOKEN_REFRESHED, USER_UPDATED, SIGNED_IN repetido):
       // NÃO limpar role. Apenas revalidar em background se necessário.
       if (event === "TOKEN_REFRESHED" || event === "USER_UPDATED") {
-        diag("AuthProvider", `same-identity ${event} — preserving role`);
-        // opcional: revalidar sem limpar
-        // fetchUserRole(nextUserId, { force: true });
         return;
       }
 
@@ -166,12 +146,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       }
     });
 
-    const doneGetSession = diagTimer("AuthProvider", "getSession");
     supabase.auth.getSession().then(async ({ data: { session: initial } }) => {
-      doneGetSession();
       if (!mounted) return;
       const initialUserId = initial?.user?.id ?? null;
-      diag("AuthProvider", `initial session hasUser=${!!initialUserId}`);
       setSession(initial);
       setUser(initial?.user ?? null);
       currentUserIdRef.current = initialUserId;
@@ -183,7 +160,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       }
 
       if (mounted) {
-        diag("AuthProvider", "loading=false (initial resolve complete)");
         setLoading(false);
       }
     });
@@ -191,16 +167,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     return () => {
       mounted = false;
       subscription.unsubscribe();
-      diag("AuthProvider", "UNMOUNTED (effect cleanup)");
     };
   }, [fetchUserRole]);
 
   return (
     <AuthContext.Provider value={{ user, session, role, loading, roleLoading }}>
       {loading ? (
-        <DiagLoading source="AuthProvider[loading-splash]" className="min-h-screen flex items-center justify-center bg-background">
+        <div className="min-h-screen flex items-center justify-center bg-background">
           <p className="text-muted-foreground">Carregando...</p>
-        </DiagLoading>
+        </div>
       ) : (
         children
       )}

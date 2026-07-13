@@ -21,7 +21,7 @@ import CreateEventDialog from "@/components/admin/CreateEventDialog";
 import DeleteTenantDialog from "@/components/admin/DeleteTenantDialog";
 import TenantViewToggle, { type TenantViewMode } from "@/components/admin/TenantViewToggle";
 import TenantTable from "@/components/admin/TenantTable";
-import { diag, diagTimer, diagCount } from "@/lib/diag";
+
 
 const VIEW_STORAGE_KEY = "master_tenant_view";
 
@@ -95,11 +95,6 @@ function statusLabel(s: EventStatus | null) {
 }
 
 export default function MasterDashboard() {
-  diagCount("MasterDashboard", "render");
-  useEffect(() => {
-    diag("MasterDashboard", "MOUNTED");
-    return () => diag("MasterDashboard", "UNMOUNTED");
-  }, []);
   const navigate = useNavigate();
   const [weddings, setWeddings] = useState<Wedding[]>([]);
   const [counts, setCounts] = useState<Record<string, Counts>>({});
@@ -130,32 +125,22 @@ export default function MasterDashboard() {
   const load = async () => {
     setLoading(true);
     setError(null);
-    const doneAll = diagTimer("MasterDashboard", "load() total");
-    const doneWeddings = diagTimer("MasterDashboard", "SELECT wedding_details");
     const { data, error: err } = await supabase
       .from("wedding_details")
       .select("id,slug,event_type,theme_id,bride_name,groom_name,wedding_date,created_at,tenant_status,expires_at,archived_at,is_public_showcase,is_demo,demo_expires_at")
       .order("created_at", { ascending: false });
-    doneWeddings();
 
     if (err) {
       setError(err.message);
       setLoading(false);
-      doneAll();
-      diag("MasterDashboard", `wedding_details error: ${err.message}`);
       return;
     }
 
     const list = (data ?? []) as Wedding[];
-    diag("MasterDashboard", `wedding_details rows=${list.length}`);
     setWeddings(list);
     setLoading(false);
 
     // Fetch counts per tenant (scoped by wedding_id)
-    const doneCounts = diagTimer(
-      "MasterDashboard",
-      `counts fanout (${list.length} tenants × 4 queries = ${list.length * 4})`
-    );
     const results = await Promise.all(
       list.map(async (w) => {
         const [g, gi, ph, inv] = await Promise.all([
@@ -175,13 +160,10 @@ export default function MasterDashboard() {
         ] as const;
       })
     );
-    doneCounts();
     setCounts(Object.fromEntries(results));
-    doneAll();
   };
 
   useEffect(() => {
-    diag("MasterDashboard", "mounted — dispatching load()");
     load();
   }, []);
 
