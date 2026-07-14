@@ -73,16 +73,26 @@ export const useAuthorization = (): AuthorizationState => {
   const canManageUsers =
     canAccessAdmin && hasPermission("usuarios", "edit");
 
-
-
-  return {
-    loading,
-    isAuthenticated,
-    isGlobalAdmin,
-    isDemoExpired,
-    canAccessAdmin,
-    canAccessMasterAdmin,
-    canManageGuests,
-    canManageUsers,
-  };
+  return useMemo<AuthorizationState>(
+    () => ({
+      loading,
+      isAuthenticated,
+      isGlobalAdmin,
+      isDemoExpired,
+      canAccessAdmin,
+      canAccessMasterAdmin,
+      canManageGuests,
+      canManageUsers,
+    }),
+    [
+      loading,
+      isAuthenticated,
+      isGlobalAdmin,
+      isDemoExpired,
+      canAccessAdmin,
+      canAccessMasterAdmin,
+      canManageGuests,
+      canManageUsers,
+    ]
+  );
 };
