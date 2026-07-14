@@ -74,7 +74,7 @@ export const useRequireRole = (requiredRole: string | string[]) => {
         }
       }
     }
-  }, [user, role, authLoading, permissionsLoading, initialized, navigate, requiredRole, location.pathname, hasPermission, hasRedirected]);
+  }, [user, role, authLoading, roleLoading, permissionsLoading, initialized, navigate, requiredRole, location.pathname, hasPermission, hasRedirected]);
 
-  return { user, role, loading: authLoading || permissionsLoading };
+  return { user, role, loading: authLoading || roleLoading || permissionsLoading };
 };
