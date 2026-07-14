@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { useOptionalWedding } from "@/contexts/WeddingContext";
 import type { User, Session } from "@supabase/supabase-js";
@@ -33,16 +34,19 @@ export const useAuth = (): AuthState => {
         )?.role ?? null
       : null;
 
-  const effectiveRole = tenantRole ?? role;
+  const weddingLoading = Boolean(
+    weddingContext?.mode === "tenant-admin" && weddingContext.loading
+  );
 
-  return {
-    user,
-    session,
-    role: effectiveRole,
-    loading:
-      loading ||
-      Boolean(weddingContext?.mode === "tenant-admin" && weddingContext.loading),
-    roleLoading,
-    isAdmin: effectiveRole === "admin",
-  };
+  return useMemo<AuthState>(() => {
+    const effectiveRole = tenantRole ?? role;
+    return {
+      user,
+      session,
+      role: effectiveRole,
+      loading: loading || weddingLoading,
+      roleLoading,
+      isAdmin: effectiveRole === "admin",
+    };
+  }, [user, session, role, tenantRole, loading, weddingLoading, roleLoading]);
 };

@@ -14,12 +14,12 @@ import { devLog } from "@/lib/devLog";
 export const useRequireRole = (requiredRole: string | string[]) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, role, loading: authLoading } = useAuth();
+  const { user, role, loading: authLoading, roleLoading } = useAuth();
   const { hasPermission, loading: permissionsLoading, initialized } = usePermissions();
   const [hasRedirected, setHasRedirected] = useState(false);
 
   useEffect(() => {
-    if (authLoading || permissionsLoading || !initialized) {
+    if (authLoading || roleLoading || permissionsLoading || !initialized) {
       return;
     }
 
@@ -74,7 +74,7 @@ export const useRequireRole = (requiredRole: string | string[]) => {
         }
       }
     }
-  }, [user, role, authLoading, permissionsLoading, initialized, navigate, requiredRole, location.pathname, hasPermission, hasRedirected]);
+  }, [user, role, authLoading, roleLoading, permissionsLoading, initialized, navigate, requiredRole, location.pathname, hasPermission, hasRedirected]);
 
-  return { user, role, loading: authLoading || permissionsLoading };
+  return { user, role, loading: authLoading || roleLoading || permissionsLoading };
 };
