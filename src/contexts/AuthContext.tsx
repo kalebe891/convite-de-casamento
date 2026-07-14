@@ -173,8 +173,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     };
   }, [fetchUserRole]);
 
+  const value = useMemo<AuthContextValue>(
+    () => ({ user, session, role, loading, roleLoading }),
+    [user, session, role, loading, roleLoading]
+  );
+
   return (
-    <AuthContext.Provider value={{ user, session, role, loading, roleLoading }}>
+    <AuthContext.Provider value={value}>
       {loading ? (
         <div className="min-h-screen flex items-center justify-center bg-background">
           <p className="text-muted-foreground">Carregando...</p>
