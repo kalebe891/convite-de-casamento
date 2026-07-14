@@ -52,7 +52,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [roleLoading, setRoleLoading] = useState(true);
 
   const lastFetchedUserIdRef = useRef<string | null>(null);
-  const inFlightRoleFetchRef = useRef<Promise<void> | null>(null);
+  const inFlightRoleFetchRef = useRef<{ userId: string; promise: Promise<void> } | null>(null);
   const currentUserIdRef = useRef<string | null>(null);
 
   const fetchUserRole = useCallback(
@@ -61,21 +61,21 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         setRoleLoading(false);
         return;
       }
-      if (inFlightRoleFetchRef.current) {
-        return inFlightRoleFetchRef.current;
+      // Reuse only if in-flight fetch belongs to the SAME user.
+      const inFlight = inFlightRoleFetchRef.current;
+      if (inFlight && inFlight.userId === userId) {
+        return inFlight.promise;
       }
 
-      const p = (async () => {
+      const promise = (async () => {
         try {
           const { data, error } = await supabase
             .from("user_roles")
             .select("role")
             .eq("user_id", userId);
 
-          // Se a identidade mudou durante o fetch, descartar resultado.
-          if (currentUserIdRef.current !== userId) {
-            return;
-          }
+          // Discard stale response (identity changed mid-flight).
+          if (currentUserIdRef.current !== userId) return;
 
           if (error) {
             console.error("Error fetching user role:", error);
@@ -90,13 +90,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           console.error("Exception fetching user role:", err);
           if (currentUserIdRef.current === userId) setRole(null);
         } finally {
-          inFlightRoleFetchRef.current = null;
+          if (inFlightRoleFetchRef.current?.userId === userId) {
+            inFlightRoleFetchRef.current = null;
+          }
           if (currentUserIdRef.current === userId) setRoleLoading(false);
         }
       })();
 
-      inFlightRoleFetchRef.current = p;
-      return p;
+      inFlightRoleFetchRef.current = { userId, promise };
+      return promise;
     },
     []
   );
