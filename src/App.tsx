@@ -17,6 +17,7 @@ import LandingHome from "./pages/LandingHome";
 import WeddingLanding from "./pages/WeddingLanding";
 import EventTypeLanding from "./pages/EventTypeLanding";
 import BirthdayLanding from "./pages/BirthdayLanding";
+import IncompleteRoutePage from "./pages/IncompleteRoutePage";
 import TenantPublicLayout from "./components/routing/TenantPublicLayout";
 import TenantAdminGuard from "./components/routing/TenantAdminGuard";
 import MasterAdminGuard from "./components/routing/MasterAdminGuard";
@@ -35,6 +36,29 @@ import Logs from "./pages/admin/Logs";
 import Eventos from "./pages/admin/Eventos";
 import MasterDashboard from "./pages/admin/MasterDashboard";
 import PenteadosMadrinha from "./pages/blog/PenteadosMadrinha";
+import { useParams } from "react-router-dom";
+
+const IncompleteEventTypeRoute = () => {
+  const { eventType } = useParams();
+  return (
+    <IncompleteRoutePage
+      title="Convite não encontrado"
+      description="Para visualizar um convite é necessário utilizar o link enviado pelo anfitrião."
+      destination={`/${eventType ?? ""}`}
+    />
+  );
+};
+
+const IncompleteTenantInviteRoute = () => {
+  const { eventType, slug } = useParams();
+  return (
+    <IncompleteRoutePage
+      title="Convite não encontrado"
+      description="O convite informado está incompleto. Para visualizar um convite é necessário utilizar o link enviado pelo anfitrião."
+      destination={`/${eventType ?? ""}/${slug ?? ""}`}
+    />
+  );
+};
 
 const queryClient = new QueryClient();
 
@@ -90,6 +114,19 @@ const App = () => {
           {/* Rota legada pública (mantida) */}
           <Route path="/convite/:invitation_code" element={<Invitation />} />
 
+          {/* Rotas institucionais de convite incompleto */}
+          <Route
+            path="/convite"
+            element={
+              <IncompleteRoutePage
+                title="Convite não encontrado"
+                description="Para visualizar um convite é necessário utilizar o link enviado pelo anfitrião."
+                destination="/"
+              />
+            }
+          />
+          <Route path="/:eventType/convite" element={<IncompleteEventTypeRoute />} />
+
           {/* ===== Master Admin global (/admin) ===== */}
           <Route
             path="/admin"
@@ -116,6 +153,9 @@ const App = () => {
             {tenantAdminChildren}
           </Route>
 
+          {/* Rota institucional para convite incompleto de tenant */}
+          <Route path="/:eventType/:slug/convite" element={<IncompleteTenantInviteRoute />} />
+
           {/* ===== Tenant público: /:eventType/:slug ===== */}
           <Route
             path="/:eventType/:slug"
@@ -126,9 +166,9 @@ const App = () => {
             }
           >
             <Route index element={<ThemeRenderer />} />
-            <Route path="convite" element={<ThemeRenderer />} />
             <Route path="rsvp" element={<ThemeRenderer />} />
           </Route>
+
 
           <Route path="*" element={<NotFound />} />
         </Routes>
