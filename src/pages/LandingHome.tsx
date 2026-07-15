@@ -230,7 +230,7 @@ const LandingHome = () => {
       </section>
 
       {/* MULTI-EVENTO */}
-      <section id="produtos" className="border-t border-border/40 bg-muted/30 py-16 sm:py-20 md:py-28">
+      <section id="solucoes" className="border-t border-border/40 bg-muted/30 py-16 sm:py-20 md:py-28">
         <div className="container mx-auto px-4">
           <div className="mx-auto mb-10 max-w-2xl text-center sm:mb-14">
             <p className="text-xs uppercase tracking-[0.2em] text-primary">Soluções</p>
