@@ -120,19 +120,28 @@ const LandingHome = () => {
               A plataforma criada para substitui a gráfica e as planilhas!{"\n"}&nbsp;Sem taxas sobre seus presentes com&nbsp;gestão&nbsp;centralizada de confirmações de presença e de convidados em um único painel.
             </p>
             <div className="mt-8 flex flex-col items-stretch justify-center gap-3 sm:mt-10 sm:flex-row sm:items-center">
-              <Link to="/casamento" className="sm:w-auto">
-                <Button size="lg" className="group w-full sm:w-auto">
-                  Criar meu convite
-                  <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-                </Button>
-              </Link>
               <a
-                href="#produtos"
+                href="#solucoes"
                 className="sm:w-auto"
                 onClick={(e) => {
                   e.preventDefault();
                   document
-                    .getElementById("produtos")
+                    .getElementById("solucoes")
+                    ?.scrollIntoView({ behavior: "smooth", block: "start" });
+                }}
+              >
+                <Button size="lg" className="group w-full sm:w-auto">
+                  Criar meu convite
+                  <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                </Button>
+              </a>
+              <a
+                href="#solucoes"
+                className="sm:w-auto"
+                onClick={(e) => {
+                  e.preventDefault();
+                  document
+                    .getElementById("solucoes")
                     ?.scrollIntoView({ behavior: "smooth", block: "start" });
                 }}
               >
@@ -221,7 +230,7 @@ const LandingHome = () => {
       </section>
 
       {/* MULTI-EVENTO */}
-      <section id="produtos" className="border-t border-border/40 bg-muted/30 py-16 sm:py-20 md:py-28">
+      <section id="solucoes" className="border-t border-border/40 bg-muted/30 py-16 sm:py-20 md:py-28">
         <div className="container mx-auto px-4">
           <div className="mx-auto mb-10 max-w-2xl text-center sm:mb-14">
             <p className="text-xs uppercase tracking-[0.2em] text-primary">Soluções</p>
