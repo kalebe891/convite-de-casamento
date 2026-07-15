@@ -36,6 +36,29 @@ import Logs from "./pages/admin/Logs";
 import Eventos from "./pages/admin/Eventos";
 import MasterDashboard from "./pages/admin/MasterDashboard";
 import PenteadosMadrinha from "./pages/blog/PenteadosMadrinha";
+import { useParams } from "react-router-dom";
+
+const IncompleteEventTypeRoute = () => {
+  const { eventType } = useParams();
+  return (
+    <IncompleteRoutePage
+      title="Convite não encontrado"
+      description="Para visualizar um convite é necessário utilizar o link enviado pelo anfitrião."
+      destination={`/${eventType ?? ""}`}
+    />
+  );
+};
+
+const IncompleteTenantInviteRoute = () => {
+  const { eventType, slug } = useParams();
+  return (
+    <IncompleteRoutePage
+      title="Convite não encontrado"
+      description="O convite informado está incompleto. Para visualizar um convite é necessário utilizar o link enviado pelo anfitrião."
+      destination={`/${eventType ?? ""}/${slug ?? ""}`}
+    />
+  );
+};
 
 const queryClient = new QueryClient();
 
