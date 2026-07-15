@@ -17,6 +17,7 @@ import LandingHome from "./pages/LandingHome";
 import WeddingLanding from "./pages/WeddingLanding";
 import EventTypeLanding from "./pages/EventTypeLanding";
 import BirthdayLanding from "./pages/BirthdayLanding";
+import IncompleteRoutePage from "./pages/IncompleteRoutePage";
 import TenantPublicLayout from "./components/routing/TenantPublicLayout";
 import TenantAdminGuard from "./components/routing/TenantAdminGuard";
 import MasterAdminGuard from "./components/routing/MasterAdminGuard";
