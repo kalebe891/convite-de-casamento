@@ -91,6 +91,19 @@ const App = () => {
           {/* Rota legada pública (mantida) */}
           <Route path="/convite/:invitation_code" element={<Invitation />} />
 
+          {/* Rotas institucionais de convite incompleto */}
+          <Route
+            path="/convite"
+            element={
+              <IncompleteRoutePage
+                title="Convite não encontrado"
+                description="Para visualizar um convite é necessário utilizar o link enviado pelo anfitrião."
+                destination="/"
+              />
+            }
+          />
+
+
           {/* ===== Master Admin global (/admin) ===== */}
           <Route
             path="/admin"
