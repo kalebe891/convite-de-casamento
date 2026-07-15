@@ -102,7 +102,7 @@ const App = () => {
               />
             }
           />
-
+          <Route path="/:eventType/convite" element={<IncompleteEventTypeRoute />} />
 
           {/* ===== Master Admin global (/admin) ===== */}
           <Route
@@ -130,6 +130,9 @@ const App = () => {
             {tenantAdminChildren}
           </Route>
 
+          {/* Rota institucional para convite incompleto de tenant */}
+          <Route path="/:eventType/:slug/convite" element={<IncompleteTenantInviteRoute />} />
+
           {/* ===== Tenant público: /:eventType/:slug ===== */}
           <Route
             path="/:eventType/:slug"
@@ -140,9 +143,9 @@ const App = () => {
             }
           >
             <Route index element={<ThemeRenderer />} />
-            <Route path="convite" element={<ThemeRenderer />} />
             <Route path="rsvp" element={<ThemeRenderer />} />
           </Route>
+
 
           <Route path="*" element={<NotFound />} />
         </Routes>
