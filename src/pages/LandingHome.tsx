@@ -136,12 +136,12 @@ const LandingHome = () => {
                 </Button>
               </a>
               <a
-                href="#produtos"
+                href="#solucoes"
                 className="sm:w-auto"
                 onClick={(e) => {
                   e.preventDefault();
                   document
-                    .getElementById("produtos")
+                    .getElementById("solucoes")
                     ?.scrollIntoView({ behavior: "smooth", block: "start" });
                 }}
               >
