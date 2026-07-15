@@ -120,12 +120,21 @@ const LandingHome = () => {
               A plataforma criada para substitui a gráfica e as planilhas!{"\n"}&nbsp;Sem taxas sobre seus presentes com&nbsp;gestão&nbsp;centralizada de confirmações de presença e de convidados em um único painel.
             </p>
             <div className="mt-8 flex flex-col items-stretch justify-center gap-3 sm:mt-10 sm:flex-row sm:items-center">
-              <Link to="/casamento" className="sm:w-auto">
+              <a
+                href="#solucoes"
+                className="sm:w-auto"
+                onClick={(e) => {
+                  e.preventDefault();
+                  document
+                    .getElementById("solucoes")
+                    ?.scrollIntoView({ behavior: "smooth", block: "start" });
+                }}
+              >
                 <Button size="lg" className="group w-full sm:w-auto">
                   Criar meu convite
                   <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </Button>
-              </Link>
+              </a>
               <a
                 href="#produtos"
                 className="sm:w-auto"
