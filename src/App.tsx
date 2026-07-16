@@ -35,7 +35,7 @@ import Checkin from "./pages/admin/Checkin";
 import Logs from "./pages/admin/Logs";
 import Eventos from "./pages/admin/Eventos";
 import MasterDashboard from "./pages/admin/MasterDashboard";
-import PenteadosMadrinha from "./pages/blog/PenteadosMadrinha";
+
 import { useParams } from "react-router-dom";
 
 const IncompleteEventTypeRoute = () => {
