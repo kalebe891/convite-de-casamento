@@ -35,6 +35,7 @@ import Checkin from "./pages/admin/Checkin";
 import Logs from "./pages/admin/Logs";
 import Eventos from "./pages/admin/Eventos";
 import MasterDashboard from "./pages/admin/MasterDashboard";
+import AdminNotFound from "./pages/admin/AdminNotFound";
 
 import { useParams } from "react-router-dom";
 
@@ -77,12 +78,14 @@ const tenantAdminChildren = (
     <Route path="momentos" element={<Momentos />} />
     <Route path="estatisticas" element={<Estatisticas />} />
     <Route path="logs" element={<Logs />} />
+    <Route path="*" element={<AdminNotFound />} />
   </>
 );
 
 const masterAdminChildren = (
   <>
     <Route index element={<MasterDashboard />} />
+    <Route path="*" element={<AdminNotFound />} />
   </>
 );
 
