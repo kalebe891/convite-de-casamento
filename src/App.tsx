@@ -83,10 +83,7 @@ const tenantAdminChildren = (
 );
 
 const masterAdminChildren = (
-  <>
-    <Route index element={<MasterDashboard />} />
-    <Route path="*" element={<AdminNotFound />} />
-  </>
+  <Route index element={<MasterDashboard />} />
 );
 
 const App = () => {
@@ -141,6 +138,13 @@ const App = () => {
           >
             {masterAdminChildren}
           </Route>
+          {/* Catch-all público: subrotas inválidas de /admin caem no AdminNotFound
+              mesmo para não autenticados, sem tocar no Guard nem no Layout.
+              Duas rotas são necessárias porque o índice de /:eventType/:slug tem
+              a mesma pontuação que /admin/*; a rota de 1 segmento adicional tem
+              prioridade explícita, e /admin/* cobre 2+ segmentos extras. */}
+          <Route path="/admin/:any" element={<AdminNotFound />} />
+          <Route path="/admin/*" element={<AdminNotFound />} />
 
           {/* ===== Tenant admin: /:eventType/:slug/admin/* ===== */}
           <Route
