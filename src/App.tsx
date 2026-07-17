@@ -128,19 +128,19 @@ const App = () => {
           <Route path="/:eventType/convite" element={<IncompleteEventTypeRoute />} />
 
           {/* ===== Master Admin global (/admin) ===== */}
-          <Route path="/admin">
-            <Route
-              element={
-                <MasterAdminGuard>
-                  <MasterAdminLayout />
-                </MasterAdminGuard>
-              }
-            >
-              {masterAdminChildren}
-            </Route>
-            {/* Catch-all público: garante AdminNotFound mesmo para não autenticados. */}
-            <Route path="*" element={<AdminNotFound />} />
+          <Route
+            path="/admin"
+            element={
+              <MasterAdminGuard>
+                <MasterAdminLayout />
+              </MasterAdminGuard>
+            }
+          >
+            {masterAdminChildren}
           </Route>
+          {/* Catch-all público: subrotas inválidas de /admin caem no AdminNotFound
+              mesmo para usuários não autenticados, sem tocar no Guard nem no Layout. */}
+          <Route path="/admin/*" element={<AdminNotFound />} />
 
           {/* ===== Tenant admin: /:eventType/:slug/admin/* ===== */}
           <Route
