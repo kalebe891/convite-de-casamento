@@ -83,10 +83,7 @@ const tenantAdminChildren = (
 );
 
 const masterAdminChildren = (
-  <>
-    <Route index element={<MasterDashboard />} />
-    <Route path="*" element={<AdminNotFound />} />
-  </>
+  <Route index element={<MasterDashboard />} />
 );
 
 const App = () => {
