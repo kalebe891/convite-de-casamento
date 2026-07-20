@@ -1,4 +1,4 @@
-import { SITE_URL } from "@/components/seo/SeoHead";
+import { SITE_URL } from "@/lib/siteUrl";
 
 /**
  * Bucket público onde as fotos dos tenants são armazenadas.
