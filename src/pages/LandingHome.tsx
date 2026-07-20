@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import MarketingHeader from "@/components/marketing/MarketingHeader";
 import MarketingFooter from "@/components/marketing/MarketingFooter";
-import SEO from "@/components/seo/SEO";
+import SeoHead, { SITE_URL } from "@/components/seo/SeoHead";
 
 const products = [
   {
@@ -93,10 +93,10 @@ const comparativo = [
 const LandingHome = () => {
   return (
     <div className="marketing-theme min-h-screen bg-background text-foreground">
-      <SEO
+      <SeoHead
         title="Convites Digitais Premium e Gestão Inteligente"
         description="Plataforma premium para criar convites digitais com RSVP, lista de presentes sem taxas, cronograma e painel administrativo."
-        path="/"
+        canonical={`${SITE_URL}/`}
       />
       <MarketingHeader />
 

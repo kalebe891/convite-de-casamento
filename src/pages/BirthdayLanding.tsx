@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Cake, ArrowLeft, Construction } from "lucide-react";
 import MarketingHeader from "@/components/marketing/MarketingHeader";
 import MarketingFooter from "@/components/marketing/MarketingFooter";
-import SEO from "@/components/seo/SEO";
+import SeoHead, { SITE_URL } from "@/components/seo/SeoHead";
 
 const BirthdayLanding = () => {
   return (

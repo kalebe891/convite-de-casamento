@@ -18,7 +18,7 @@ import MarketingFooter from "@/components/marketing/MarketingFooter";
 import ShowcaseSection from "@/components/marketing/ShowcaseSection";
 import ThemesShowcaseSection from "@/components/marketing/ThemesShowcaseSection";
 import DemoSignupDialog from "@/components/marketing/DemoSignupDialog";
-import SEO from "@/components/seo/SEO";
+import SeoHead, { SITE_URL } from "@/components/seo/SeoHead";
 
 const WHATSAPP_URL =
   "https://api.whatsapp.com/send/?phone=5562992485994&text=Olá,%20Quero%20criar%20o%20meu%20convite%20de%20casamento.&type=phone_number&app_absent=0";
@@ -85,10 +85,10 @@ const WeddingLanding = () => {
   const [demoOpen, setDemoOpen] = useState(false);
   return (
     <div className="marketing-theme min-h-screen bg-background text-foreground">
-      <SEO
+      <SeoHead
         title="Convite de Casamento Digital | Página exclusiva, RSVP e presentes"
         description="Crie uma página de casamento exclusiva com RSVP integrado, lista de presentes e cronograma. Personalização rápida, visual elegante e gestão completa em um único painel."
-        path="/casamento"
+        canonical={`${SITE_URL}/casamento`}
       />
       <MarketingHeader />
 
