@@ -1,4 +1,5 @@
 import { Helmet } from "react-helmet-async";
+import { resolvePublicImageUrl, DEFAULT_OG_IMAGE } from "@/lib/publicImage";
 
 /**
  * URL pública base do projeto. Utilizada para gerar canonical/og:url absolutos.
