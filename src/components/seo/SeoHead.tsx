@@ -60,8 +60,6 @@ const SeoHead = ({
 }: SeoHeadProps) => {
   // `resolvePublicImageUrl` garante URL absoluta (bucket público do Storage
   // ou passthrough se já for absoluta). Fallback institucional absoluto.
-  // Import local para evitar ciclo com src/lib/publicImage.ts (que importa SITE_URL).
-  const { resolvePublicImageUrl, DEFAULT_OG_IMAGE } = require("@/lib/publicImage") as typeof import("@/lib/publicImage");
   const img = resolvePublicImageUrl(image) ?? DEFAULT_OG_IMAGE;
 
   return (
