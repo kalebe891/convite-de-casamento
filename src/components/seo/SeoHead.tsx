@@ -1,11 +1,9 @@
 import { Helmet } from "react-helmet-async";
 import { resolvePublicImageUrl, DEFAULT_OG_IMAGE } from "@/lib/publicImage";
+import { SITE_URL } from "@/lib/siteUrl";
 
-/**
- * URL pública base do projeto. Utilizada para gerar canonical/og:url absolutos.
- * Reutilizada por SEO.tsx (wrapper legado baseado em `path`).
- */
-export const SITE_URL = "https://convite-de-evento.lovable.app";
+/** Reexport para compatibilidade com módulos que importavam SITE_URL daqui. */
+export { SITE_URL };
 
 export interface SeoHeadProps {
   title: string;
