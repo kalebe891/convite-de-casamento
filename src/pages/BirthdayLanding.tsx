@@ -8,10 +8,10 @@ import SeoHead, { SITE_URL } from "@/components/seo/SeoHead";
 const BirthdayLanding = () => {
   return (
     <div className="marketing-theme min-h-screen bg-background text-foreground flex flex-col">
-      <SEO
+      <SeoHead
         title="Convites para Aniversários | Em breve"
         description="Estamos preparando uma experiência completa de convites digitais para aniversários. Em breve."
-        path="/aniversario"
+        canonical={`${SITE_URL}/aniversario`}
       />
       <MarketingHeader />
 
