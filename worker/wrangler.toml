@@ -1,0 +1,21 @@
+# Etapa 1.25.5 — Configuração mínima e reversível do Edge Worker.
+#
+# Esta configuração NÃO ativa interceptação de produção. Não define
+# `routes = [...]` nem `zone_id`. Deploy real depende de uma zona
+# Cloudflare sob controle do projeto, o que ainda não existe.
+#
+# Quando a zona existir, adicionar rotas específicas (ex.:
+# "seu-dominio.com/casamento/*" e "seu-dominio.com/aniversario/*").
+# Nunca usar "*/*" sem revisão.
+
+name = "edge-seo-renderer"
+main = "src/index.ts"
+compatibility_date = "2024-11-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Origem do frontend — NÃO hardcodar o domínio nos arquivos .ts.
+# Definir externamente com `wrangler secret put FRONTEND_ORIGIN`
+# ou sobrescrever por ambiente. O valor abaixo é apenas placeholder
+# de desenvolvimento e deve ser trocado antes de qualquer deploy real.
+[vars]
+FRONTEND_ORIGIN = "http://localhost:8080"
