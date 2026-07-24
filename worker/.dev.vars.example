@@ -1,0 +1,12 @@
+# Exemplo de configuração local para `wrangler dev`.
+# Copie para `worker/.dev.vars` (não versionado) e ajuste.
+#
+# NENHUM destes valores é lido em produção. Em produção/staging os
+# valores vêm de `wrangler secret put ... --env <ambiente>`.
+
+FRONTEND_ORIGIN="http://localhost:8080"
+
+# Necessário para o Worker gerar SEO por tenant contra um Supabase de teste.
+# Use SEMPRE um projeto Supabase de desenvolvimento — jamais o de produção.
+SUPABASE_URL=""
+SUPABASE_ANON_KEY=""

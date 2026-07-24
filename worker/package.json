@@ -1,14 +1,17 @@
 {
   "name": "edge-seo-renderer",
-  "version": "1.25.5",
+  "version": "1.25.11",
   "private": true,
   "description": "Cloudflare Worker foundation for tenant Link Preview SEO. Isolated from the Vite/React frontend.",
   "type": "module",
   "main": "src/index.ts",
   "scripts": {
     "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "bun test",
     "dev": "wrangler dev",
-    "deploy": "wrangler deploy"
+    "deploy:preview": "wrangler deploy --env staging --dry-run",
+    "deploy:staging": "wrangler deploy --env staging",
+    "deploy:production": "wrangler deploy --env production"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20240718.0",
