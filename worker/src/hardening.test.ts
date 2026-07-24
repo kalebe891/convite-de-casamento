@@ -92,12 +92,14 @@ describe("hardening — proxy não aceita destino arbitrário", () => {
       env,
     );
 
-    // Todo fetch de origem deve começar por FRONTEND_ORIGIN, nunca por evil.example.
+    // O host de destino deve ser SEMPRE FRONTEND_ORIGIN, independentemente
+    // de query strings, headers Host ou X-Forwarded-Host do cliente.
     const originFetches = seen.filter((u) => !u.includes("supabase.co"));
     expect(originFetches.length).toBeGreaterThan(0);
     for (const u of originFetches) {
-      expect(u.startsWith("https://trusted.internal/")).toBe(true);
-      expect(u).not.toContain("evil.example");
+      const parsed = new URL(u);
+      expect(parsed.origin).toBe("https://trusted.internal");
+      expect(parsed.hostname).not.toBe("evil.example");
     }
   });
 
