@@ -49,8 +49,15 @@ describe("matchTenantRoute", () => {
     expect(matchTenantRoute("/casamento/foo.png")).toBeNull();
   });
 
+  it("normalizes uppercase slug to lowercase (matches)", () => {
+    expect(matchTenantRoute("/casamento/UPPER")).toEqual({
+      eventType: "casamento",
+      slug: "upper",
+    });
+  });
+
   it("rejects invalid slug chars", () => {
-    expect(matchTenantRoute("/casamento/UPPER")).toBeNull();
     expect(matchTenantRoute("/casamento/with space")).toBeNull();
+    expect(matchTenantRoute("/casamento/-badstart")).toBeNull();
   });
 });
