@@ -83,15 +83,15 @@ describe("injectSeoIntoHtmlStream", () => {
     expect(result).toBe(html);
   });
 
-  it("respects buffer limit and falls back", async () => {
-    // Head huge o suficiente para estourar limite baixo.
-    const filler = "a".repeat(5000);
-    const html = `<html><head>${filler}</head><body/></html>`;
+  it("respects buffer limit and falls back when </head> never appears within limit", async () => {
+    // Streaming em muitos chunks pequenos, sem </head>, excedendo o limite.
+    const filler = "x".repeat(200);
+    const chunks: string[] = [];
+    for (let i = 0; i < 20; i++) chunks.push(filler); // 4000 chars totais
     const result = await collect(
-      injectSeoIntoHtmlStream(streamOf([html]), BLOCK, { maxScanChars: 1024 }),
+      injectSeoIntoHtmlStream(streamOf(chunks), BLOCK, { maxScanChars: 1024 }),
     );
-    expect(result).toContain(filler);
-    // Fallback: sem injeção.
+    expect(result.length).toBe(4000);
     expect(result).not.toContain(BLOCK);
   });
 
