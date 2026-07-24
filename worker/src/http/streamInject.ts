@@ -70,11 +70,13 @@ export function injectSeoIntoHtmlStream(
 
   const transformer = new TransformStream<Uint8Array, Uint8Array>({
     transform(chunk, controller) {
+      // Sempre decodifica pelo mesmo decoder para não perder bytes
+      // multi-byte pendentes na fronteira de chunks.
+      const text = decoder.decode(chunk, { stream: true });
       if (injected) {
-        controller.enqueue(chunk);
+        if (text) controller.enqueue(encoder.encode(text));
         return;
       }
-      const text = decoder.decode(chunk, { stream: true });
       buffered += text;
       scanned += text.length;
 
