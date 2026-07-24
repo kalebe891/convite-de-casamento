@@ -1,21 +1,56 @@
-# Etapa 1.25.5 — Configuração mínima e reversível do Edge Worker.
+# Edge SEO Renderer — Wrangler configuration
 #
-# Esta configuração NÃO ativa interceptação de produção. Não define
-# `routes = [...]` nem `zone_id`. Deploy real depende de uma zona
-# Cloudflare sob controle do projeto, o que ainda não existe.
+# Etapa 1.25.11 — Hardening de produção.
 #
-# Quando a zona existir, adicionar rotas específicas (ex.:
-# "seu-dominio.com/casamento/*" e "seu-dominio.com/aniversario/*").
-# Nunca usar "*/*" sem revisão.
+# Princípios:
+#  - Nenhum domínio, origem, URL Supabase ou chave é hardcodada aqui.
+#  - Secrets (ex.: SUPABASE_ANON_KEY) NUNCA vão neste arquivo. Usar
+#    `wrangler secret put SUPABASE_ANON_KEY --env <ambiente>`.
+#  - Nenhum `routes` ou `zone_id` é declarado: enquanto não houver zona
+#    Cloudflare sob controle do projeto, `wrangler deploy` continua
+#    inofensivo (worker existe mas não intercepta nenhum tráfego real).
+#  - Ambientes `staging` e `production` são explícitos: para publicar em
+#    produção é obrigatório `--env production`. Não há deploy implícito.
+#
+# Referência operacional: docs/edge-seo-deployment.md
 
 name = "edge-seo-renderer"
 main = "src/index.ts"
 compatibility_date = "2024-11-01"
 compatibility_flags = ["nodejs_compat"]
 
-# Origem do frontend — NÃO hardcodar o domínio nos arquivos .ts.
-# Definir externamente com `wrangler secret put FRONTEND_ORIGIN`
-# ou sobrescrever por ambiente. O valor abaixo é apenas placeholder
-# de desenvolvimento e deve ser trocado antes de qualquer deploy real.
+# ---------------------------------------------------------------------------
+# Configuração padrão (desenvolvimento local via `wrangler dev`).
+# Valores aqui NUNCA representam produção. Para dev real, sobrescrever com
+# `worker/.dev.vars` (não versionado) — veja `.dev.vars.example`.
+# ---------------------------------------------------------------------------
 [vars]
 FRONTEND_ORIGIN = "http://localhost:8080"
+# SUPABASE_URL / SUPABASE_ANON_KEY intencionalmente ausentes: em dev,
+# defini-los em `.dev.vars`; em staging/produção, via `wrangler secret put`.
+
+# ---------------------------------------------------------------------------
+# Staging — deploy manual, explícito. Sem routes: só responde no
+# subdomínio `*.workers.dev` até uma zona real ser conectada.
+# ---------------------------------------------------------------------------
+[env.staging]
+name = "edge-seo-renderer-staging"
+
+[env.staging.vars]
+# FRONTEND_ORIGIN de staging DEVE ser definida como secret ou sobrescrita
+# no deploy — deixá-la fora daqui evita que um valor de produção
+# vaze para staging por engano.
+
+# ---------------------------------------------------------------------------
+# Production — deploy manual, exige `--env production` explícito.
+# Nenhum `routes`/`zone_id` até a zona Cloudflare estar oficialmente
+# configurada pelo projeto (ver docs/edge-seo-deployment.md, passo 1).
+# ---------------------------------------------------------------------------
+[env.production]
+name = "edge-seo-renderer-production"
+
+[env.production.vars]
+# FRONTEND_ORIGIN de produção é definido via `wrangler secret put
+# FRONTEND_ORIGIN --env production` OU sobrescrito na etapa de deploy.
+# Mantido fora do arquivo versionado para impedir deploy acidental
+# apontando para host errado.
