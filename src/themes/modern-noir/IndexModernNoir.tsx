@@ -82,12 +82,12 @@ const IndexModernNoir = () => {
       {wedding && <SEO {...seo} />}
       <header className="fixed top-0 left-0 right-0 z-50 bg-background/70 backdrop-blur-md border-b border-border/40">
         <div className="container mx-auto flex min-w-0 items-center justify-between gap-3 px-4 py-4">
-          <h1
+          <span
             className="min-w-0 truncate text-base font-bold tracking-tight text-foreground sm:text-lg"
             style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 700 }}
           >
             {title}
-          </h1>
+          </span>
           <div className="flex shrink-0 items-center gap-2">
             <ThemeToggle label="Tema" />
             <Button

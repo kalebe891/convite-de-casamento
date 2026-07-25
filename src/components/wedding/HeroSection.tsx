@@ -108,7 +108,8 @@ const HeroSection = ({ weddingDetails }: HeroSectionProps) => {
 
       <img
         src={mainPhoto}
-        alt="Hero"
+        alt=""
+        aria-hidden="true"
         className="hidden"
         onLoad={() => setImageLoaded(true)}
       />

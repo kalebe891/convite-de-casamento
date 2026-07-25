@@ -601,9 +601,9 @@ const Invitation = () => {
     return (
       <section className="py-20 bg-muted/50">
         <div className="container mx-auto px-4">
-          <h2 className="text-5xl font-serif font-bold text-center mb-16 text-foreground">
+          <h1 className="text-5xl font-serif font-bold text-center mb-16 text-foreground">
             Confirmação de Presença
-          </h2>
+          </h1>
           
           <Card className="max-w-2xl mx-auto shadow-elegant animate-fade-in">
             <CardHeader>
@@ -730,9 +730,9 @@ const Invitation = () => {
     <div className="min-h-screen bg-background">
       <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-serif font-bold text-primary">
+          <span className="text-2xl font-serif font-bold text-primary">
             {weddingDetails ? `${weddingDetails.bride_name} & ${weddingDetails.groom_name}` : "Nosso Casamento"}
-          </h1>
+          </span>
           <ThemeToggle />
         </div>
       </header>
