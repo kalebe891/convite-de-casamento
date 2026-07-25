@@ -78,7 +78,11 @@ const StorySection = ({ weddingDetails }: StorySectionProps) => {
               ) : secondaryPhoto ? (
                 <img
                   src={secondaryPhoto}
-                  alt="Casal"
+                  alt={
+                    weddingDetails?.bride_name && weddingDetails?.groom_name
+                      ? `${weddingDetails.bride_name} e ${weddingDetails.groom_name}`
+                      : "Imagem do evento"
+                  }
                   className="rounded-lg shadow-elegant w-full h-auto object-cover"
                 />
               ) : null}

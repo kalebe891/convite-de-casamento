@@ -83,12 +83,12 @@ const IndexMinimal = () => {
       {wedding && <SEO {...seo} />}
       <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border/40">
         <div className="container mx-auto flex min-w-0 items-center justify-between gap-3 px-4 py-4">
-          <h1
+          <span
             className="min-w-0 truncate font-sans text-base font-light tracking-[0.08em] text-foreground sm:text-lg"
             style={{ fontFamily: "Inter, sans-serif", fontWeight: 300 }}
           >
             {title}
-          </h1>
+          </span>
           <div className="flex shrink-0 items-center gap-2">
             <ThemeToggle label="Tema" />
             <Button
