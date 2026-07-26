@@ -56,7 +56,12 @@ export function buildTenantSeo(
   if (dateLabel) descBits.push(dateLabel);
   if (city) descBits.push(city);
   const descPrefix = descBits.length ? `${descBits.join(" • ")}. ` : "";
-  const description = `${descPrefix}Confira nosso convite digital.`;
+  // Só cita nomes quando existem de fato (evita repetir o fallback genérico).
+  const hasNames = baseTitle !== "Convite Digital";
+  const core = hasNames
+    ? `Confira o convite digital de ${baseTitle} e confirme sua presença.`
+    : "Confira o convite digital do evento e confirme sua presença.";
+  const description = `${descPrefix}${core}`;
 
   const urlType = dbToUrl(wedding?.event_type) ?? "casamento";
   const path = wedding?.slug ? `/${urlType}/${wedding.slug}` : `/${urlType}`;
