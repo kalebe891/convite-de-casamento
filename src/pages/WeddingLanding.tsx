@@ -86,8 +86,8 @@ const WeddingLanding = () => {
   return (
     <div className="marketing-theme min-h-screen bg-background text-foreground">
       <SeoHead
-        title="Convite de Casamento Digital | Página exclusiva, RSVP e presentes"
-        description="Crie uma página de casamento exclusiva com RSVP integrado, lista de presentes e cronograma. Personalização rápida, visual elegante e gestão completa em um único painel."
+        title="Convite de Casamento Digital | RSVP e lista de presentes"
+        description="Crie uma página de casamento exclusiva com RSVP integrado, lista de presentes e cronograma, com gestão completa dos convidados em um único painel."
         canonical={`${SITE_URL}/casamento`}
       />
       <MarketingHeader />
