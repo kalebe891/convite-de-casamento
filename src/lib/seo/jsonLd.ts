@@ -125,8 +125,6 @@ export function buildTenantEventJsonLd(
   const url = options.canonical;
   if (!url) return null;
 
-  const isWedding = dbToUrl(wedding.event_type) === "casamento";
-
   const venueName = wedding.venue_name?.trim() || null;
   const venueAddress = wedding.venue_address?.trim() || null;
   const location = venueName
@@ -142,7 +140,9 @@ export function buildTenantEventJsonLd(
   return {
     "@context": "https://schema.org",
     ...compact({
-      "@type": isWedding ? "Event" : "Event",
+      // Schema.org não possui um tipo específico para casamento/aniversário;
+      // `Event` é o tipo correto e suportado pelos dados reais disponíveis.
+      "@type": "Event",
       name,
       startDate,
       url,
