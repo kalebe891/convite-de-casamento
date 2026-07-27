@@ -4,6 +4,7 @@ import { Cake, ArrowLeft, Construction } from "lucide-react";
 import MarketingHeader from "@/components/marketing/MarketingHeader";
 import MarketingFooter from "@/components/marketing/MarketingFooter";
 import SeoHead, { SITE_URL } from "@/components/seo/SeoHead";
+import { buildWebPageJsonLd } from "@/lib/seo/jsonLd";
 
 const BirthdayLanding = () => {
   return (
@@ -12,6 +13,12 @@ const BirthdayLanding = () => {
         title="Convites para Aniversários | Em breve"
         description="Estamos preparando uma experiência completa de convites digitais para aniversários. Em breve."
         canonical={`${SITE_URL}/aniversario`}
+        jsonLd={buildWebPageJsonLd({
+          name: "Convites para Aniversários",
+          description:
+            "Página institucional sobre convites digitais de aniversário, atualmente em preparação.",
+          path: "/aniversario",
+        })}
       />
       <MarketingHeader />
 
