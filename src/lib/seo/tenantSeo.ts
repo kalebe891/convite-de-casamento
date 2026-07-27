@@ -41,6 +41,8 @@ export interface TenantSeo {
   path: string;
   image: string | null;
   type: "event";
+  /** JSON-LD do evento (null quando os dados reais não são suficientes). */
+  jsonLd: JsonLd | null;
 }
 
 export function buildTenantSeo(
@@ -68,6 +70,7 @@ export function buildTenantSeo(
 
   const urlType = dbToUrl(wedding?.event_type) ?? "casamento";
   const path = wedding?.slug ? `/${urlType}/${wedding.slug}` : `/${urlType}`;
+  const canonical = `${SITE_URL.replace(/\/+$/, "")}${path}`;
 
   return {
     title,
@@ -75,5 +78,6 @@ export function buildTenantSeo(
     path,
     image: mainPhotoUrl ?? null,
     type: "event" as const,
+    jsonLd: buildTenantEventJsonLd(wedding, { canonical, image: mainPhotoUrl ?? null }),
   };
 }
