@@ -60,10 +60,13 @@ const SeoHead = ({
   image,
   type = "website",
   noIndex = false,
+  jsonLd = null,
 }: SeoHeadProps) => {
   // `resolvePublicImageUrl` garante URL absoluta (bucket público do Storage
   // ou passthrough se já for absoluta). Fallback institucional absoluto.
   const img = resolvePublicImageUrl(image) ?? DEFAULT_OG_IMAGE;
+
+  const blocks = (Array.isArray(jsonLd) ? jsonLd : jsonLd ? [jsonLd] : []).filter(Boolean);
 
   return (
     <Helmet>
@@ -82,6 +85,13 @@ const SeoHead = ({
       <meta name="twitter:title" content={title} />
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={img} />
+
+      {blocks.map((block, i) => (
+        // Serialização segura: nunca há interpolação manual de string.
+        <script key={i} type="application/ld+json">
+          {JSON.stringify(block)}
+        </script>
+      ))}
     </Helmet>
   );
 };
