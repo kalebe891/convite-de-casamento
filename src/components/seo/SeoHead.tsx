@@ -1,6 +1,7 @@
 import { Helmet } from "react-helmet-async";
 import { resolvePublicImageUrl, DEFAULT_OG_IMAGE } from "@/lib/publicImage";
 import { SITE_URL } from "@/lib/siteUrl";
+import type { JsonLd } from "@/lib/seo/jsonLd";
 
 /** Reexport para compatibilidade com módulos que importavam SITE_URL daqui. */
 export { SITE_URL };
@@ -16,6 +17,8 @@ export interface SeoHeadProps {
   type?: "website" | "article" | "event";
   /** Adiciona <meta name="robots" content="noindex,nofollow">. */
   noIndex?: boolean;
+  /** Bloco(s) JSON-LD (Schema.org) da rota. Serializados com JSON.stringify. */
+  jsonLd?: JsonLd | JsonLd[] | null;
 }
 
 /**
