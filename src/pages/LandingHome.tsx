@@ -18,6 +18,7 @@ import {
 import MarketingHeader from "@/components/marketing/MarketingHeader";
 import MarketingFooter from "@/components/marketing/MarketingFooter";
 import SeoHead, { SITE_URL } from "@/components/seo/SeoHead";
+import { buildSiteJsonLd } from "@/lib/seo/jsonLd";
 
 const products = [
   {
@@ -97,6 +98,7 @@ const LandingHome = () => {
         title="Convites Digitais Premium e Gestão Inteligente"
         description="Plataforma premium para criar convites digitais com RSVP, lista de presentes sem taxas, cronograma e painel administrativo."
         canonical={`${SITE_URL}/`}
+        jsonLd={buildSiteJsonLd()}
       />
       <MarketingHeader />
 

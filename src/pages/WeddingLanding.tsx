@@ -19,6 +19,7 @@ import ShowcaseSection from "@/components/marketing/ShowcaseSection";
 import ThemesShowcaseSection from "@/components/marketing/ThemesShowcaseSection";
 import DemoSignupDialog from "@/components/marketing/DemoSignupDialog";
 import SeoHead, { SITE_URL } from "@/components/seo/SeoHead";
+import { buildWebPageJsonLd } from "@/lib/seo/jsonLd";
 
 const WHATSAPP_URL =
   "https://api.whatsapp.com/send/?phone=5562992485994&text=Olá,%20Quero%20criar%20o%20meu%20convite%20de%20casamento.&type=phone_number&app_absent=0";
@@ -89,6 +90,12 @@ const WeddingLanding = () => {
         title="Convite de Casamento Digital | RSVP e lista de presentes"
         description="Crie uma página de casamento exclusiva com RSVP integrado, lista de presentes e cronograma, com gestão completa dos convidados em um único painel."
         canonical={`${SITE_URL}/casamento`}
+        jsonLd={buildWebPageJsonLd({
+          name: "Convite de Casamento Digital",
+          description:
+            "Página institucional sobre convites digitais de casamento com RSVP integrado, lista de presentes e cronograma.",
+          path: "/casamento",
+        })}
       />
       <MarketingHeader />
 
