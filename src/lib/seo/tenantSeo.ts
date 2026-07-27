@@ -3,6 +3,9 @@
  * Sem dependência de React/DOM.
  */
 import { dbToUrl, formatEventTitle, type WeddingLike } from "./eventType";
+import { buildTenantEventJsonLd, type JsonLd } from "./jsonLd";
+import { SITE_URL } from "./siteUrl";
+
 
 export type WeddingSeoInput = WeddingLike & {
   wedding_date?: string | null;
