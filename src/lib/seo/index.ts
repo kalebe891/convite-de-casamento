@@ -9,3 +9,4 @@ export * from "./siteUrl";
 export * from "./eventType";
 export * from "./publicImage";
 export * from "./tenantSeo";
+export * from "./jsonLd";
