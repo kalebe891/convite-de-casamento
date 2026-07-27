@@ -8,7 +8,7 @@
  * real disponível são omitidos (nunca `null`/`undefined` no output).
  */
 import { SITE_URL } from "./siteUrl";
-import { dbToUrl, formatEventTitle, type WeddingLike } from "./eventType";
+import { formatEventTitle, type WeddingLike } from "./eventType";
 
 /** Objeto JSON-LD genérico (serializável). */
 export type JsonLd = Record<string, unknown>;
