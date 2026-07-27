@@ -1,0 +1,37 @@
+# Convite de Evento
+
+> Plataforma brasileira de convites digitais e páginas públicas para eventos, com confirmação de presença online.
+
+O Convite de Evento permite criar uma página pública personalizada para o evento e enviar
+convites digitais individuais aos convidados, que confirmam presença diretamente pelo link.
+Os anfitriões administram convidados, presentes e informações do evento em um painel próprio.
+
+## Principais funcionalidades
+
+- Página pública do evento com temas visuais personalizados
+- Convites digitais individuais por convidado
+- Confirmação de presença (RSVP) online
+- Lista de presentes com itens e contribuição via Pix (QR Code)
+- Galeria de fotos e seção de história do casal
+- Cronograma do evento e informações de local e horário
+- Playlist colaborativa de músicas
+- Check-in de convidados no dia do evento
+- Cadastro de usuários com permissões por papel (ex.: cerimonialista, recepcionista)
+
+## Tipos de eventos
+
+- Casamentos
+- Aniversários
+
+## Páginas principais
+
+- [Página inicial](https://convite-de-evento.lovable.app/)
+- [Convites de casamento](https://convite-de-evento.lovable.app/casamento)
+- [Convites de aniversário](https://convite-de-evento.lovable.app/aniversario)
+- [Mapa do site](https://convite-de-evento.lovable.app/sitemap.xml)
+
+## Observações
+
+As páginas individuais de eventos são dinâmicas e publicadas pelos próprios anfitriões.
+Páginas de convite individual, painel administrativo e áreas autenticadas não são públicas
+e não devem ser rastreadas.
