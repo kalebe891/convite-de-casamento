@@ -55,7 +55,7 @@ const GallerySection = ({ photos }: GallerySectionProps) => {
             >
               <img
                 src={photo.photo_url}
-                alt={photo.caption || `Foto ${index + 1} do evento`}
+                alt={photo.caption || `Momento ${index + 1} registrado no evento`}
                 className="w-full h-full object-cover hover:scale-110 transition-transform duration-500"
               />
             </motion.div>
@@ -73,7 +73,7 @@ const GallerySection = ({ photos }: GallerySectionProps) => {
             >
               <motion.img
                 src={selectedImage}
-                alt="Foto ampliada do evento"
+                alt="Momento do evento em visualização ampliada"
                 className="max-w-full max-h-full rounded-lg shadow-elegant"
                 initial={{ scale: 0.9 }}
                 animate={{ scale: 1 }}

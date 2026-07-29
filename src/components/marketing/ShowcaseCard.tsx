@@ -47,7 +47,9 @@ const ShowcaseCard = ({ event }: Props) => {
         {event.main_photo_url ? (
           <img
             src={event.main_photo_url}
-            alt={title}
+            alt={`Imagem principal do convite digital de ${
+              event.event_type === "birthday" ? "aniversário" : "casamento"
+            }${event.venue_name ? ` em ${event.venue_name}` : ""}`}
             loading="lazy"
             decoding="async"
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"

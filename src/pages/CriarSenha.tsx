@@ -5,7 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 
 const CriarSenha = () => {
@@ -228,7 +228,7 @@ const CriarSenha = () => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-secondary/5 p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-2xl font-serif">Criar Senha</CardTitle>
+          <h1 className="text-2xl font-serif font-semibold leading-none tracking-tight">Criar senha</h1>
           <CardDescription>
             Você foi convidado como <strong>{getRoleName(role)}</strong>. Complete seu cadastro para acessar o painel administrativo.
           </CardDescription>

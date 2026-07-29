@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Heart } from "lucide-react";
 import { z } from "zod";
@@ -111,9 +111,9 @@ const Auth = () => {
       <Card className="w-full max-w-md shadow-elegant animate-fade-in">
         <CardHeader className="text-center">
           <Heart className="w-12 h-12 mx-auto mb-4 text-primary" />
-          <CardTitle className="text-3xl font-serif">
-            {isLogin ? "Bem-vindo" : "Criar Conta"}
-          </CardTitle>
+          <h1 className="text-3xl font-serif font-semibold leading-none tracking-tight">
+            {isLogin ? "Entrar" : "Criar conta"}
+          </h1>
           <CardDescription>
             {isLogin 
               ? "Acesse o painel administrativo do casamento"
