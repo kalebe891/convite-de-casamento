@@ -104,6 +104,8 @@ const HeroSkyPeach = () => {
               src={mainPhoto}
               alt={title}
               loading="eager"
+              fetchPriority="high"
+              decoding="async"
               className="absolute inset-0 h-full w-full object-cover"
             />
           ) : (

@@ -110,6 +110,8 @@ const HeroSection = ({ weddingDetails }: HeroSectionProps) => {
         src={mainPhoto}
         alt=""
         aria-hidden="true"
+        fetchPriority="high"
+        decoding="async"
         className="hidden"
         onLoad={() => setImageLoaded(true)}
       />
