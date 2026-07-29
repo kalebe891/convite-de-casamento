@@ -52,7 +52,7 @@ const HeroModernNoir = () => {
       {/* Mobile: imagem topo */}
       <div className="md:hidden relative w-full aspect-[4/5] bg-muted overflow-hidden">
         {mainPhoto ? (
-          <img src={mainPhoto} alt={title} loading="eager" className="absolute inset-0 h-full w-full object-cover" />
+          <img src={mainPhoto} alt={title} loading="eager" fetchPriority="high" decoding="async" className="absolute inset-0 h-full w-full object-cover" />
         ) : (
           <div className="absolute inset-0 bg-muted" />
         )}
@@ -63,7 +63,7 @@ const HeroModernNoir = () => {
       <div className="relative w-full md:min-h-[calc(100vh-5rem)] overflow-hidden">
         <div className="hidden md:block absolute inset-0">
           {mainPhoto ? (
-            <img src={mainPhoto} alt={title} loading="eager" className="absolute inset-0 h-full w-full object-cover" />
+            <img src={mainPhoto} alt={title} loading="eager" fetchPriority="high" decoding="async" className="absolute inset-0 h-full w-full object-cover" />
           ) : (
             <div className="absolute inset-0 bg-muted" />
           )}
