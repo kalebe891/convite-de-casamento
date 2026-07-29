@@ -23,7 +23,7 @@ const AccessDenied = () => {
       <Card className="w-full max-w-md shadow-elegant animate-fade-in">
         <CardHeader className="text-center">
           <ShieldAlert className="w-16 h-16 mx-auto mb-4 text-destructive" />
-          <CardTitle className="text-3xl font-serif">Acesso Negado</CardTitle>
+          <h1 className="text-3xl font-serif font-semibold leading-none tracking-tight">Acesso Negado</h1>
           <CardDescription className="text-base">
             Você não tem permissão para acessar esta página
           </CardDescription>

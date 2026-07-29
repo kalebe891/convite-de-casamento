@@ -228,7 +228,7 @@ const CriarSenha = () => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-secondary/5 p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-2xl font-serif">Criar Senha</CardTitle>
+          <h1 className="text-2xl font-serif font-semibold leading-none tracking-tight">Criar senha</h1>
           <CardDescription>
             Você foi convidado como <strong>{getRoleName(role)}</strong>. Complete seu cadastro para acessar o painel administrativo.
           </CardDescription>
