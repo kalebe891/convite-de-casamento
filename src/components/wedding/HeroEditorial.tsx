@@ -60,6 +60,21 @@ const HeroEditorial = () => {
         </div>
       )}
 
+      {/* Imagem oculta apenas para sinalizar prioridade de carregamento ao
+          navegador — background-image não aceita fetchPriority. */}
+      {hasPhoto && (
+        <img
+          src={mainPhoto!}
+          alt=""
+          aria-hidden="true"
+          loading="eager"
+          fetchPriority="high"
+          decoding="async"
+          className="hidden"
+        />
+      )}
+
+
       <div className="relative z-10 w-full max-w-6xl px-6 text-center animate-fade-in-up">
         <p className={`font-sans text-[10px] sm:text-sm uppercase tracking-[0.3em] sm:tracking-[0.45em] mb-6 sm:mb-8 ${accent}`}>
           Save the date
