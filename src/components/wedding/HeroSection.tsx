@@ -1,53 +1,23 @@
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
 import { Heart } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SkeletonText } from "@/components/ui/skeleton-text";
 import CountdownTimer from "@/components/wedding/CountdownTimer";
 import { formatEventTitle } from "@/lib/eventType";
+import { useHeroMedia } from "@/hooks/useHeroMedia";
 
 interface HeroSectionProps {
   weddingDetails: any;
 }
 
 const HeroSection = ({ weddingDetails }: HeroSectionProps) => {
-  const [mainPhoto, setMainPhoto] = useState<string | null>(null);
   const [imageLoaded, setImageLoaded] = useState(false);
-  const [firstEventTime, setFirstEventTime] = useState<string | null>(null);
+  // Fetch centralizado no hook compartilhado (mesmas duas consultas em paralelo),
+  // eliminando a duplicação de lógica que existia neste componente.
+  const { mainPhoto, firstEventTime } = useHeroMedia(weddingDetails?.id);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!weddingDetails?.id) return;
-
-      const [photoRes, timelineRes] = await Promise.all([
-        supabase
-          .from("photos")
-          .select("photo_url")
-          .eq("wedding_id", weddingDetails.id)
-          .eq("is_main", true)
-          .maybeSingle(),
-        supabase
-          .from("timeline_events")
-          .select("time")
-          .eq("wedding_id", weddingDetails.id)
-          .eq("is_public", true)
-          .order("display_order", { ascending: true })
-          .limit(1),
-      ]);
-
-      if (!photoRes.error && photoRes.data) {
-        setMainPhoto(photoRes.data.photo_url);
-      }
-
-      if (!timelineRes.error && timelineRes.data?.[0]) {
-        setFirstEventTime(timelineRes.data[0].time);
-      }
-    };
-
-    fetchData();
-  }, [weddingDetails?.id]);
 
   const renderContent = () => (
     <>
