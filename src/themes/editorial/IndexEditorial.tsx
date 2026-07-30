@@ -46,16 +46,18 @@ const IndexEditorial = () => {
   useEffect(() => {
     if (!weddingId) return;
     (async () => {
-      const { data: eventsData } = await supabase
-        .from("events")
-        .select("*")
-        .eq("wedding_id", weddingId)
-        .order("event_date");
-      const { data: photosData } = await supabase
-        .from("photos")
-        .select("*")
-        .eq("wedding_id", weddingId)
-        .order("display_order");
+      const [{ data: eventsData }, { data: photosData }] = await Promise.all([
+        supabase
+          .from("events")
+          .select("*")
+          .eq("wedding_id", weddingId)
+          .order("event_date"),
+        supabase
+          .from("photos")
+          .select("*")
+          .eq("wedding_id", weddingId)
+          .order("display_order"),
+      ]);
       setEvents(eventsData || null);
       setPhotos(photosData || null);
     })();
