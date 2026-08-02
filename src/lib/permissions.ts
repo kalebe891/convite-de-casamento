@@ -4,6 +4,7 @@ export type MenuKey =
   | "estatisticas"
   | "detalhes"
   | "convidados"
+  | "convites"
   | "eventos"
   | "cronograma"
   | "buffet"
@@ -31,6 +32,7 @@ export const MENU_LABELS: Record<MenuKey, string> = {
   estatisticas: "Estatísticas",
   detalhes: "Detalhes",
   convidados: "Convidados",
+  convites: "Convites",
   eventos: "Eventos",
   cronograma: "Cronograma",
   buffet: "Buffet",
