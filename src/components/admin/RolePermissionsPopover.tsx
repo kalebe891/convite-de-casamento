@@ -7,7 +7,7 @@ import { Loader2, Check, X, Shield, UserCog, Users as UsersIcon, Settings } from
 import { MENU_LABELS, MenuKey } from "@/lib/permissions";
 
 const MENU_ORDER: MenuKey[] = [
-  "detalhes", "usuarios", "eventos", "convidados", "checkin",
+  "detalhes", "usuarios", "eventos", "convidados", "convites", "checkin",
   "presentes", "cronograma", "buffet", "playlist", "momentos",
   "estatisticas", "logs"
 ];
@@ -16,6 +16,7 @@ const MENU_PERMISSIONS: Record<MenuKey, Array<"view" | "add" | "edit" | "delete"
   estatisticas: ["view"],
   detalhes: ["view", "edit"],
   convidados: ["view", "add", "edit", "delete"],
+  convites: ["view", "add", "edit", "delete"],
   eventos: ["view", "add", "edit", "delete"],
   cronograma: ["view", "add", "edit", "delete", "publish"],
   buffet: ["view", "add", "edit", "delete", "publish"],
