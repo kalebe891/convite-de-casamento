@@ -12,6 +12,7 @@ import { Trash2, Plus, Pencil, X } from "lucide-react";
 import { timelineEventSchema } from "@/lib/validationSchemas";
 import { getSafeErrorMessage } from "@/lib/errorHandling";
 import { logAdminAction } from "@/lib/adminLogger";
+import { devLog } from "@/lib/devLog";
 
 interface TimelineManagerProps {
   permissions: {
@@ -58,14 +59,17 @@ const TimelineManager = ({ permissions }: TimelineManagerProps) => {
     }
     if (!weddingId) return;
 
-    const { error } = await supabase.from("wedding_details").update({ show_timeline_section: newValue }).eq("id", weddingId);
+    const { data, error } = await supabase.from("wedding_details").update({ show_timeline_section: newValue }).eq("id", weddingId).select();
 
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
-    } else {
+    } else if (Array.isArray(data) && data.length > 0) {
       toast({ title: "Atualizado", description: `Seção de cronograma ${newValue ? 'exibida' : 'oculta'} na página pública` });
       await logAdminAction({ action: "update", tableName: "wedding_details", recordId: weddingId, newData: { show_timeline_section: newValue }, affectedName: "Seção Cronograma" });
       setShowTimelineSection(newValue);
+    } else {
+        devLog("Operação concluída sem alterações.");
+        toast({ title: "Nenhuma alteração foi aplicada.", description: "Verifique suas permissões ou tente novamente.", variant: "destructive" });
     }
   };
 
@@ -89,15 +93,18 @@ const TimelineManager = ({ permissions }: TimelineManagerProps) => {
       observation: newEvent.observation.trim() || null,
       is_public: newEvent.is_public,
       display_order: events.length,
-    }).select().single();
+    }).select();
 
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
-    } else {
-      await logAdminAction({ action: "insert", tableName: "timeline_events", recordId: data?.id, newData: newEvent, affectedName: newEvent.activity });
+    } else if (Array.isArray(data) && data.length > 0) {
+      await logAdminAction({ action: "insert", tableName: "timeline_events", recordId: data[0]?.id, newData: newEvent, affectedName: newEvent.activity });
       toast({ title: "Sucesso", description: "Evento adicionado!" });
       setNewEvent({ time: "", activity: "", observation: "", is_public: true });
       fetchData();
+    } else {
+        devLog("Operação concluída sem alterações.");
+        toast({ title: "Nenhuma alteração foi aplicada.", description: "Verifique suas permissões ou tente novamente.", variant: "destructive" });
     }
   };
 
@@ -129,7 +136,7 @@ const TimelineManager = ({ permissions }: TimelineManagerProps) => {
     }
 
     const oldEvent = events.find(e => e.id === editingId);
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("timeline_events")
       .update({
         time: validationResult.data.time.trim(),
@@ -138,16 +145,20 @@ const TimelineManager = ({ permissions }: TimelineManagerProps) => {
         is_public: editEvent.is_public,
       })
       .eq("id", editingId)
-      .eq("wedding_id", weddingId!);
+      .eq("wedding_id", weddingId!)
+      .select();
 
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
-    } else {
+    } else if (Array.isArray(data) && data.length > 0) {
       await logAdminAction({ action: "update", tableName: "timeline_events", recordId: editingId!, oldData: oldEvent, newData: editEvent, affectedName: editEvent.activity });
       toast({ title: "Sucesso", description: "Evento atualizado!" });
       setIsEditOpen(false);
       setEditingId(null);
       fetchData();
+    } else {
+        devLog("Operação concluída sem alterações.");
+        toast({ title: "Nenhuma alteração foi aplicada.", description: "Verifique suas permissões ou tente novamente.", variant: "destructive" });
     }
   };
 
@@ -157,14 +168,17 @@ const TimelineManager = ({ permissions }: TimelineManagerProps) => {
       return;
     }
     const deletedEvent = events.find(e => e.id === id);
-    const { error } = await supabase.from("timeline_events").delete().eq("id", id).eq("wedding_id", weddingId!);
+    const { data, error } = await supabase.from("timeline_events").delete().eq("id", id).eq("wedding_id", weddingId!).select();
 
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
-    } else {
+    } else if (Array.isArray(data) && data.length > 0) {
       await logAdminAction({ action: "delete", tableName: "timeline_events", recordId: id, oldData: deletedEvent, affectedName: deletedEvent?.activity });
       toast({ title: "Sucesso", description: "Evento removido!" });
       fetchData();
+    } else {
+        devLog("Operação concluída sem alterações.");
+        toast({ title: "Nenhuma alteração foi aplicada.", description: "Verifique suas permissões ou tente novamente.", variant: "destructive" });
     }
   };
 
@@ -174,14 +188,17 @@ const TimelineManager = ({ permissions }: TimelineManagerProps) => {
       return;
     }
     const newValue = !currentValue;
-    const { error } = await supabase.from("timeline_events").update({ is_public: newValue }).eq("id", id).eq("wedding_id", weddingId!);
+    const { data, error } = await supabase.from("timeline_events").update({ is_public: newValue }).eq("id", id).eq("wedding_id", weddingId!).select();
 
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
-    } else {
+    } else if (Array.isArray(data) && data.length > 0) {
       const item = events.find(e => e.id === id);
       await logAdminAction({ action: "update", tableName: "timeline_events", recordId: id, oldData: { is_public: currentValue }, newData: { is_public: newValue }, affectedName: item?.activity });
       fetchData();
+    } else {
+        devLog("Operação concluída sem alterações.");
+        toast({ title: "Nenhuma alteração foi aplicada.", description: "Verifique suas permissões ou tente novamente.", variant: "destructive" });
     }
   };
 

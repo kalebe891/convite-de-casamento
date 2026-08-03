@@ -12,6 +12,7 @@ import { Trash2, Plus, Pencil, X } from "lucide-react";
 import { playlistSongSchema } from "@/lib/validationSchemas";
 import { getSafeErrorMessage } from "@/lib/errorHandling";
 import { logAdminAction } from "@/lib/adminLogger";
+import { devLog } from "@/lib/devLog";
 
 interface PlaylistManagerProps {
   permissions: {
@@ -58,14 +59,17 @@ const PlaylistManager = ({ permissions }: PlaylistManagerProps) => {
     }
     if (!weddingId) return;
 
-    const { error } = await supabase.from("wedding_details").update({ show_playlist_section: newValue }).eq("id", weddingId);
+    const { data, error } = await supabase.from("wedding_details").update({ show_playlist_section: newValue }).eq("id", weddingId).select();
 
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
-    } else {
+    } else if (Array.isArray(data) && data.length > 0) {
       toast({ title: "Atualizado", description: `Seção de playlist ${newValue ? 'exibida' : 'oculta'} na página pública` });
       await logAdminAction({ action: "update", tableName: "wedding_details", recordId: weddingId, newData: { show_playlist_section: newValue }, affectedName: "Seção Playlist" });
       setShowPlaylistSection(newValue);
+    } else {
+        devLog("Operação concluída sem alterações.");
+        toast({ title: "Nenhuma alteração foi aplicada.", description: "Verifique suas permissões ou tente novamente.", variant: "destructive" });
     }
   };
 
@@ -89,15 +93,18 @@ const PlaylistManager = ({ permissions }: PlaylistManagerProps) => {
       artist: validationResult.data.artist?.trim() || null,
       is_public: newSong.is_public,
       display_order: songs.length,
-    }).select().single();
+    }).select();
 
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
-    } else {
-      await logAdminAction({ action: "insert", tableName: "playlist_songs", recordId: data?.id, newData: newSong, affectedName: newSong.song_name });
+    } else if (Array.isArray(data) && data.length > 0) {
+      await logAdminAction({ action: "insert", tableName: "playlist_songs", recordId: data[0]?.id, newData: newSong, affectedName: newSong.song_name });
       toast({ title: "Sucesso", description: "Música adicionada!" });
       setNewSong({ moment: "", song_name: "", artist: "", is_public: true });
       fetchData();
+    } else {
+        devLog("Operação concluída sem alterações.");
+        toast({ title: "Nenhuma alteração foi aplicada.", description: "Verifique suas permissões ou tente novamente.", variant: "destructive" });
     }
   };
 
@@ -129,7 +136,7 @@ const PlaylistManager = ({ permissions }: PlaylistManagerProps) => {
     }
 
     const oldSong = songs.find(s => s.id === editingId);
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("playlist_songs")
       .update({
         moment: validationResult.data.moment.trim(),
@@ -138,16 +145,20 @@ const PlaylistManager = ({ permissions }: PlaylistManagerProps) => {
         is_public: editSong.is_public,
       })
       .eq("id", editingId)
-      .eq("wedding_id", weddingId!);
+      .eq("wedding_id", weddingId!)
+      .select();
 
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
-    } else {
+    } else if (Array.isArray(data) && data.length > 0) {
       await logAdminAction({ action: "update", tableName: "playlist_songs", recordId: editingId!, oldData: oldSong, newData: editSong, affectedName: editSong.song_name });
       toast({ title: "Sucesso", description: "Música atualizada!" });
       setIsEditOpen(false);
       setEditingId(null);
       fetchData();
+    } else {
+        devLog("Operação concluída sem alterações.");
+        toast({ title: "Nenhuma alteração foi aplicada.", description: "Verifique suas permissões ou tente novamente.", variant: "destructive" });
     }
   };
 
@@ -157,14 +168,17 @@ const PlaylistManager = ({ permissions }: PlaylistManagerProps) => {
       return;
     }
     const deletedSong = songs.find(s => s.id === id);
-    const { error } = await supabase.from("playlist_songs").delete().eq("id", id).eq("wedding_id", weddingId!);
+    const { data, error } = await supabase.from("playlist_songs").delete().eq("id", id).eq("wedding_id", weddingId!).select();
 
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
-    } else {
+    } else if (Array.isArray(data) && data.length > 0) {
       await logAdminAction({ action: "delete", tableName: "playlist_songs", recordId: id, oldData: deletedSong, affectedName: deletedSong?.song_name });
       toast({ title: "Sucesso", description: "Música removida!" });
       fetchData();
+    } else {
+        devLog("Operação concluída sem alterações.");
+        toast({ title: "Nenhuma alteração foi aplicada.", description: "Verifique suas permissões ou tente novamente.", variant: "destructive" });
     }
   };
 
@@ -174,14 +188,17 @@ const PlaylistManager = ({ permissions }: PlaylistManagerProps) => {
       return;
     }
     const newValue = !currentValue;
-    const { error } = await supabase.from("playlist_songs").update({ is_public: newValue }).eq("id", id).eq("wedding_id", weddingId!);
+    const { data, error } = await supabase.from("playlist_songs").update({ is_public: newValue }).eq("id", id).eq("wedding_id", weddingId!).select();
 
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
-    } else {
+    } else if (Array.isArray(data) && data.length > 0) {
       const song = songs.find(s => s.id === id);
       await logAdminAction({ action: "update", tableName: "playlist_songs", recordId: id, oldData: { is_public: currentValue }, newData: { is_public: newValue }, affectedName: song?.song_name });
       fetchData();
+    } else {
+        devLog("Operação concluída sem alterações.");
+        toast({ title: "Nenhuma alteração foi aplicada.", description: "Verifique suas permissões ou tente novamente.", variant: "destructive" });
     }
   };
 

@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { logAdminAction } from "@/lib/adminLogger";
 import { useWedding } from "@/contexts/WeddingContext";
+import { devLog } from "@/lib/devLog";
 
 interface WeddingSettingsFormProps {
   permissions: {
@@ -61,12 +62,23 @@ const WeddingSettingsForm = ({ permissions }: WeddingSettingsFormProps) => {
         .eq("id", weddingId)
         .maybeSingle();
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("wedding_details")
         .update(formData)
-        .eq("id", weddingId);
+        .eq("id", weddingId)
+        .select();
 
       if (error) throw error;
+
+      if (!Array.isArray(data) || data.length === 0) {
+        devLog("Operação concluída sem alterações.");
+        toast({
+          title: "Nenhuma alteração foi aplicada.",
+          description: "Verifique suas permissões ou tente novamente.",
+          variant: "destructive",
+        });
+        return;
+      }
 
       await logAdminAction({
         action: "update",

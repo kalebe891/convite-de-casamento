@@ -15,6 +15,7 @@ import {
 import { toast } from "@/hooks/use-toast";
 import { buildTenantAdminUrl } from "@/lib/eventType";
 import { logAdminAction } from "@/lib/adminLogger";
+import { devLog } from "@/lib/devLog";
 import { CalendarDays, Plus, Users, Gift, Images, Mail, ArrowRight, Search, RefreshCw, PartyPopper, Heart, CalendarCheck, Trash2, Archive, RotateCcw, AlertTriangle, Wrench, BadgeCheck } from "lucide-react";
 import { isValidThemeId } from "@/lib/themeValidation";
 import CreateEventDialog from "@/components/admin/CreateEventDialog";
@@ -204,12 +205,18 @@ export default function MasterDashboard() {
   const handleRenew = async (w: Wedding) => {
     const base = w.expires_at ? new Date(w.expires_at) : new Date();
     const next = new Date(base.getTime() + 365 * 24 * 60 * 60 * 1000).toISOString();
-    const { error: err } = await supabase
+    const { data, error: err } = await supabase
       .from("wedding_details")
       .update({ expires_at: next })
-      .eq("id", w.id);
+      .eq("id", w.id)
+      .select();
     if (err) {
       toast({ title: "Erro ao renovar", description: err.message, variant: "destructive" });
+      return;
+    }
+    if (!Array.isArray(data) || data.length === 0) {
+      devLog("Operação concluída sem alterações.");
+      toast({ title: "Nenhuma alteração foi aplicada.", description: "Verifique suas permissões ou tente novamente.", variant: "destructive" });
       return;
     }
     await logAdminAction({
@@ -228,12 +235,18 @@ export default function MasterDashboard() {
   const handleArchive = async (w: Wedding) => {
     if (!window.confirm(`Arquivar o tenant "${tenantDisplayName(w)}"? Os dados serão preservados.`)) return;
     const now = new Date().toISOString();
-    const { error: err } = await supabase
+    const { data, error: err } = await supabase
       .from("wedding_details")
       .update({ tenant_status: "archived", archived_at: now, is_public_showcase: false })
-      .eq("id", w.id);
+      .eq("id", w.id)
+      .select();
     if (err) {
       toast({ title: "Erro ao arquivar", description: err.message, variant: "destructive" });
+      return;
+    }
+    if (!Array.isArray(data) || data.length === 0) {
+      devLog("Operação concluída sem alterações.");
+      toast({ title: "Nenhuma alteração foi aplicada.", description: "Verifique suas permissões ou tente novamente.", variant: "destructive" });
       return;
     }
     await logAdminAction({
@@ -251,12 +264,18 @@ export default function MasterDashboard() {
   const handleFixTheme = async (w: Wedding) => {
     const oldTheme = w.theme_id ?? null;
     if (!window.confirm(`Corrigir tema do tenant "${tenantDisplayName(w)}"? O tema atual ("${oldTheme ?? "—"}") será substituído por "legacy".`)) return;
-    const { error: err } = await supabase
+    const { data, error: err } = await supabase
       .from("wedding_details")
       .update({ theme_id: "legacy" })
-      .eq("id", w.id);
+      .eq("id", w.id)
+      .select();
     if (err) {
       toast({ title: "Erro ao corrigir tema", description: err.message, variant: "destructive" });
+      return;
+    }
+    if (!Array.isArray(data) || data.length === 0) {
+      devLog("Operação concluída sem alterações.");
+      toast({ title: "Nenhuma alteração foi aplicada.", description: "Verifique suas permissões ou tente novamente.", variant: "destructive" });
       return;
     }
     await logAdminAction({
@@ -274,12 +293,18 @@ export default function MasterDashboard() {
 
 
   const handleRestore = async (w: Wedding) => {
-    const { error: err } = await supabase
+    const { data, error: err } = await supabase
       .from("wedding_details")
       .update({ tenant_status: "active", archived_at: null })
-      .eq("id", w.id);
+      .eq("id", w.id)
+      .select();
     if (err) {
       toast({ title: "Erro ao restaurar", description: err.message, variant: "destructive" });
+      return;
+    }
+    if (!Array.isArray(data) || data.length === 0) {
+      devLog("Operação concluída sem alterações.");
+      toast({ title: "Nenhuma alteração foi aplicada.", description: "Verifique suas permissões ou tente novamente.", variant: "destructive" });
       return;
     }
     await logAdminAction({
@@ -301,7 +326,7 @@ export default function MasterDashboard() {
       "Converter esta demonstração em uma licença definitiva?\n\nO acesso administrativo será restaurado imediatamente e o período de licença será reiniciado para 365 dias."
     )) return;
     const newExpires = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString();
-    const { error: err } = await supabase
+    const { data, error: err } = await supabase
       .from("wedding_details")
       .update({
         is_demo: false,
@@ -310,13 +335,19 @@ export default function MasterDashboard() {
         archived_at: null,
         expires_at: newExpires,
       })
-      .eq("id", w.id);
+      .eq("id", w.id)
+      .select();
     if (err) {
       toast({
         title: "Não foi possível converter esta demonstração.",
         description: "Tente novamente.",
         variant: "destructive",
       });
+      return;
+    }
+    if (!Array.isArray(data) || data.length === 0) {
+      devLog("Operação concluída sem alterações.");
+      toast({ title: "Nenhuma alteração foi aplicada.", description: "Verifique suas permissões ou tente novamente.", variant: "destructive" });
       return;
     }
     await logAdminAction({

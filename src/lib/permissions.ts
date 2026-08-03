@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { devLog } from "@/lib/devLog";
 
 export type MenuKey = 
   | "estatisticas"
@@ -105,7 +106,7 @@ export const upsertPermission = async (
   permissions: Partial<Omit<Permission, "id" | "role_key" | "menu_key">>
 ): Promise<void> => {
   try {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("admin_permissions")
       .upsert([
         {
@@ -113,11 +114,17 @@ export const upsertPermission = async (
           menu_key: menuKey,
           ...permissions,
         },
-      ]);
+      ])
+      .select();
 
     if (error) {
       console.error("Error upserting permission:", error);
       throw error;
+    }
+
+    if (!Array.isArray(data) || data.length === 0) {
+      devLog("Operação concluída sem alterações.");
+      throw new Error("Nenhuma alteração foi aplicada. Verifique suas permissões ou tente novamente.");
     }
   } catch (error) {
     console.error("Error in upsertPermission:", error);
@@ -130,10 +137,12 @@ export const upsertPermission = async (
  */
 export const deleteRolePermissions = async (roleKey: string): Promise<void> => {
   try {
+    // cleanup: zero rows is a valid outcome
     const { error } = await supabase
       .from("admin_permissions")
       .delete()
-      .eq("role_key", roleKey);
+      .eq("role_key", roleKey)
+      .select();
 
     if (error) {
       console.error("Error deleting role permissions:", error);

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { devLog } from "@/lib/devLog";
 import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
@@ -80,15 +81,27 @@ const RoleProfilesDialog = ({ open, onOpenChange, onRoleChange }: RoleProfilesDi
     try {
       if (editingRole) {
         // Update existing role
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from("role_profiles")
           .update({
             role_key: formData.role_key,
             role_label: formData.role_label,
           })
-          .eq("id", editingRole.id);
+          .eq("id", editingRole.id)
+          .select();
 
         if (error) throw error;
+
+        if (!Array.isArray(data) || data.length === 0) {
+          devLog("Operação concluída sem alterações.");
+          toast({
+            title: "Nenhuma alteração foi aplicada.",
+            description: "Verifique suas permissões ou tente novamente.",
+            variant: "destructive",
+          });
+          setLoading(false);
+          return;
+        }
 
         toast({
           title: "Papel atualizado!",
@@ -96,15 +109,27 @@ const RoleProfilesDialog = ({ open, onOpenChange, onRoleChange }: RoleProfilesDi
         });
       } else {
         // Create new role
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from("role_profiles")
           .insert({
             role_key: formData.role_key,
             role_label: formData.role_label,
             is_system: false,
-          });
+          })
+          .select();
 
         if (error) throw error;
+
+        if (!Array.isArray(data) || data.length === 0) {
+          devLog("Operação concluída sem alterações.");
+          toast({
+            title: "Nenhuma alteração foi aplicada.",
+            description: "Verifique suas permissões ou tente novamente.",
+            variant: "destructive",
+          });
+          setLoading(false);
+          return;
+        }
 
         toast({
           title: "Papel criado!",
@@ -142,12 +167,24 @@ const RoleProfilesDialog = ({ open, onOpenChange, onRoleChange }: RoleProfilesDi
   const handleDelete = async (roleId: string) => {
     setLoading(true);
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("role_profiles")
         .delete()
-        .eq("id", roleId);
+        .eq("id", roleId)
+        .select();
 
       if (error) throw error;
+
+      if (!Array.isArray(data) || data.length === 0) {
+        devLog("Operação concluída sem alterações.");
+        toast({
+          title: "Nenhuma alteração foi aplicada.",
+          description: "Verifique suas permissões ou tente novamente.",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
 
       toast({
         title: "Papel excluído!",

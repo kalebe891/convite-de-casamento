@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { Trash2, Plus, Edit } from "lucide-react";
 import { logAdminAction } from "@/lib/adminLogger";
+import { devLog } from "@/lib/devLog";
 import { format, parseISO } from "date-fns";
 
 // Helper para converter data do banco mantendo o horário local
@@ -71,7 +72,7 @@ const EventsManager = ({ permissions }: EventsManagerProps) => {
       if (editingId) {
         // Update existing event
         const oldEvent = events.find((e) => e.id === editingId);
-        const { data, error } = await supabase
+        const { data: updatedEvents, error } = await supabase
           .from("events")
           .update({
             event_type: newEvent.event_type,
@@ -84,10 +85,21 @@ const EventsManager = ({ permissions }: EventsManagerProps) => {
           })
           .eq("id", editingId)
           .eq("wedding_id", weddingId!)
-          .select()
-          .single();
+          .select();
 
         if (error) throw error;
+
+        if (!Array.isArray(updatedEvents) || updatedEvents.length === 0) {
+          devLog("Operação concluída sem alterações.");
+          toast({
+            title: "Nenhuma alteração foi aplicada.",
+            description: "Verifique suas permissões ou tente novamente.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        const data = updatedEvents[0];
 
         await logAdminAction({
           action: "update",
@@ -107,7 +119,7 @@ const EventsManager = ({ permissions }: EventsManagerProps) => {
         });
       } else {
         // Insert new event
-        const { data, error } = await supabase
+        const { data: insertedEvents, error } = await supabase
           .from("events")
           .insert({
             wedding_id: weddingId,
@@ -119,10 +131,21 @@ const EventsManager = ({ permissions }: EventsManagerProps) => {
             maps_url: newEvent.maps_url || null,
             description: newEvent.description || null,
           })
-          .select()
-          .single();
+          .select();
 
         if (error) throw error;
+
+        if (!Array.isArray(insertedEvents) || insertedEvents.length === 0) {
+          devLog("Operação concluída sem alterações.");
+          toast({
+            title: "Nenhuma alteração foi aplicada.",
+            description: "Verifique suas permissões ou tente novamente.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        const data = insertedEvents[0];
 
         await logAdminAction({
           action: "insert",
@@ -193,9 +216,24 @@ const EventsManager = ({ permissions }: EventsManagerProps) => {
     const eventToDelete = events.find((e) => e.id === id);
     
     try {
-      const { error } = await supabase.from("events").delete().eq("id", id).eq("wedding_id", weddingId!);
+      const { data: deletedEvents, error } = await supabase
+        .from("events")
+        .delete()
+        .eq("id", id)
+        .eq("wedding_id", weddingId!)
+        .select();
 
       if (error) throw error;
+
+      if (!Array.isArray(deletedEvents) || deletedEvents.length === 0) {
+        devLog("Operação concluída sem alterações.");
+        toast({
+          title: "Nenhuma alteração foi aplicada.",
+          description: "Verifique suas permissões ou tente novamente.",
+          variant: "destructive",
+        });
+        return;
+      }
 
       await logAdminAction({
         action: "delete",
