@@ -20,6 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useWedding } from "@/contexts/WeddingContext";
 import { logAdminAction } from "@/lib/adminLogger";
 import { resolveThemeId, type TenantThemeId } from "@/themes/registry";
+import { devLog } from "@/lib/devLog";
 
 interface Props {
   permissions: {
@@ -58,11 +59,22 @@ const WeddingThemeForm = ({ permissions }: Props) => {
     if (!weddingId) return;
     setLoading(true);
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("wedding_details")
         .update({ theme_id: themeId })
-        .eq("id", weddingId);
+        .eq("id", weddingId)
+        .select();
       if (error) throw error;
+
+      if (!Array.isArray(data) || data.length === 0) {
+        devLog("Operação concluída sem alterações.");
+        toast({
+          title: "Nenhuma alteração foi aplicada.",
+          description: "Verifique suas permissões ou tente novamente.",
+          variant: "destructive",
+        });
+        return;
+      }
 
       await logAdminAction({
         action: "update",
