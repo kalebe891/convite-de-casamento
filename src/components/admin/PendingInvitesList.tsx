@@ -16,6 +16,7 @@ import { Copy, Mail, MessageCircle, RefreshCw, Clock, CheckCircle, XCircle, Tras
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useWedding } from "@/contexts/WeddingContext";
+import { devLog } from "@/lib/devLog";
 
 interface PendingInvite {
   id: string;
@@ -148,12 +149,24 @@ const PendingInvitesList = ({ refreshTrigger }: PendingInvitesListProps) => {
   const deleteInvite = async (email: string, id: string) => {
     setDeletingId(id);
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("pending_users")
         .delete()
-        .eq("email", email);
+        .eq("email", email)
+        .select();
 
       if (error) throw error;
+
+      if (!Array.isArray(data) || data.length === 0) {
+        devLog("Operação concluída sem alterações.");
+        toast({
+          title: "Nenhuma alteração foi aplicada.",
+          description: "Verifique suas permissões ou tente novamente.",
+          variant: "destructive",
+        });
+        setDeletingId(null);
+        return;
+      }
 
       toast({
         title: "Convite excluído",

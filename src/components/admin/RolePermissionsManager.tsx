@@ -8,6 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { Loader2, CheckSquare } from "lucide-react";
 import { MENU_LABELS, MenuKey } from "@/lib/permissions";
+import { devLog } from "@/lib/devLog";
 
 // Define menu order matching the sidebar
 const MENU_ORDER: MenuKey[] = [
@@ -146,13 +147,25 @@ const RolePermissionsManager = ({ roleKey, roleLabel }: RolePermissionsManagerPr
         };
       });
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("admin_permissions")
         .upsert(updates, {
           onConflict: "role_key,menu_key"
-        });
+        })
+        .select();
 
       if (error) throw error;
+
+      if (!Array.isArray(data) || data.length === 0) {
+        devLog("Operação concluída sem alterações.");
+        toast({
+          title: "Nenhuma alteração foi aplicada.",
+          description: "Verifique suas permissões ou tente novamente.",
+          variant: "destructive",
+        });
+        setSaving(false);
+        return;
+      }
 
       toast({
         title: "Todas as permissões habilitadas",
@@ -200,7 +213,7 @@ const RolePermissionsManager = ({ roleKey, roleLabel }: RolePermissionsManagerPr
         updatedPermission.can_view = true;
       }
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("admin_permissions")
         .upsert(
           {
@@ -215,9 +228,21 @@ const RolePermissionsManager = ({ roleKey, roleLabel }: RolePermissionsManagerPr
           {
             onConflict: "role_key,menu_key"
           }
-        );
+        )
+        .select();
 
       if (error) throw error;
+
+      if (!Array.isArray(data) || data.length === 0) {
+        devLog("Operação concluída sem alterações.");
+        toast({
+          title: "Nenhuma alteração foi aplicada.",
+          description: "Verifique suas permissões ou tente novamente.",
+          variant: "destructive",
+        });
+        setSaving(false);
+        return;
+      }
 
       setPermissions((prev) =>
         prev.map((p) => (p.menu_key === menuKey ? updatedPermission : p))

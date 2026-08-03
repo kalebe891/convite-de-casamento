@@ -12,6 +12,7 @@ import { Trash2, Plus, Pencil, X } from "lucide-react";
 import { buffetItemSchema } from "@/lib/validationSchemas";
 import { getSafeErrorMessage } from "@/lib/errorHandling";
 import { logAdminAction } from "@/lib/adminLogger";
+import { devLog } from "@/lib/devLog";
 
 interface BuffetManagerProps {
   permissions: {
@@ -60,14 +61,17 @@ const BuffetManager = ({ permissions }: BuffetManagerProps) => {
     }
     if (!weddingId) return;
 
-    const { error } = await supabase.from("wedding_details").update({ show_buffet_section: newValue }).eq("id", weddingId);
+    const { data, error } = await supabase.from("wedding_details").update({ show_buffet_section: newValue }).eq("id", weddingId).select();
 
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
-    } else {
+    } else if (Array.isArray(data) && data.length > 0) {
       toast({ title: "Atualizado", description: `Seção de buffet ${newValue ? 'exibida' : 'oculta'} na página pública` });
       await logAdminAction({ action: "update", tableName: "wedding_details", recordId: weddingId, newData: { show_buffet_section: newValue }, affectedName: "Seção Buffet" });
       setShowBuffetSection(newValue);
+    } else {
+        devLog("Operação concluída sem alterações.");
+        toast({ title: "Nenhuma alteração foi aplicada.", description: "Verifique suas permissões ou tente novamente.", variant: "destructive" });
     }
   };
 
@@ -90,15 +94,18 @@ const BuffetManager = ({ permissions }: BuffetManagerProps) => {
       category: validationResult.data.category?.trim() || null,
       is_public: newItem.is_public,
       display_order: items.length,
-    }).select().single();
+    }).select();
 
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
-    } else {
-      await logAdminAction({ action: "insert", tableName: "buffet_items", recordId: data?.id, newData: newItem, affectedName: newItem.item_name });
+    } else if (Array.isArray(data) && data.length > 0) {
+      await logAdminAction({ action: "insert", tableName: "buffet_items", recordId: data[0]?.id, newData: newItem, affectedName: newItem.item_name });
       toast({ title: "Sucesso", description: "Item adicionado!" });
       setNewItem({ item_name: "", category: "", is_public: true });
       fetchData();
+    } else {
+        devLog("Operação concluída sem alterações.");
+        toast({ title: "Nenhuma alteração foi aplicada.", description: "Verifique suas permissões ou tente novamente.", variant: "destructive" });
     }
   };
 
@@ -129,7 +136,7 @@ const BuffetManager = ({ permissions }: BuffetManagerProps) => {
     }
 
     const oldItem = items.find(item => item.id === editingId);
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("buffet_items")
       .update({
         item_name: validationResult.data.item_name.trim(),
@@ -137,16 +144,20 @@ const BuffetManager = ({ permissions }: BuffetManagerProps) => {
         is_public: editItem.is_public,
       })
       .eq("id", editingId)
-      .eq("wedding_id", weddingId!);
+      .eq("wedding_id", weddingId!)
+      .select();
 
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
-    } else {
+    } else if (Array.isArray(data) && data.length > 0) {
       await logAdminAction({ action: "update", tableName: "buffet_items", recordId: editingId!, oldData: oldItem, newData: editItem, affectedName: editItem.item_name });
       toast({ title: "Sucesso", description: "Item atualizado!" });
       setIsEditOpen(false);
       setEditingId(null);
       fetchData();
+    } else {
+        devLog("Operação concluída sem alterações.");
+        toast({ title: "Nenhuma alteração foi aplicada.", description: "Verifique suas permissões ou tente novamente.", variant: "destructive" });
     }
   };
 
@@ -156,14 +167,17 @@ const BuffetManager = ({ permissions }: BuffetManagerProps) => {
       return;
     }
     const deletedItem = items.find(item => item.id === id);
-    const { error } = await supabase.from("buffet_items").delete().eq("id", id).eq("wedding_id", weddingId!);
+    const { data, error } = await supabase.from("buffet_items").delete().eq("id", id).eq("wedding_id", weddingId!).select();
 
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
-    } else {
+    } else if (Array.isArray(data) && data.length > 0) {
       await logAdminAction({ action: "delete", tableName: "buffet_items", recordId: id, oldData: deletedItem, affectedName: deletedItem?.item_name });
       toast({ title: "Sucesso", description: "Item removido!" });
       fetchData();
+    } else {
+        devLog("Operação concluída sem alterações.");
+        toast({ title: "Nenhuma alteração foi aplicada.", description: "Verifique suas permissões ou tente novamente.", variant: "destructive" });
     }
   };
 
