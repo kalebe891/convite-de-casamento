@@ -16,6 +16,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
 import { getSafeErrorMessage } from "@/lib/errorHandling";
 import { logAdminAction } from "@/lib/adminLogger";
+import { devLog } from "@/lib/devLog";
 import { Loader2, Upload, QrCode, ClipboardPaste } from "lucide-react";
 
 interface PixGiftDialogProps {
@@ -159,13 +160,19 @@ const PixGiftDialog = ({ open, onOpenChange, weddingId, onCreated, itemsCount }:
         suggested_amount: pixMode === "fixed" ? parseFloat(amount) : null,
       };
 
-      const { data, error } = await supabase.from("gift_items").insert(payload).select().single();
+      const { data, error } = await supabase.from("gift_items").insert(payload).select();
       if (error) throw error;
+
+      if (!Array.isArray(data) || data.length === 0) {
+        devLog("Operação concluída sem alterações.");
+        toast({ title: "Nenhuma alteração foi aplicada.", description: "Verifique suas permissões ou tente novamente.", variant: "destructive" });
+        return;
+      }
 
       await logAdminAction({
         action: "insert",
         tableName: "gift_items",
-        recordId: data?.id,
+        recordId: data[0]?.id,
         newData: payload,
         affectedName: payload.gift_name,
       });

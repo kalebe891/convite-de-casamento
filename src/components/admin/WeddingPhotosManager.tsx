@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { Trash2, Upload, Star } from "lucide-react";
 import { getSafeErrorMessage } from "@/lib/errorHandling";
+import { devLog } from "@/lib/devLog";
 
 interface Photo {
   id: string;
@@ -138,12 +139,22 @@ const WeddingPhotosManager = ({ permissions }: WeddingPhotosManagerProps) => {
           is_main: false,
           is_secondary: false,
         })
-        .select()
-        .single();
+        .select();
 
       if (error) throw error;
 
-      setPhotos([...photos, data]);
+      if (!Array.isArray(data) || data.length === 0) {
+        devLog("Operação concluída sem alterações.");
+        toast({
+          title: "Nenhuma alteração foi aplicada.",
+          description: "Verifique suas permissões ou tente novamente.",
+          variant: "destructive",
+        });
+        e.target.value = '';
+        return;
+      }
+
+      setPhotos([...photos, data[0]]);
 
       toast({
         title: "Sucesso!",
@@ -178,9 +189,19 @@ const WeddingPhotosManager = ({ permissions }: WeddingPhotosManagerProps) => {
 
       await supabase.storage.from("wedding-photos").remove([filePath]);
 
-      const { error } = await supabase.from("photos").delete().eq("id", id).eq("wedding_id", weddingId!);
+      const { data, error } = await supabase.from("photos").delete().eq("id", id).eq("wedding_id", weddingId!).select();
 
       if (error) throw error;
+
+      if (!Array.isArray(data) || data.length === 0) {
+        devLog("Operação concluída sem alterações.");
+        toast({
+          title: "Nenhuma alteração foi aplicada.",
+          description: "Verifique suas permissões ou tente novamente.",
+          variant: "destructive",
+        });
+        return;
+      }
 
       const updatedPhotos = photos.filter((p) => p.id !== id);
       setPhotos(updatedPhotos);
@@ -216,13 +237,24 @@ const WeddingPhotosManager = ({ permissions }: WeddingPhotosManagerProps) => {
     }
 
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("photos")
         .update({ is_main: true })
         .eq("id", photoId)
-        .eq("wedding_id", weddingId!);
+        .eq("wedding_id", weddingId!)
+        .select();
 
       if (error) throw error;
+
+      if (!Array.isArray(data) || data.length === 0) {
+        devLog("Operação concluída sem alterações.");
+        toast({
+          title: "Nenhuma alteração foi aplicada.",
+          description: "Verifique suas permissões ou tente novamente.",
+          variant: "destructive",
+        });
+        return;
+      }
 
       const updatedPhotos = photos.map(p => ({
         ...p,
@@ -256,13 +288,24 @@ const WeddingPhotosManager = ({ permissions }: WeddingPhotosManagerProps) => {
     }
 
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("photos")
         .update({ is_secondary: true })
         .eq("id", photoId)
-        .eq("wedding_id", weddingId!);
+        .eq("wedding_id", weddingId!)
+        .select();
 
       if (error) throw error;
+
+      if (!Array.isArray(data) || data.length === 0) {
+        devLog("Operação concluída sem alterações.");
+        toast({
+          title: "Nenhuma alteração foi aplicada.",
+          description: "Verifique suas permissões ou tente novamente.",
+          variant: "destructive",
+        });
+        return;
+      }
 
       const updatedPhotos = photos.map(p => ({
         ...p,

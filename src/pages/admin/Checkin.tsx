@@ -17,6 +17,7 @@ import {
 import { Search, RefreshCw, CheckCircle, XCircle, Clock, Gift, Bell, Wifi, WifiOff } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { logAdminAction } from "@/lib/adminLogger";
+import { devLog } from "@/lib/devLog";
 import { usePagePermissions } from "@/hooks/usePagePermissions";
 import { useNavigate } from "react-router-dom";
 import { useAdminBasePath } from "@/hooks/useAdminBasePath";
@@ -413,13 +414,24 @@ const Checkin = () => {
     if (!user) return;
 
     try {
-      const { error } = await supabase
+      const { data: updatedGifts, error } = await supabase
         .from("gift_items")
         .update({ is_purchased: true })
         .eq("selected_by_guest_id", guest.id)
-        .eq("wedding_id", weddingId!);
+        .eq("wedding_id", weddingId!)
+        .select();
 
       if (error) throw error;
+
+      if (!Array.isArray(updatedGifts) || updatedGifts.length === 0) {
+        devLog("Operação concluída sem alterações.");
+        toast({
+          title: "Nenhuma alteração foi aplicada.",
+          description: "Verifique suas permissões ou tente novamente.",
+          variant: "destructive",
+        });
+        return;
+      }
 
       await logAdminAction({
         action: "gift_received",
@@ -451,13 +463,24 @@ const Checkin = () => {
     if (!user) return;
 
     try {
-      const { error } = await supabase
+      const { data: updatedGifts, error } = await supabase
         .from("gift_items")
         .update({ is_purchased: false })
         .eq("selected_by_guest_id", guest.id)
-        .eq("wedding_id", weddingId!);
+        .eq("wedding_id", weddingId!)
+        .select();
 
       if (error) throw error;
+
+      if (!Array.isArray(updatedGifts) || updatedGifts.length === 0) {
+        devLog("Operação concluída sem alterações.");
+        toast({
+          title: "Nenhuma alteração foi aplicada.",
+          description: "Verifique suas permissões ou tente novamente.",
+          variant: "destructive",
+        });
+        return;
+      }
 
       await logAdminAction({
         action: "gift_cancelled",

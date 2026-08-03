@@ -174,14 +174,17 @@ const TimelineManager = ({ permissions }: TimelineManagerProps) => {
       return;
     }
     const newValue = !currentValue;
-    const { error } = await supabase.from("timeline_events").update({ is_public: newValue }).eq("id", id).eq("wedding_id", weddingId!);
+    const { data, error } = await supabase.from("timeline_events").update({ is_public: newValue }).eq("id", id).eq("wedding_id", weddingId!).select();
 
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
-    } else {
+    } else if (Array.isArray(data) && data.length > 0) {
       const item = events.find(e => e.id === id);
       await logAdminAction({ action: "update", tableName: "timeline_events", recordId: id, oldData: { is_public: currentValue }, newData: { is_public: newValue }, affectedName: item?.activity });
       fetchData();
+    } else {
+        devLog("Operação concluída sem alterações.");
+        toast({ title: "Nenhuma alteração foi aplicada.", description: "Verifique suas permissões ou tente novamente.", variant: "destructive" });
     }
   };
 

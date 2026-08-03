@@ -174,14 +174,17 @@ const PlaylistManager = ({ permissions }: PlaylistManagerProps) => {
       return;
     }
     const newValue = !currentValue;
-    const { error } = await supabase.from("playlist_songs").update({ is_public: newValue }).eq("id", id).eq("wedding_id", weddingId!);
+    const { data, error } = await supabase.from("playlist_songs").update({ is_public: newValue }).eq("id", id).eq("wedding_id", weddingId!).select();
 
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
-    } else {
+    } else if (Array.isArray(data) && data.length > 0) {
       const song = songs.find(s => s.id === id);
       await logAdminAction({ action: "update", tableName: "playlist_songs", recordId: id, oldData: { is_public: currentValue }, newData: { is_public: newValue }, affectedName: song?.song_name });
       fetchData();
+    } else {
+        devLog("Operação concluída sem alterações.");
+        toast({ title: "Nenhuma alteração foi aplicada.", description: "Verifique suas permissões ou tente novamente.", variant: "destructive" });
     }
   };
 

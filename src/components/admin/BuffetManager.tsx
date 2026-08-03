@@ -173,14 +173,17 @@ const BuffetManager = ({ permissions }: BuffetManagerProps) => {
       return;
     }
     const newValue = !currentValue;
-    const { error } = await supabase.from("buffet_items").update({ is_public: newValue }).eq("id", id).eq("wedding_id", weddingId!);
+    const { data, error } = await supabase.from("buffet_items").update({ is_public: newValue }).eq("id", id).eq("wedding_id", weddingId!).select();
 
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
-    } else {
+    } else if (Array.isArray(data) && data.length > 0) {
       const item = items.find(i => i.id === id);
       await logAdminAction({ action: "update", tableName: "buffet_items", recordId: id, oldData: { is_public: currentValue }, newData: { is_public: newValue }, affectedName: item?.item_name });
       fetchData();
+    } else {
+        devLog("Operação concluída sem alterações.");
+        toast({ title: "Nenhuma alteração foi aplicada.", description: "Verifique suas permissões ou tente novamente.", variant: "destructive" });
     }
   };
 
