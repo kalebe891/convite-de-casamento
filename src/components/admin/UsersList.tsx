@@ -35,6 +35,7 @@ import RoleProfilesDialog from "./RoleProfilesDialog";
 import RolePermissionsPopover from "./RolePermissionsPopover";
 import { useWedding } from "@/contexts/WeddingContext";
 import { logAdminAction } from "@/lib/adminLogger";
+import { devLog } from "@/lib/devLog";
 
 
 interface UserProfile {
@@ -207,16 +208,23 @@ const UsersList = ({ refreshKey, roleProfiles, onRoleProfilesChange, permissions
           weddingId,
         });
       } else {
+        // cleanup: zero rows is a valid outcome
         const { error: deleteError } = await supabase
           .from("user_roles")
           .delete()
-          .eq("user_id", userId);
+          .eq("user_id", userId)
+          .select();
         if (deleteError) throw deleteError;
 
-        const { error: insertError } = await supabase
+        const { data: insertData, error: insertError } = await supabase
           .from("user_roles")
-          .insert({ user_id: userId, role: newRole as any });
+          .insert({ user_id: userId, role: newRole as any })
+          .select();
         if (insertError) throw insertError;
+        if (!Array.isArray(insertData) || insertData.length === 0) {
+          devLog("Operação concluída sem alterações.");
+          throw new Error("Nenhuma alteração foi aplicada. Verifique suas permissões ou tente novamente.");
+        }
 
         await logAdminAction({
           action: "update",
@@ -283,12 +291,23 @@ const UsersList = ({ refreshKey, roleProfiles, onRoleProfilesChange, permissions
     }
 
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("profiles")
         .update({ full_name: editNameValue.trim() })
-        .eq("id", userId);
+        .eq("id", userId)
+        .select();
 
       if (error) throw error;
+
+      if (!Array.isArray(data) || data.length === 0) {
+        devLog("Operação concluída sem alterações.");
+        toast({
+          title: "Nenhuma alteração foi aplicada.",
+          description: "Verifique suas permissões ou tente novamente.",
+          variant: "destructive",
+        });
+        return;
+      }
 
       toast({
         title: "Nome atualizado!",
