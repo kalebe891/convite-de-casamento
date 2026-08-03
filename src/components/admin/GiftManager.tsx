@@ -16,6 +16,7 @@ import { getSafeErrorMessage } from "@/lib/errorHandling";
 import PixGiftDialog from "./PixGiftDialog";
 import PixQrViewerDialog from "@/components/shared/PixQrViewerDialog";
 import { logAdminAction } from "@/lib/adminLogger";
+import { devLog } from "@/lib/devLog";
 
 interface GiftManagerProps {
   permissions: {
@@ -112,15 +113,18 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
       link: newItem.link.trim() || null,
       is_public: newItem.is_public,
       display_order: items.length,
-    }).select().single();
+    }).select();
 
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
-    } else {
-      await logAdminAction({ action: "insert", tableName: "gift_items", recordId: data?.id, newData: newItem, affectedName: newItem.gift_name });
+    } else if (Array.isArray(data) && data.length > 0) {
+      await logAdminAction({ action: "insert", tableName: "gift_items", recordId: data[0]?.id, newData: newItem, affectedName: newItem.gift_name });
       toast({ title: "Sucesso", description: "Presente adicionado!" });
       setNewItem({ gift_name: "", description: "", link: "", is_public: true });
       fetchData();
+    } else {
+      devLog("Operação concluída sem alterações.");
+      toast({ title: "Nenhuma alteração foi aplicada.", description: "Verifique suas permissões ou tente novamente.", variant: "destructive" });
     }
   };
 
@@ -138,15 +142,16 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
 
   const handleToggleReceived = async (item: any) => {
     const newValue = !item.is_purchased;
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("gift_items")
       .update({ is_purchased: newValue })
       .eq("id", item.id)
-      .eq("wedding_id", weddingId!);
+      .eq("wedding_id", weddingId!)
+      .select();
 
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
-    } else {
+    } else if (Array.isArray(data) && data.length > 0) {
       await logAdminAction({
         action: newValue ? "gift_received" : "gift_cancelled",
         tableName: "gift_items",
@@ -162,6 +167,9 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
           : `"${item.gift_name}" não está mais marcado como recebido`,
       });
       fetchData();
+    } else {
+      devLog("Operação concluída sem alterações.");
+      toast({ title: "Nenhuma alteração foi aplicada.", description: "Verifique suas permissões ou tente novamente.", variant: "destructive" });
     }
   };
 
@@ -178,7 +186,7 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
 
     const oldItem = items.find(item => item.id === editingId);
     const guestId = editItem.selected_by_guest_id || null;
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("gift_items")
       .update({
         gift_name: editItem.gift_name.trim(),
@@ -190,16 +198,20 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
         claimed_via_admin: guestId ? true : false,
       })
       .eq("id", editingId)
-      .eq("wedding_id", weddingId!);
+      .eq("wedding_id", weddingId!)
+      .select();
 
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
-    } else {
+    } else if (Array.isArray(data) && data.length > 0) {
       await logAdminAction({ action: "update", tableName: "gift_items", recordId: editingId!, oldData: oldItem, newData: editItem, affectedName: editItem.gift_name });
       toast({ title: "Sucesso", description: "Presente atualizado!" });
       setIsEditOpen(false);
       setEditingId(null);
       fetchData();
+    } else {
+      devLog("Operação concluída sem alterações.");
+      toast({ title: "Nenhuma alteração foi aplicada.", description: "Verifique suas permissões ou tente novamente.", variant: "destructive" });
     }
   };
 
@@ -209,14 +221,17 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
       return;
     }
     const deletedItem = items.find(item => item.id === id);
-    const { error } = await supabase.from("gift_items").delete().eq("id", id).eq("wedding_id", weddingId!);
+    const { data, error } = await supabase.from("gift_items").delete().eq("id", id).eq("wedding_id", weddingId!).select();
 
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
-    } else {
+    } else if (Array.isArray(data) && data.length > 0) {
       await logAdminAction({ action: "delete", tableName: "gift_items", recordId: id, oldData: deletedItem, affectedName: deletedItem?.gift_name });
       toast({ title: "Sucesso", description: "Presente removido!" });
       fetchData();
+    } else {
+      devLog("Operação concluída sem alterações.");
+      toast({ title: "Nenhuma alteração foi aplicada.", description: "Verifique suas permissões ou tente novamente.", variant: "destructive" });
     }
   };
 
@@ -225,15 +240,18 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
       toast({ title: "Sem permissão", description: "Você não tem permissão para tornar itens públicos/privados", variant: "destructive" });
       return;
     }
-    const { error } = await supabase.from("gift_items").update({ is_public: newValue }).eq("id", id).eq("wedding_id", weddingId!);
+    const { data, error } = await supabase.from("gift_items").update({ is_public: newValue }).eq("id", id).eq("wedding_id", weddingId!).select();
 
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
-    } else {
+    } else if (Array.isArray(data) && data.length > 0) {
       toast({ title: "Atualizado", description: `Presente ${newValue ? 'visível' : 'oculto'} para o público` });
       const gift = items.find(i => i.id === id);
       await logAdminAction({ action: "update", tableName: "gift_items", recordId: id, newData: { is_public: newValue }, affectedName: gift?.gift_name });
       fetchData();
+    } else {
+      devLog("Operação concluída sem alterações.");
+      toast({ title: "Nenhuma alteração foi aplicada.", description: "Verifique suas permissões ou tente novamente.", variant: "destructive" });
     }
   };
 
@@ -244,14 +262,17 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
     }
     if (!weddingId) return;
 
-    const { error } = await supabase.from("wedding_details").update({ show_gifts_section: newValue }).eq("id", weddingId);
+    const { data, error } = await supabase.from("wedding_details").update({ show_gifts_section: newValue }).eq("id", weddingId).select();
 
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
-    } else {
+    } else if (Array.isArray(data) && data.length > 0) {
       toast({ title: "Atualizado", description: `Seção de presentes ${newValue ? 'exibida' : 'oculta'} na página inicial` });
       await logAdminAction({ action: "update", tableName: "wedding_details", recordId: weddingId, newData: { show_gifts_section: newValue }, affectedName: "Seção Presentes" });
       setShowGiftsSection(newValue);
+    } else {
+      devLog("Operação concluída sem alterações.");
+      toast({ title: "Nenhuma alteração foi aplicada.", description: "Verifique suas permissões ou tente novamente.", variant: "destructive" });
     }
   };
 
@@ -262,14 +283,17 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
     }
     if (!weddingId) return;
 
-    const { error } = await supabase.from("wedding_details").update({ hide_reserved_gifts: newValue }).eq("id", weddingId);
+    const { data, error } = await supabase.from("wedding_details").update({ hide_reserved_gifts: newValue }).eq("id", weddingId).select();
 
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
-    } else {
+    } else if (Array.isArray(data) && data.length > 0) {
       toast({ title: "Atualizado", description: `Presentes reservados ${newValue ? 'ocultos' : 'visíveis'} na página inicial` });
       await logAdminAction({ action: "update", tableName: "wedding_details", recordId: weddingId, newData: { hide_reserved_gifts: newValue }, affectedName: "Ocultar Reservados" });
       setHideReservedGifts(newValue);
+    } else {
+      devLog("Operação concluída sem alterações.");
+      toast({ title: "Nenhuma alteração foi aplicada.", description: "Verifique suas permissões ou tente novamente.", variant: "destructive" });
     }
   };
 
@@ -280,17 +304,21 @@ const GiftManager = ({ permissions }: GiftManagerProps) => {
     }
     if (!weddingId) return;
 
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("wedding_details")
       .update({ show_pix_section: newValue } as any)
-      .eq("id", weddingId);
+      .eq("id", weddingId)
+      .select();
 
     if (error) {
       toast({ title: "Erro", description: getSafeErrorMessage(error), variant: "destructive" });
-    } else {
+    } else if (Array.isArray(data) && data.length > 0) {
       toast({ title: "Atualizado", description: `Seção PIX ${newValue ? 'exibida' : 'oculta'} na página inicial` });
       await logAdminAction({ action: "update", tableName: "wedding_details", recordId: weddingId, newData: { show_pix_section: newValue }, affectedName: "Seção PIX" });
       setShowPixSection(newValue);
+    } else {
+      devLog("Operação concluída sem alterações.");
+      toast({ title: "Nenhuma alteração foi aplicada.", description: "Verifique suas permissões ou tente novamente.", variant: "destructive" });
     }
   };
 
