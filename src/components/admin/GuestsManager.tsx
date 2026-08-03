@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { guestSchema } from "@/lib/validationSchemas";
 import { getSafeErrorMessage } from "@/lib/errorHandling";
 import { logAdminAction } from "@/lib/adminLogger";
+import { devLog } from "@/lib/devLog";
 import GuestMessagesDialog from "./GuestMessagesDialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
@@ -223,20 +224,19 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
       wedding_id: weddingId,
     };
 
-    const { data: insertedGuest, error } = await supabase
+    const { data: insertedGuests, error } = await supabase
       .from("guests")
       .insert(guestPayload)
-      .select("id")
-      .single();
+      .select("id");
 
     if (error) {
       console.error("Error adding guest:", error);
       toast.error(getSafeErrorMessage(error));
-    } else {
+    } else if (Array.isArray(insertedGuests) && insertedGuests.length > 0) {
       await logAdminAction({
         action: "insert",
         tableName: "guests",
-        recordId: insertedGuest?.id,
+        recordId: insertedGuests[0]?.id,
         newData: guestPayload,
         affectedName: guestPayload.name,
         weddingId,
@@ -246,6 +246,9 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
       setNewGuest({ name: "", phone: "", email: "" });
       setIsAddOpen(false);
       fetchGuests();
+    } else {
+      devLog("Operação concluída sem alterações.");
+      toast.error("Nenhuma alteração foi aplicada. Verifique suas permissões ou tente novamente.");
     }
   };
 
@@ -304,7 +307,7 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
     // Get old data for logging
     const oldGuest = guests.find(g => g.id === editGuest.id);
 
-    const { error } = await supabase
+    const { data: updatedGuests, error } = await supabase
       .from("guests")
       .update({
         name: validationResult.data.name.trim(),
@@ -312,12 +315,13 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
         email: validationResult.data.email?.trim() || null,
       })
       .eq("id", editGuest.id)
-      .eq("wedding_id", weddingId!);
+      .eq("wedding_id", weddingId!)
+      .select();
 
     if (error) {
       console.error("Error updating guest:", error);
       toast.error(getSafeErrorMessage(error));
-    } else {
+    } else if (Array.isArray(updatedGuests) && updatedGuests.length > 0) {
       await logAdminAction({
         action: "update",
         tableName: "guests",
@@ -336,6 +340,9 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
       setEditGuest({ id: "", name: "", phone: "", email: "" });
       setIsEditOpen(false);
       fetchGuests();
+    } else {
+      devLog("Operação concluída sem alterações.");
+      toast.error("Nenhuma alteração foi aplicada. Verifique suas permissões ou tente novamente.");
     }
   };
 
@@ -356,15 +363,28 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
       await supabase.rpc("unclaim_gift", { p_guest_id: id });
 
       // 2. Delete RSVP tokens for this guest
-      await supabase.from("rsvp_tokens").delete().eq("guest_id", id);
+      // cleanup: zero rows is a valid outcome
+      await supabase.from("rsvp_tokens").delete().eq("guest_id", id).select();
 
       // 3. Delete invitations for this guest
-      await supabase.from("invitations").delete().eq("guest_id", id);
+      // cleanup: zero rows is a valid outcome
+      await supabase.from("invitations").delete().eq("guest_id", id).select();
 
       // 4. Hard delete the guest
-      const { error } = await supabase.from("guests").delete().eq("id", id).eq("wedding_id", weddingId!);
+      const { data: deletedGuests, error } = await supabase
+        .from("guests")
+        .delete()
+        .eq("id", id)
+        .eq("wedding_id", weddingId!)
+        .select();
 
       if (error) throw error;
+
+      if (!Array.isArray(deletedGuests) || deletedGuests.length === 0) {
+        devLog("Operação concluída sem alterações.");
+        toast.error("Nenhuma alteração foi aplicada. Verifique suas permissões ou tente novamente.");
+        return;
+      }
 
       // 5. Log the action
       await logAdminAction({
