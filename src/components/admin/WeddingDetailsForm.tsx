@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useWedding } from "@/contexts/WeddingContext";
+import { devLog } from "@/lib/devLog";
 
 interface WeddingDetailsFormProps {
   permissions: {
@@ -102,26 +103,34 @@ const WeddingDetailsForm = ({ permissions }: WeddingDetailsFormProps) => {
         invitation_message: formData.invitationMessage,
       };
 
-      const { data: updated, error } = await supabase
+      const { data, error } = await supabase
         .from("wedding_details")
         .update(weddingData)
         .eq("id", weddingId)
-        .select("*")
-        .maybeSingle();
+        .select("*");
 
       if (error) throw error;
 
-      if (updated) {
-        setFormData({
-          brideName: updated.bride_name || "",
-          groomName: updated.groom_name || "",
-          weddingDate: updated.wedding_date || "",
-          venueName: updated.venue_name || "",
-          story: updated.story || "",
-          coupleMessage: updated.couple_message || "",
-          invitationMessage: (updated as any).invitation_message || "",
+      if (!Array.isArray(data) || data.length === 0) {
+        devLog("Operação concluída sem alterações.");
+        toast({
+          title: "Nenhuma alteração foi aplicada.",
+          description: "Verifique suas permissões ou tente novamente.",
+          variant: "destructive",
         });
+        return;
       }
+
+      const updated = data[0];
+      setFormData({
+        brideName: updated.bride_name || "",
+        groomName: updated.groom_name || "",
+        weddingDate: updated.wedding_date || "",
+        venueName: updated.venue_name || "",
+        story: updated.story || "",
+        coupleMessage: updated.couple_message || "",
+        invitationMessage: (updated as any).invitation_message || "",
+      });
 
       toast({
         title: "Sucesso!",
