@@ -1,205 +1,247 @@
-# Arquitetura de Autorização — Decisão Oficial (Etapa 1.26.02)
+# Arquitetura de Autorização — Documento Oficial (consolidado na Etapa 1.26.08)
 
-> **Status:** decisão arquitetural formalizada. **Nenhuma alteração funcional foi realizada nesta etapa.**
-> Migrations, policies, funções SQL, RPCs, Edge Functions, frontend, hooks, RLS, Storage, Worker e UI permanecem intocados.
+> **Status:** consolidado. Reflete o estado **real** do banco e do código após as Etapas 1.26.01 → 1.26.07.
+> Todas as tabelas de policies e permissões deste documento foram extraídas do catálogo do banco
+> (`pg_policies`, `admin_permissions`) e da leitura do código-fonte — **nada foi inferido**.
+> Esta etapa **não alterou nenhuma linha funcional** do sistema.
 
 ---
 
-## 1. Decisão
+## 1. Objetivo
 
-| Fonte | Escopo oficial | Uso |
+Definir, de forma única e definitiva, como o sistema decide **quem pode ver, criar, editar, excluir e publicar**
+cada informação. A arquitetura separa dois universos que nunca devem ser confundidos:
+
+| Universo | Pergunta que responde | Fonte de verdade |
 |---|---|---|
-| `public.user_weddings.role` | **Papel do usuário DENTRO de um casamento** | **Única fonte de verdade para permissões de tenant** |
-| `public.user_roles.role` | **Papel global da plataforma** (master admin, suporte, moderador, operador) | Nunca para permissões de um casamento específico |
-
-Consequência: qualquer decisão de autorização que envolva um `wedding_id` deve derivar de `user_weddings.role`
-cruzado com `admin_permissions` (`menu_key` + tipo). Decisões sem `wedding_id` (painel `/admin` master,
-lifecycle de tenants, suporte) continuam derivando de `user_roles`.
+| **Plataforma** | "Este usuário é da equipe da plataforma?" | `public.user_roles.role` |
+| **Tenant (evento)** | "Este usuário pode fazer X **neste casamento/aniversário**?" | `public.user_weddings.role` |
 
 ---
 
-## 2. Arquitetura antiga (legado)
+## 2. Fonte de verdade
 
 ```
-auth.uid()
-   │
-   ├─► user_roles.role ──► has_role(uid,'admin'|'couple'|'planner'|'cerimonial')
-   │                          │
-   │                          └─► policies RLS com papéis HARDCODED
-   │
-   └─► user_roles.role ──► has_table_permission(uid, menu_key, tipo)
-                              │  (JOIN admin_permissions ON role_key = user_roles.role)
-                              └─► permissão de módulo, mas SEM escopo de tenant
+Permissões globais
+        ↓
+   user_roles.role          ← plataforma / Master Admin / Edge Functions administrativas
+
+Permissões de tenant
+        ↓
+ user_weddings.role         ← ÚNICA fonte de verdade para permissões de um evento
 ```
 
-Problemas:
-- papel global determinava permissão de um casamento específico;
-- papéis hardcoded nas policies impedem papéis personalizados;
-- `user_has_wedding_access()` mistura `user_roles` (admin global) + `user_weddings`.
+**`user_roles` NÃO determina permissões de tenant.** Ele é usado exclusivamente para:
 
-## 3. Arquitetura nova (alvo)
+- painel Master Admin (`/admin`);
+- ciclo de vida de tenants (criar, arquivar, expirar, excluir);
+- Edge Functions administrativas (`delete-user`, `delete-tenant`, `expire-demo-tenants`);
+- funções globais (`is_platform_admin`, `has_role`);
+- bypass explícito de suporte dentro das funções de tenant.
 
-```
-auth.uid()
-   │
-   ├── PLATAFORMA ──► user_roles.role ──► has_role(uid,'admin')
-   │                      └─► /admin master, lifecycle, suporte, Edge Functions administrativas
-   │
-   └── TENANT ─────► user_weddings(user_id, wedding_id, role)
-                          │
-                          ├─► role_profiles (catálogo de papéis, inclui personalizados)
-                          └─► admin_permissions(role_key, menu_key, can_view/add/edit/delete/publish)
-                                     │
-                                     └─► has_table_permission_for_wedding(uid, wedding_id, menu_key, tipo)
-                                                │
-                                                └─► policies RLS de todas as tabelas com wedding_id
-```
-
-Fluxo de autorização por requisição de tenant:
-
-```
-requisição ──► RLS da tabela ──► has_table_permission_for_wedding
-                                     ├─ vínculo existe em user_weddings(uid, wedding_id)? 
-                                     ├─ role do vínculo tem can_<tipo> em admin_permissions(menu_key)?
-                                     └─ (bypass) has_role(uid,'admin') global → suporte/master
-```
+**`user_weddings.role`** é o papel do usuário **dentro de um evento específico**. A mesma pessoa pode ser
+`admin` em um evento e `planner` em outro. Papéis personalizados são suportados sem alteração de código,
+porque o papel é apenas um `text` que casa com `role_profiles.role_key` e `admin_permissions.role_key`.
 
 ---
 
-## 4. Inventário — dependências de `user_roles` / `has_role()`
+## 3. Fluxo completo de uma requisição de tenant
 
-### 4.1 Funções SQL
+```
+Frontend (componente admin)
+        ↓            usa useAuth / useAuthorization / usePermissions só para ESCONDER UI
+Supabase Client (@/integrations/supabase/client)
+        ↓            envia o JWT do usuário
+RLS (Row Level Security da tabela alvo)
+        ↓            avalia USING (leitura/filtro) e WITH CHECK (escrita)
+Policies da tabela
+        ↓            chamam sempre a mesma função de tenant
+has_table_permission_for_wedding(uid, wedding_id, menu_key, tipo)
+        ↓
+has_wedding_role_permission(uid, wedding_id, menu_key, tipo)
+        ↓
+admin_permissions (can_view / can_add / can_edit / can_delete / can_publish)
+        ↓
+role_profiles (catálogo de papéis, inclui personalizados)
+        ↓
+user_weddings.role (vínculo usuário ↔ evento ↔ papel)
+```
 
-| Função | Categoria | Decisão |
-|---|---|---|
-| `has_role(uid, role)` | Plataforma | **Permanece** (papéis globais) |
-| `has_table_permission(uid, menu_key, tipo)` | **Tenant (indevido)** — faz `JOIN admin_permissions ON role_key = user_roles.role` | **Migrar** (deve deixar de ser usada em contexto de tenant) |
-| `has_table_permission_for_wedding(...)` | Tenant | **Permanece**, mas deve passar a resolver o papel via `user_weddings.role` em vez de `has_table_permission` |
-| `user_has_wedding_access(uid, wedding_id)` | Misto (`has_role` admin + `user_weddings`) | **Migrar** (manter apenas bypass explícito de admin global) |
-| `get_user_wedding_ids(uid)` | Misto | **Migrar** (mesma observação) |
-| `assign_first_admin()` | Plataforma (grava `user_roles`) | **Permanece** |
-| `create_demo_tenant(...)` | Tenant — já grava `user_weddings(role='admin')` | **Permanece** (já conforme) |
-| `create_new_event(...)` (2 sobrecargas) | Mista — exige `has_role(uid,'admin')` global | **Migrar/revisar** (criação é ato de plataforma; overload antiga grava `user_weddings`, a nova não) |
+**Explicação de cada etapa**
 
-### 4.2 Policies RLS
+1. **Frontend** — nunca é autoridade. Ele consulta `admin_permissions` apenas para decidir o que **mostrar**.
+   Esconder um botão não protege dado nenhum; a proteção real está na RLS.
+2. **Supabase Client** — todas as consultas do app usam a chave publicável + JWT do usuário. O papel do
+   Postgres é `authenticated` (ou `anon` em páginas públicas), nunca `service_role`.
+3. **RLS** — cada tabela tem RLS habilitada. Sem policy correspondente, a operação retorna **zero linhas
+   sem erro** (foi exatamente esse comportamento que originou o bug da Etapa 1.26.00).
+4. **Policies** — não contêm papéis hardcoded em tabelas de tenant; delegam a decisão à função oficial.
+5. **`has_table_permission_for_wedding`** — porta de entrada única da autorização de tenant.
+6. **`has_wedding_role_permission`** — resolve o papel via `user_weddings` e cruza com `admin_permissions`.
+7. **`admin_permissions`** — matriz `role_key × menu_key × ação`.
+8. **`role_profiles`** — catálogo de papéis existentes (sistema + personalizados).
+9. **`user_weddings.role`** — o vínculo. Sem vínculo (e sem ser admin global) não há acesso algum.
 
-**Legado (dependem de `has_role`/`user_roles`) — a migrar quando escopadas a tenant:**
+### Condições que fazem `has_table_permission_for_wedding` retornar TRUE
 
-| Tabela | Policy | Categoria |
-|---|---|---|
-| `wedding_details` | `Users can update their wedding details` | **Tenant → migrar** (raiz do bug 1.26.00) |
-| `wedding_details` | `Admins can insert / delete wedding details` | Plataforma → permanece |
-| `events` | `Users can manage events of their weddings` | Tenant → migrar |
-| `invitations` | `Users can manage invitations of their weddings` | Tenant → migrar |
-| `rsvp_tokens` | `Authorized users can manage tokens of their weddings` | Tenant → migrar |
-| `rsvps` | `Users can view RSVPs of their weddings` | Tenant → migrar |
-| `checkin_logs` | `Admins can delete checkin logs` | Tenant → migrar |
-| `pending_users` | `Admins can manage all pending users` | Plataforma → permanece |
-| `user_weddings` | `Admins can manage user_weddings` | Plataforma → permanece |
-| `user_roles` | `Admins can manage all roles` | Plataforma → permanece |
-| `role_profiles` | `Admins can manage role profiles` | Plataforma → permanece |
-| `admin_permissions` | `Admins can manage all permissions`, `Users can view their role permissions` | Plataforma / auditoria → permanece |
-| `admin_logs` | `Admins can view all admin logs` | Plataforma → permanece |
-| `profiles` | `Admins can view/update all profiles` | Plataforma → permanece |
+Retorna TRUE quando `_wedding_id` e `_user_id` não são nulos **e** ao menos uma alternativa é verdadeira:
 
-**Global-perm (`has_table_permission` sem `wedding_id`) — revisar:** `profiles`, `user_roles`, `admin_permissions`
-(policies de "usuarios: view"). São de auditoria administrativa; permanecem, mas dependem indiretamente de `user_roles`.
-
-**Misto (`user_has_wedding_access` / `get_user_wedding_ids`):** `checkin_logs` (SELECT), `gift_pix_selections` (SELECT) → migrar junto das funções.
-
-**Já conformes (modelo novo, `has_table_permission_for_wedding`):** `guests`, `gift_items`, `buffet_items`,
-`playlist_songs`, `timeline_events`, `photos`, `admin_logs` (view por tenant), `pending_users` (wedding members),
-`user_weddings` (usuarios view/edit).
-
-### 4.3 Edge Functions
-
-| Função | Categoria | Decisão |
-|---|---|---|
-| `invite-admin` | Mista (valida papel para convidar em um casamento) | **Migrar** para `user_weddings.role` |
-| `delete-user` | Plataforma | Permanece |
-| `delete-tenant` | Plataforma | Permanece |
-| `expire-demo-tenants` | Plataforma (cron) | Permanece |
-| `complete-user-invite` | Mista (cria vínculo + papel) | **Revisar**: deve gravar papel em `user_weddings`, não em `user_roles` |
-| `generate-rsvp-token`, `sync-checkin`, `send-rsvp-email`, `rsvp-*`, `select-gift` | Tenant / público | **Revisar** checagens de papel onde existirem |
-
-### 4.4 Frontend
-
-| Arquivo | Dependência atual | Decisão |
-|---|---|---|
-| `src/contexts/AuthContext.tsx` | busca `user_roles` (papel global) | Permanece como papel **global** |
-| `src/hooks/useAuth.tsx` | sobrepõe com `user_weddings.role` quando em tenant-admin | **Já conforme** — é o comportamento oficial |
-| `src/hooks/useAuthorization.tsx` | `isGlobalAdmin` via `user_roles` + `usePermissions` | Permanece; `canAccess*` de tenant devem passar a usar apenas papel de tenant |
-| `src/hooks/usePermissions.tsx` | consulta `admin_permissions` pelo papel efetivo | **Já conforme** |
-| `src/hooks/useRequireRole.tsx` | compara papel efetivo com lista | Revisar (papéis hardcoded) |
-| `src/components/admin/UsersList.tsx`, `UsersManager.tsx` | leem/escrevem papéis | **Migrar** para `user_weddings.role` em contexto de tenant |
-| `src/components/routing/MasterAdminGuard.tsx` | `canAccessMasterAdmin` (global) | Permanece |
-| `src/components/routing/TenantAdminGuard.tsx` | `WeddingContext` + demo expirada | Permanece |
-| `src/pages/CriarSenha.tsx`, `DeleteTenantDialog.tsx` | fluxo de convite / plataforma | Revisar / permanece |
-
-### 4.5 Dependências atuais de `user_weddings.role`
-
-- `src/hooks/useAuth.tsx` (override de papel por tenant) — fonte efetiva no frontend hoje;
-- `src/contexts/WeddingContext.tsx` (`userWeddings`);
-- policies de `user_weddings`, `pending_users` (wedding members);
-- `create_demo_tenant`, `create_new_event` (overload legada), `complete-user-invite` (gravação do vínculo);
-- `user_has_wedding_access` / `get_user_wedding_ids` (leitura do vínculo, sem ler o `role`).
-
-**Observação crítica:** hoje **nenhuma policy RLS lê `user_weddings.role`**. O vínculo é usado apenas como
-"tem acesso ou não"; o *papel* que alimenta `admin_permissions` vem de `user_roles`. É exatamente essa
-divergência (frontend usa `user_weddings.role`, RLS usa `user_roles.role`) que produz o bug de 1.26.00:
-o `UPDATE` em `wedding_details` é filtrado pela RLS e retorna 0 linhas, enquanto a UI exibe sucesso.
+1. `is_platform_admin(_user_id)` — admin global da plataforma (bypass de suporte);
+2. `has_wedding_role_permission(...)` — **caminho oficial**, via `user_weddings.role`;
+3. `user_has_wedding_access(...)` **E** `has_table_permission(...)` — **fallback legado**, mantido
+   deliberadamente ativo para não quebrar usuários cujo papel só existe em `user_roles`.
 
 ---
 
-## 5. Impedimentos técnicos
+## 4. Funções centrais
 
-**Não existe impedimento técnico** para adotar `user_weddings.role` como única fonte de verdade de tenant:
+### `is_platform_admin(_user_id uuid) → boolean`
+- **Objetivo:** dizer se o usuário é admin global da plataforma (`user_roles.role = 'admin'`).
+- **Quem usa:** `has_table_permission_for_wedding`, `user_has_wedding_access`, `get_user_wedding_ids`.
+- **Quando usar:** bypass de suporte e decisões de plataforma.
+- **Quando NÃO usar:** como substituto de permissão de tenant.
 
-- a tabela já existe, tem `unique(user_id, wedding_id)`, índices em ambas as colunas e `role text NOT NULL`;
-- `admin_permissions.role_key` e `role_profiles.role_key` são `text`, portanto casam diretamente com `user_weddings.role`;
-- toda tabela de dados de tenant já possui `wedding_id`, permitindo escopo por linha;
-- funções `SECURITY DEFINER` já são o padrão do projeto, evitando recursão de RLS.
+### `has_role(_user_id uuid, _role text) → boolean`
+- **Objetivo:** verificar um papel **global** em `user_roles`.
+- **Quem usa:** policies de plataforma (`admin_permissions`, `user_roles`, `role_profiles`, `pending_users`,
+  `profiles`, `user_weddings` admin, `wedding_details` INSERT/DELETE, `admin_logs` view all,
+  `checkin_logs` DELETE), `create_new_event`.
+- **Quando usar:** ações de plataforma sem `wedding_id`.
+- **Quando NÃO usar:** qualquer decisão que envolva um `wedding_id`.
 
-Pontos de atenção (não bloqueios), a tratar nas próximas etapas:
-1. `user_weddings.role` **não tem FK** para `role_profiles.role_key` (diferente de `user_roles.role`) — permite papel inválido;
-2. usuários existentes podem ter papel só em `user_roles` sem `role` correspondente no vínculo → exige backfill antes de trocar as policies;
-3. `has_table_permission` é usada por policies não escopadas (`profiles`, `user_roles`, `admin_permissions`) — não pode ser simplesmente removida;
-4. o bypass de admin global precisa continuar explícito em cada função, senão o suporte perde acesso.
+### `user_has_wedding_access(_user_id uuid, _wedding_id uuid) → boolean`
+- **Objetivo:** existe vínculo com o evento (ou é admin global)? Responde "acesso sim/não", **não** o papel.
+- **Quem usa:** `checkin_logs` (SELECT), `gift_pix_selections` (SELECT), fallback legado da função de tenant.
+- **Quando usar:** leitura ampla onde não há granularidade por ação.
+- **Quando NÃO usar:** para autorizar escrita ou substituir a checagem de ação.
+
+### `has_table_permission(_user_id uuid, _menu_key text, _permission_type text) → boolean`
+- **Objetivo:** permissão **global** por módulo, derivada de `user_roles` + `admin_permissions`.
+- **Quem usa:** policies sem `wedding_id` (`profiles`, `user_roles`, `admin_permissions` — visão de auditoria
+  do módulo `usuarios`) e o fallback legado.
+- **Quando usar:** somente auditoria administrativa global.
+- **Quando NÃO usar:** em qualquer tabela com `wedding_id`. **Não deve ser usada em código novo.**
+
+### `has_table_permission_for_wedding(_user_id, _wedding_id, _menu_key, _permission_type) → boolean`
+- **Objetivo:** **única** porta de autorização de tenant.
+- **Quem usa:** todas as policies de tenant migradas (ver seção 5).
+- **Quando usar:** sempre que a tabela tiver `wedding_id` (direto ou por relacionamento).
+- **Quando NÃO usar:** decisões de plataforma.
+
+### `has_wedding_role_permission(_user_id, _wedding_id, _menu_key, _permission_type) → boolean`
+- **Objetivo:** implementação do modelo oficial — `user_weddings` → `role_profiles` → `admin_permissions`.
+- **Quem usa:** apenas `has_table_permission_for_wedding`.
+- **Quando usar:** indiretamente, via a função acima.
+- **Quando NÃO usar:** diretamente em policies — perde o bypass de admin global e o fallback.
+
+### `get_user_wedding_ids(_user_id uuid) → setof uuid`
+- **Objetivo:** listar os eventos visíveis ao usuário (todos, se admin global).
+- **Quem usa:** consultas/policies que precisam filtrar por conjunto de eventos.
+- **Quando usar:** filtros de listagem.
+- **Quando NÃO usar:** como prova de permissão de ação.
+
+Todas são `SECURITY DEFINER` com `search_path = public`, evitando recursão de RLS.
 
 ---
 
-## 6. Validação da arquitetura
+## 5. Policies por tabela (estado real do banco)
 
-| Requisito | Suportado | Como |
-|---|---|---|
-| Múltiplos casamentos por usuário | ✅ | uma linha por `(user_id, wedding_id)` |
-| Papéis diferentes em cada casamento | ✅ | `role` é coluna do vínculo, não do usuário |
-| Papéis personalizados | ✅ | `role_profiles` + `admin_permissions` por `role_key`, sem hardcode |
-| Isolamento entre tenants | ✅ | escopo por `wedding_id` em toda policy |
-| Compatibilidade com `admin_permissions` | ✅ | `role_key` = `user_weddings.role` |
-| Compatibilidade com `role_profiles` | ✅ | catálogo compartilhado (falta apenas a FK) |
-| Papéis globais preservados | ✅ | `user_roles` + `has_role()` |
+Legenda de modelo: **Tenant** = `has_table_permission_for_wedding`; **Global** = `has_role`/`is_platform_admin`;
+**Global-perm** = `has_table_permission` (sem `wedding_id`); **Misto** = `user_has_wedding_access`;
+**Self** = `auth.uid()` na própria linha; **Pública** = `anon`/condição pública; **Service** = `service_role`.
 
-**Riscos arquiteturais:** (a) janela de inconsistência se as policies mudarem antes do backfill dos vínculos;
-(b) perda de acesso de usuários cujo papel só existe em `user_roles`; (c) papéis inválidos em `user_weddings`
-enquanto não houver FK. Todos mitigáveis com backfill + FK antes da troca das policies.
+| Tabela | Policy | Cmd | Modelo | Tipo |
+|---|---|---|---|---|
+| `admin_logs` | Users can view admin logs of their weddings | SELECT | Tenant (`logs:view`) | Tenant |
+| `admin_logs` | Admins can view all admin logs | SELECT | Global | Global |
+| `admin_logs` | Service role can insert logs | INSERT | — | Service |
+| `admin_permissions` | Admins can manage all permissions | ALL | Global | Global |
+| `admin_permissions` | Users can view their role permissions | SELECT | Self | Global |
+| `admin_permissions` | Users with usuarios permission can view all permissions | SELECT | Global-perm | Global |
+| `buffet_items` | view/insert/update/delete of their weddings | 4 cmds | Tenant (`buffet:*`) | Tenant |
+| `buffet_items` | Anyone can view public buffet items | SELECT | Pública | Pública |
+| `checkin_logs` | Users can view checkin logs of their weddings | SELECT | Misto | Tenant |
+| `checkin_logs` | Admins can delete checkin logs | DELETE | Global | Global |
+| `events` | view/insert/update/delete of their weddings | 4 cmds | Tenant (`eventos:*`) | Tenant |
+| `events` | Anyone can view events | SELECT | Pública | Pública |
+| `gift_items` | view/insert/update/delete of their weddings | 4 cmds | Tenant (`presentes:*`) | Tenant |
+| `gift_items` | Anyone can view public gift items | SELECT | Pública | Pública |
+| `gift_pix_selections` | Users can view pix selections of their weddings | SELECT | Misto | Tenant |
+| `guests` | view/insert/update/delete of their weddings | 4 cmds | Tenant (`convidados:*`) | Tenant |
+| `guests` | Checkin users can view/update guests of their weddings | SELECT/UPDATE | Tenant (`checkin:*`) | Tenant |
+| `invitations` | view/insert/update/delete of their weddings | 4 cmds | Tenant (`convites:*`) | Tenant |
+| `pending_users` | Wedding members can manage pending users of their weddings | ALL | Tenant (`usuarios:*`) | Tenant |
+| `pending_users` | Admins can manage all pending users | ALL | Global | Global |
+| `pending_users` | Public can read valid tokens | SELECT | Pública | Pública |
+| `pending_users` | Service role can manage/delete pending users | ALL/DELETE | — | Service |
+| `photos` | insert/update/delete of their weddings | 3 cmds | Tenant (`momentos:*`) | Tenant |
+| `photos` | Anyone can view photos | SELECT | Pública | Pública |
+| `playlist_songs` | view/insert/update/delete of their weddings | 4 cmds | Tenant (`playlist:*`) | Tenant |
+| `playlist_songs` | Anyone can view public playlist songs | SELECT | Pública | Pública |
+| `profiles` | Users can view/update their own profile | SELECT/UPDATE | Self | Global |
+| `profiles` | Admins can view/update all profiles | SELECT/UPDATE | Global | Global |
+| `profiles` | Users with usuarios permission can view all profiles | SELECT | Global-perm | Global |
+| `profiles` | Service role can insert/update profiles | INSERT/UPDATE | — | Service |
+| `role_profiles` | Admins can manage role profiles | ALL | Global | Global |
+| `role_profiles` | Anyone can view role profiles | SELECT | Pública | Pública |
+| `rsvp_tokens` | Authorized users view/insert/update/delete of their weddings | 4 cmds | Tenant (`convites:*`) | Tenant |
+| `rsvp_tokens` | Anyone can read valid tokens | SELECT | Pública | Pública |
+| `rsvps` | Users can view RSVPs of their weddings | SELECT | Tenant (`convites:view`) | Tenant |
+| `rsvps` | Service role can insert RSVPs | INSERT | — | Service |
+| `timeline_events` | view/insert/update/delete of their weddings | 4 cmds | Tenant (`cronograma:*`) | Tenant |
+| `timeline_events` | Anyone can view public timeline events | SELECT | Pública | Pública |
+| `user_roles` | Admins can manage all roles | ALL | Global | Global |
+| `user_roles` | Users can view their own roles | SELECT | Self | Global |
+| `user_roles` | Users with usuarios permission can view all roles | SELECT | Global-perm | Global |
+| `user_roles` | Service role can insert user roles | INSERT | — | Service |
+| `user_weddings` | Tenant managers can view/update wedding links | SELECT/UPDATE | Tenant (`usuarios:*`) | Tenant |
+| `user_weddings` | Users can view their own wedding links | SELECT | Self | Global |
+| `user_weddings` | Admins can manage user_weddings | ALL | Global | Global |
+| `wedding_details` | Users can update their wedding details | UPDATE | Tenant (`detalhes:edit`) | Tenant |
+| `wedding_details` | Admins can insert/delete wedding details | INSERT/DELETE | Global | Global |
+| `wedding_details` | Anyone can view wedding details | SELECT | Pública | Pública |
+
+`rsvps` e `checkin_logs` **não possuem** policies de escrita para usuários autenticados: a gravação ocorre
+apenas via Edge Function com `service_role` (`rsvp-respond`, `sync-checkin`). Isso é intencional.
 
 ---
 
-## 7. Próximas etapas (inventário de migração)
+## 6. Módulos (menu_key → tela → tabela → policy → permissões → frontend)
 
-1. Backfill de `user_weddings.role` a partir de `user_roles` para vínculos existentes + FK para `role_profiles`.
-2. `has_table_permission_for_wedding` passa a resolver o papel via `user_weddings.role`.
-3. Migrar policies de tenant: `wedding_details` (UPDATE), `events`, `invitations`, `rsvp_tokens`, `rsvps`, `checkin_logs`.
-4. Migrar `user_has_wedding_access` / `get_user_wedding_ids` (bypass admin global explícito).
-5. Revisar `invite-admin` e `complete-user-invite` para gravar papel de tenant no vínculo.
-6. Alinhar `UsersList` / `UsersManager` / `useRequireRole` ao papel de tenant.
-7. Endurecer formulários administrativos para validar linhas afetadas (herdado de 1.26.00).
+| menu_key | Tela | Tabela(s) | Policy | Permissões existentes | Frontend |
+|---|---|---|---|---|---|
+| `detalhes` | `/…/admin/detalhes` | `wedding_details` | Tenant UPDATE | view, edit | `pages/admin/Detalhes.tsx` + `WeddingDetailsForm`, `WeddingSettingsForm`, `WeddingThemeForm`, `WeddingVisibilityForm` |
+| `convidados` | `/…/admin/convidados` | `guests` | Tenant (4) | view, add, edit, delete | `pages/admin/Convidados.tsx` + `GuestsManager` |
+| `convites` | — (sem rota própria) | `invitations`, `rsvp_tokens`, `rsvps` | Tenant (4 + 4 + view) | view, add, edit, delete | consumido dentro de convidados/RSVP |
+| `eventos` | `/…/admin/eventos` | `events` | Tenant (4) | view, add, edit, delete | `pages/admin/Eventos.tsx` + `EventsManager` |
+| `presentes` | `/…/admin/presentes` | `gift_items`, `gift_pix_selections` | Tenant (4) / Misto (view) | view, add, edit, delete, publish | `pages/admin/Presentes.tsx` + `GiftManager`, `PixGiftDialog` |
+| `buffet` | `/…/admin/buffet` | `buffet_items` | Tenant (4) | view, add, edit, delete, publish | `pages/admin/Buffet.tsx` + `BuffetManager` |
+| `cronograma` | `/…/admin/cronograma` | `timeline_events` | Tenant (4) | view, add, edit, delete, publish | `pages/admin/Cronograma.tsx` + `TimelineManager` |
+| `playlist` | `/…/admin/playlist` | `playlist_songs` | Tenant (4) | view, add, edit, delete, publish | `pages/admin/Playlist.tsx` + `PlaylistManager` |
+| `momentos` | `/…/admin/momentos` | `photos` + bucket `wedding-photos` | Tenant (3) | view, add, edit, delete | `pages/admin/Momentos.tsx` + `WeddingPhotosManager` |
+| `checkin` | `/…/admin/checkin` | `guests`, `checkin_logs` | Tenant (checkin) / Misto | view, edit | `pages/admin/Checkin.tsx` + `lib/db.ts` (offline) |
+| `usuarios` | `/…/admin/usuarios` | `user_weddings`, `pending_users`, `profiles`, `user_roles` | Tenant + Global-perm | view, add, edit, delete | `pages/admin/Usuarios.tsx` + `UsersManager`, `UsersList`, `PendingInvitesList`, `RolePermissionsManager` |
+| `estatisticas` | `/…/admin/estatisticas` | leitura agregada de várias | herdadas das tabelas | view | `pages/admin/Estatisticas.tsx` |
+| `logs` | `/…/admin/logs` | `admin_logs` | Tenant SELECT | view | `pages/admin/Logs.tsx` + `lib/adminLogger.ts` |
+
+Matriz real por papel em `admin_permissions` (13 menus × papéis de `role_profiles`) é editável em
+**Usuários → Permissões**; não há valores hardcoded no banco além dessa tabela.
 
 ---
 
-## 8. Confirmação
+## 7. Divergências e itens deliberadamente pendentes (série 1.27.xx)
 
-Nesta etapa foram criadas **apenas** este documento e a decisão arquitetural acima.
-Nenhuma migration, policy, função SQL, RPC, Edge Function, hook, componente, tabela, bucket ou configuração foi alterada.
-Nenhum comportamento do sistema mudou.
+1. **Fallback legado ativo** — a 3ª alternativa de `has_table_permission_for_wedding` ainda consulta
+   `user_roles`. Remoção exige backfill completo de `user_weddings.role`.
+2. **`user_weddings.role` sem FK** para `role_profiles.role_key` (diferente de `user_roles.role`) — permite papel inválido.
+3. **Policies mistas** — `checkin_logs` (SELECT) e `gift_pix_selections` (SELECT) ainda usam
+   `user_has_wedding_access`, sem granularidade por ação.
+4. **`checkin_logs` DELETE** e **`admin_logs` view all** permanecem globais (`has_role`) — decisão consciente
+   de plataforma/auditoria.
+5. **`has_table_permission`** ainda é usada por `profiles`, `user_roles`, `admin_permissions` (auditoria global).
+6. **`menu_key = 'convites'` sem rota própria** no frontend — hoje só protege dados.
+7. **Papéis de teste no catálogo** (`test`, `teste`, `tester`, `Tester`, `Concierge`) com permissões atribuídas
+   — limpeza pertence à série 1.27.xx.
+8. **`create_new_event` possui duas sobrecargas**, uma das quais não cria o vínculo em `user_weddings`.
+
+Nenhuma dessas divergências foi corrigida nesta etapa — apenas documentada.
