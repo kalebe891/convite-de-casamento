@@ -205,3 +205,102 @@ Pages / Components     exibem, habilitam e desabilitam a UI
 
 Guards: `MasterAdminGuard` (plataforma) e `TenantAdminGuard` (evento + bloqueio de demo expirada).
 Ordem de providers obrigatória: `AuthProvider` → `WeddingProvider` → guards → layouts → páginas.
+
+---
+
+## Capítulo 6 — Como navegar na documentação
+
+Antes de qualquer implementação, leia [`ai-playbook.md`](./ai-playbook.md).
+Depois use este índice para chegar ao documento certo:
+
+```text
+Quero implementar/alterar QUALQUER coisa
+        ↓
+docs/ai-playbook.md  (ordem de leitura, checklists, Definition of Done)
+
+Quero entender a arquitetura geral, pastas, fluxos, camadas
+        ↓
+docs/system-map.md  (este documento)
+
+Quero alterar permissões, papéis, RLS, acesso de tenant
+        ↓
+docs/authorization-architecture.md
+
+Quero alterar CRUD (insert / update / delete)
+        ↓
+docs/patterns/database-write.md
+
+Quero alterar SEO no Edge / Link Preview
+        ↓
+docs/edge-seo.md  (documento central, CONGELADO)
+        ↓ complementares
+docs/edge-seo-architecture.md          (arquitetura-alvo)
+docs/edge-seo-deployment.md            (guia de deploy)
+docs/edge-seo-integration-1.25.10.md   (evidence log — histórico)
+
+Quero alterar performance / LCP / caminho crítico
+        ↓
+docs/critical-rendering-path-1.25.21.md  (mais recente)
+docs/critical-rendering-path-1.25.20.md  (anterior — histórico)
+
+Quero alterar ciclo de vida de eventos / expiração / arquivamento
+        ↓
+docs/tenant-lifecycle.md   (tenants normais)
+docs/demo-lifecycle.md     (tenants demo)
+
+Quero alterar Pix
+        ↓
+docs/pix-roadmap.md
+
+Quero alterar RSVP / convites
+        ↓
+SEM DOCUMENTO PRÓPRIO — usar system-map.md §1.14 / §3.2 + authorization-architecture.md
+                        (módulo de permissão: menu_key "convites")
+
+Quero alterar Presentes
+        ↓
+SEM DOCUMENTO PRÓPRIO — usar system-map.md §1.15 + docs/pix-roadmap.md (parte Pix)
+
+Quero alterar Check-in / offline
+        ↓
+SEM DOCUMENTO PRÓPRIO em docs/ — usar system-map.md §1.16 + CHECKIN_OFFLINE_GUIDE.md (raiz)
+
+Quero alterar Google Calendar
+        ↓
+NÃO EXISTE INTEGRAÇÃO nem documento (system-map.md §1.17) — nada a manter
+
+Quero alterar temas / landing / design system
+        ↓
+SEM DOCUMENTO PRÓPRIO — usar system-map.md §1.12, §1.13 e §2
+```
+
+**Status dos documentos**
+
+| Documento | Natureza |
+|---|---|
+| `ai-playbook.md` | operacional — obrigatório |
+| `system-map.md` | arquitetura oficial — vivo |
+| `authorization-architecture.md` | arquitetura oficial — vivo |
+| `patterns/database-write.md` | padrão normativo — vivo |
+| `edge-seo.md` | arquitetura oficial — congelada (1.25.13) |
+| `edge-seo-architecture.md`, `edge-seo-deployment.md` | apoio ao Edge SEO (congelado) |
+| `edge-seo-integration-1.25.10.md` | histórico (evidence log) |
+| `critical-rendering-path-1.25.21.md` | auditoria vigente de performance |
+| `critical-rendering-path-1.25.20.md` | histórico (auditoria anterior) |
+| `tenant-lifecycle.md`, `demo-lifecycle.md` | arquitetura oficial — vivo |
+| `pix-roadmap.md` | roadmap / débito técnico — vivo |
+
+---
+
+## Capítulo 7 — Documentação viva
+
+1. **Toda nova arquitetura deve possuir documentação própria** em `docs/`, criada na mesma etapa
+   que a implementa.
+2. **Nenhuma arquitetura pode existir apenas no código.** Se a única forma de entender uma decisão
+   é ler os arquivos, a etapa está incompleta.
+3. **Toda mudança estrutural atualiza a documentação correspondente** — banco, RLS, autorização,
+   padrões de escrita, SEO, performance, ciclo de vida. Documento desatualizado é bug.
+4. Documentos **históricos** (auditorias datadas, evidence logs) não são atualizados: são
+   preservados como registro e marcados como tal na tabela acima.
+5. Ao criar um documento novo, adicioná-lo ao índice do Capítulo 6 e à lista de documentos irmãos
+   no topo deste arquivo.
