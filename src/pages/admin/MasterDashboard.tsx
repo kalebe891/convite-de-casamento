@@ -106,6 +106,7 @@ export default function MasterDashboard() {
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("created_desc");
   const [createOpen, setCreateOpen] = useState(false);
+  const [activationOpen, setActivationOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Wedding | null>(null);
   const [viewMode, setViewMode] = useState<TenantViewMode>(() => {
     try {
