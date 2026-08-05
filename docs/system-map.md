@@ -5,6 +5,7 @@
 > Consolidado na Etapa 1.26.08 a partir da leitura real do código-fonte e do catálogo do banco.
 
 Documentos irmãos:
+- [`ai-playbook.md`](./ai-playbook.md) — **guia operacional obrigatório antes de qualquer implementação**
 - [`authorization-architecture.md`](./authorization-architecture.md) — autorização (fonte de verdade)
 - [`patterns/database-write.md`](./patterns/database-write.md) — padrão obrigatório de escrita
 - [`edge-seo.md`](./edge-seo.md), [`edge-seo-architecture.md`](./edge-seo-architecture.md) — SEO no Edge (congelado)
