@@ -14,6 +14,7 @@ import { useAllRoles } from "@/hooks/useAllRoles";
 import EventSelector from "@/components/admin/EventSelector";
 import { useWedding } from "@/contexts/WeddingContext";
 import { buildTenantPublicUrl } from "@/lib/eventType";
+import DemoActivationBanner from "@/components/admin/DemoActivationBanner";
 
 const AdminLayout = () => {
   const navigate = useNavigate();
@@ -90,6 +91,7 @@ const AdminLayout = () => {
                   {role === "admin" ? "Administrador" : role === "couple" ? "Casal" : "Cerimonialista"}
                 </p>
               </div>
+              <DemoActivationBanner />
               <ThemeToggle />
               <Button variant="outline" onClick={() => navigate(viewInviteUrl)} size="sm">
                 Ver Convite

@@ -16,12 +16,13 @@ import { toast } from "@/hooks/use-toast";
 import { buildTenantAdminUrl } from "@/lib/eventType";
 import { logAdminAction } from "@/lib/adminLogger";
 import { devLog } from "@/lib/devLog";
-import { CalendarDays, Plus, Users, Gift, Images, Mail, ArrowRight, Search, RefreshCw, PartyPopper, Heart, CalendarCheck, Trash2, Archive, RotateCcw, AlertTriangle, Wrench, BadgeCheck } from "lucide-react";
+import { CalendarDays, Plus, Users, Gift, Images, Mail, ArrowRight, Search, RefreshCw, PartyPopper, Heart, CalendarCheck, Trash2, Archive, RotateCcw, AlertTriangle, Wrench, BadgeCheck, Link2 } from "lucide-react";
 import { isValidThemeId } from "@/lib/themeValidation";
 import CreateEventDialog from "@/components/admin/CreateEventDialog";
 import DeleteTenantDialog from "@/components/admin/DeleteTenantDialog";
 import TenantViewToggle, { type TenantViewMode } from "@/components/admin/TenantViewToggle";
 import TenantTable from "@/components/admin/TenantTable";
+import ActivationLinkDialog from "@/components/admin/ActivationLinkDialog";
 
 
 const VIEW_STORAGE_KEY = "master_tenant_view";
@@ -105,6 +106,7 @@ export default function MasterDashboard() {
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("created_desc");
   const [createOpen, setCreateOpen] = useState(false);
+  const [activationOpen, setActivationOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Wedding | null>(null);
   const [viewMode, setViewMode] = useState<TenantViewMode>(() => {
     try {
@@ -388,6 +390,10 @@ export default function MasterDashboard() {
             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
             Atualizar
           </Button>
+          <Button variant="outline" size="sm" onClick={() => setActivationOpen(true)} className="gap-2">
+            <Link2 className="w-4 h-4" />
+            Link de ativação
+          </Button>
           <Button onClick={handleCreate} className="gap-2">
             <Plus className="w-4 h-4" />
             Criar Novo Convite
@@ -645,6 +651,7 @@ export default function MasterDashboard() {
         </div>
       )}
 
+      <ActivationLinkDialog open={activationOpen} onOpenChange={setActivationOpen} />
       <CreateEventDialog open={createOpen} onOpenChange={setCreateOpen} onCreated={load} />
       <DeleteTenantDialog
         tenant={deleteTarget}

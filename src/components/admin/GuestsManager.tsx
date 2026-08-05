@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { openWhatsApp } from "@/lib/whatsapp";
 import { supabase } from "@/integrations/supabase/client";
 import { useWedding } from "@/contexts/WeddingContext";
 import { Button } from "@/components/ui/button";
@@ -457,13 +458,8 @@ const GuestsManager = ({ permissions }: GuestsManagerProps) => {
   };
 
   const handleOpenWhatsApp = () => {
-    if (selectedGuest?.phone) {
-      let phone = selectedGuest.phone.replace(/\D/g, "");
-      if (!phone.startsWith("55")) {
-        phone = "55" + phone;
-      }
-      const encodedMessage = encodeURIComponent(whatsAppMessage);
-      window.open(`https://wa.me/${phone}?text=${encodedMessage}`, "_blank");
+    if (selectedGuest?.phone && openWhatsApp(selectedGuest.phone, whatsAppMessage)) {
+      return;
     } else {
       toast.error("Convidado não possui telefone cadastrado");
     }

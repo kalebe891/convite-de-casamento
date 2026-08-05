@@ -129,3 +129,34 @@ Nenhuma migration, Edge Function, cron, scheduler, checkout, cobrança, WhatsApp
 - **Sem envio de e-mails de aviso** (pré-expiração ou pós-expiração).
 - **Sem exclusão automática**: nada é removido após o arquivamento.
 - **Sem limitação por IP**: regra única continua sendo 1 demo ativa por usuário (validada na RPC).
+
+## UX de ativação (v1.28.00 — apenas visual)
+
+Nenhuma migration, permissão, RLS, role, auth, cron ou exclusão foi alterada.
+
+### Header do painel do tenant (`/:eventType/:slug/admin`)
+`src/components/admin/DemoActivationBanner.tsx`, renderizado no header de `AdminLayout`.
+Usa somente campos já existentes: `is_demo`, `demo_expires_at`, `tenant_status`.
+- Demo ativa: contador "Teste restante · N dias" + botão `ATIVAR`.
+- Demo expirada (`tenant_status='archived'` ou dias <= 0): mensagem com menor destaque
+  visual ("Período de testes encerrado." + aviso de remoção em 30 dias) + botão `ATIVAR`.
+
+O botão `ATIVAR` abre o WhatsApp usando o helper único `src/lib/whatsapp.ts`
+(extraído do fluxo de RSVP): normaliza telefone, prefixa `55` e encoda a mensagem.
+
+### Master Admin (`/admin`)
+Botão **Link de ativação** → `ActivationLinkDialog` com campos Número, Mensagem e
+pré-visualização do Link WhatsApp (somente leitura).
+
+Persistência: apenas telefone e mensagem. **O link pronto nunca é salvo** — é montado
+em tempo de execução.
+
+### Campo necessário (documentado, não criado)
+Não existe hoje armazenamento global de configuração da plataforma. A configuração
+é persistida em `localStorage` (`activation_link_config`) com fallback padrão.
+Para compartilhar entre usuários, uma etapa futura deverá criar:
+
+```
+platform_settings.activation_phone    text
+platform_settings.activation_message  text
+```
