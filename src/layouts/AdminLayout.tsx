@@ -19,7 +19,7 @@ import DemoActivationBanner from "@/components/admin/DemoActivationBanner";
 const AdminLayout = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { roles: allRoleKeys, loading: rolesLoading } = useAllRoles();
+  const { roles: allRoleKeys, roleLabels, loading: rolesLoading } = useAllRoles();
   const { user, role, loading } = useRequireRole(allRoleKeys.length > 0 ? allRoleKeys : ["admin"]);
   const { loading: permissionsLoading, initialized } = usePermissions();
   const { wedding } = useWedding();
@@ -88,7 +88,7 @@ const AdminLayout = () => {
               <div className="text-right hidden sm:block">
                 <p className="text-sm font-medium">{userName}</p>
                 <p className="text-xs text-muted-foreground">
-                  {role === "admin" ? "Administrador" : role === "couple" ? "Casal" : "Cerimonialista"}
+                  {(role && roleLabels[role]) || role || ""}
                 </p>
               </div>
               <DemoActivationBanner />
