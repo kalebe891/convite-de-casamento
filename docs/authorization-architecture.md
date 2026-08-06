@@ -248,18 +248,30 @@ Nenhuma dessas divergências foi corrigida nesta etapa — apenas documentada.
 
 ---
 
-## 8. Papéis Demo (auditoria 1.28.01)
+## 8. Papéis Demo (oficializado na Etapa 1.28.02)
 
-Decisão arquitetural oficial registrada: usuários de bases Demo devem nascer com `admin_demo` e migrar
-automaticamente para o papel Demo somente leitura após 7 dias.
+Existem **exatamente dois** papéis destinados a bases de demonstração, ambos papéis normais do
+catálogo (`role_profiles`), sem tratamento especial e sem bypass:
 
-Estado **real** hoje:
+| role_key | label | escopo | permissões |
+|---|---|---|---|
+| `admin_demo` | Admin Demonstração | tenant (via `user_weddings`) | réplica exata das permissões do papel `admin` em `admin_permissions` (13 menus) |
+| `user_demo` | Usuário Demonstração | tenant (via `user_weddings`) | somente leitura em 13/13 menus |
 
-- `admin_demo` **não existe** em `role_profiles`, `admin_permissions`, `user_roles` nem `user_weddings`.
-- Existe `User_demo` (grafia com U maiúsculo), somente leitura em 13/13 menus, sem usuários atribuídos.
-- `create_demo_tenant` grava `user_weddings.role = 'admin'` (literal) — a Demo hoje tem permissões de admin
-  de tenant e ainda recebe bypass total em `usePermissions` (`role === "admin"`).
-- A arquitetura 1.26 suporta a transição apenas com `UPDATE user_weddings.role`; não há impossibilidade técnica.
+Regras oficiais:
 
-Matrizes completas, código com papéis literais e pendências: ver `docs/demo-lifecycle.md`
-(seção "Auditoria 1.28.01").
+1. `create_demo_tenant` grava `user_weddings.role = 'admin_demo'` (nunca mais `'admin'`).
+2. A grafia canônica é minúscula: `admin_demo` / `user_demo`. `User_demo` foi eliminado de
+   `role_profiles`, `admin_permissions`, `user_weddings`, `user_roles`, código e documentação.
+3. **Nenhum usuário criado por autoatendimento (Demo) recebe papel global.** `assign_first_admin`
+   não concede mais `admin` ao "primeiro usuário"; apenas o e-mail do administrador da plataforma.
+   Permissões globais existem só para usuários criados explicitamente pelo Master Admin.
+4. `admin_demo` tem controle total **apenas do próprio tenant** — todo o acesso é resolvido por
+   `has_table_permission_for_wedding()` → `user_weddings.role` → `role_profiles` → `admin_permissions`.
+5. O bypass literal `role === "admin"` no frontend passou a valer **somente para plataforma**
+   (`isPlatformAdmin`, derivado de `user_roles`). Papéis de tenant — inclusive um `admin` de tenant e
+   `admin_demo` — dependem de fato de `admin_permissions`.
+6. A transição automática `admin_demo → user_demo` após 7 dias **não** faz parte desta etapa
+   (fica para a 1.28.03). A infraestrutura já suporta: basta `UPDATE user_weddings.role`.
+
+Histórico e matrizes completas: `docs/demo-lifecycle.md`.

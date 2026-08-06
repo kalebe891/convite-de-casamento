@@ -29,7 +29,7 @@ const TENANT_MENU_ORDER: MenuKey[] = [
 export const usePagePermissions = (menuKey: MenuKey) => {
   const navigate = useNavigate();
   const { hasPermission, loading, initialized } = usePermissions();
-  const { role } = useAuth();
+  const { role, isPlatformAdmin } = useAuth();
   const adminBasePath = useAdminBasePath();
   const weddingContext = useOptionalWedding();
 
@@ -62,7 +62,7 @@ export const usePagePermissions = (menuKey: MenuKey) => {
     canEdit: hasPermission(menuKey, "edit"),
     canDelete: hasPermission(menuKey, "delete"),
     canPublish: hasPermission(menuKey, "publish"),
-    isAdmin: role === "admin",
+    isAdmin: isPlatformAdmin,
     loading: loading || !initialized || adminBasePath === null,
   };
 };

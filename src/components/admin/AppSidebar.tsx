@@ -40,10 +40,9 @@ export function AppSidebar() {
     { title: "Logs", path: "logs", icon: ScrollText, adminOnly: false, menuKey: "logs" as MenuKey },
   ];
 
-  const visibleItems = allItems.filter((item) => {
-    if (item.adminOnly && role !== "admin") return false;
-    return hasPermission(item.menuKey, "view");
-  });
+  // Etapa 1.28.02 — visibilidade decidida SOMENTE por admin_permissions (papel de tenant).
+  const visibleItems = allItems.filter((item) => hasPermission(item.menuKey, "view"));
+
 
   const isCollapsed = state === "collapsed";
 

@@ -13,7 +13,7 @@ interface PermissionsState {
 }
 
 export const usePermissions = (): PermissionsState => {
-  const { user, role, loading: authLoading, roleLoading } = useAuth();
+  const { user, role, isPlatformAdmin, loading: authLoading, roleLoading } = useAuth();
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [loading, setLoading] = useState(true);
   const [initialized, setInitialized] = useState(false);
@@ -76,7 +76,10 @@ export const usePermissions = (): PermissionsState => {
       menuKey: MenuKey,
       type: "view" | "add" | "edit" | "delete" | "publish"
     ): boolean => {
-      if (role === "admin") {
+      // Etapa 1.28.02 — bypass EXCLUSIVO de plataforma (user_roles.role = 'admin').
+      // Papéis de tenant (inclusive 'admin' de tenant e 'admin_demo') resolvem
+      // permissões apenas via admin_permissions.
+      if (isPlatformAdmin) {
         return true;
       }
 
@@ -91,8 +94,9 @@ export const usePermissions = (): PermissionsState => {
 
       return permission[`can_${type}`] || false;
     },
-    [role, initialized, loading, permissions]
+    [isPlatformAdmin, role, initialized, loading, permissions]
   );
+
 
   return {
     permissions,

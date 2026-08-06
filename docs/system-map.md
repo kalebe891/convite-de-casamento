@@ -304,3 +304,15 @@ SEM DOCUMENTO PRÓPRIO — usar system-map.md §1.12, §1.13 e §2
    preservados como registro e marcados como tal na tabela acima.
 5. Ao criar um documento novo, adicioná-lo ao índice do Capítulo 6 e à lista de documentos irmãos
    no topo deste arquivo.
+
+
+---
+
+## 8. Papéis Demo (1.28.02)
+
+Bases de demonstração usam exclusivamente `admin_demo` (controle total do próprio tenant) e
+`user_demo` (somente leitura). Ambos são papéis normais de `role_profiles` + `admin_permissions`,
+atribuídos em `user_weddings` por `create_demo_tenant`. Nenhum usuário criado por Demo recebe papel
+global em `user_roles`. O único bypass de permissão do frontend é `isPlatformAdmin`
+(`user_roles.role = 'admin'`), usado apenas para decisões de plataforma (Master Admin).
+Detalhes: `docs/authorization-architecture.md` (cap. 8) e `docs/demo-lifecycle.md`.
