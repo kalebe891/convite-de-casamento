@@ -34,7 +34,7 @@ export interface AuthorizationState {
 }
 
 export const useAuthorization = (): AuthorizationState => {
-  const { user, role, loading: authLoading, roleLoading } = useAuth();
+  const { user, role, isPlatformAdmin, loading: authLoading, roleLoading } = useAuth();
   const weddingContext = useOptionalWedding();
   const { hasPermission, loading: permsLoading, initialized } = usePermissions();
 
@@ -46,7 +46,9 @@ export const useAuthorization = (): AuthorizationState => {
     Boolean(weddingContext?.loading);
 
   const isAuthenticated = !!user;
-  const isGlobalAdmin = role === "admin";
+  // Etapa 1.28.02 — admin global = papel de plataforma (user_roles), nunca papel de tenant.
+  const isGlobalAdmin = isPlatformAdmin;
+
 
   // Bloqueio Demo Expirada (Etapa 1.22.00).
   const wedding = weddingContext?.wedding ?? null;

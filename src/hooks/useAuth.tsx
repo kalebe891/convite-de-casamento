@@ -11,8 +11,17 @@ interface AuthState {
   role: UserRole;
   loading: boolean;
   roleLoading: boolean;
+  /**
+   * Papel global de plataforma (user_roles), independente do tenant atual.
+   * Etapa 1.28.02 — usado apenas para decisões de PLATAFORMA (Master Admin).
+   */
+  platformRole: UserRole;
+  /** true somente para admin global de plataforma (user_roles.role = 'admin'). */
+  isPlatformAdmin: boolean;
+  /** @deprecated use isPlatformAdmin (plataforma) ou permissões por tenant. */
   isAdmin: boolean;
 }
+
 
 /**
  * useAuth — consumidor do AuthContext global (Etapa 1.24.13).
@@ -40,13 +49,17 @@ export const useAuth = (): AuthState => {
 
   return useMemo<AuthState>(() => {
     const effectiveRole = tenantRole ?? role;
+    const isPlatformAdmin = role === "admin";
     return {
       user,
       session,
       role: effectiveRole,
       loading: loading || weddingLoading,
       roleLoading,
-      isAdmin: effectiveRole === "admin",
+      platformRole: role,
+      isPlatformAdmin,
+      isAdmin: isPlatformAdmin,
     };
   }, [user, session, role, tenantRole, loading, weddingLoading, roleLoading]);
 };
+
