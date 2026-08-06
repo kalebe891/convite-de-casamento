@@ -45,25 +45,26 @@ export const useRequireRole = (requiredRole: string | string[]) => {
       }
 
       if (location.pathname === "/admin" || location.pathname === "/admin/") {
-        const allMenus: { menuKey: MenuKey; path: string; adminOnly: boolean }[] = [
-          { menuKey: "detalhes", path: "detalhes", adminOnly: false },
-          { menuKey: "usuarios", path: "usuarios", adminOnly: true },
-          { menuKey: "eventos", path: "eventos", adminOnly: false },
-          { menuKey: "convidados", path: "convidados", adminOnly: false },
-          { menuKey: "checkin", path: "checkin", adminOnly: false },
-          { menuKey: "presentes", path: "presentes", adminOnly: false },
-          { menuKey: "cronograma", path: "cronograma", adminOnly: false },
-          { menuKey: "buffet", path: "buffet", adminOnly: false },
-          { menuKey: "playlist", path: "playlist", adminOnly: false },
-          { menuKey: "momentos", path: "momentos", adminOnly: false },
-          { menuKey: "estatisticas", path: "estatisticas", adminOnly: false },
-          { menuKey: "logs", path: "logs", adminOnly: false },
+        const allMenus: { menuKey: MenuKey; path: string }[] = [
+          { menuKey: "detalhes", path: "detalhes" },
+          { menuKey: "usuarios", path: "usuarios" },
+          { menuKey: "eventos", path: "eventos" },
+          { menuKey: "convidados", path: "convidados" },
+          { menuKey: "checkin", path: "checkin" },
+          { menuKey: "presentes", path: "presentes" },
+          { menuKey: "cronograma", path: "cronograma" },
+          { menuKey: "buffet", path: "buffet" },
+          { menuKey: "playlist", path: "playlist" },
+          { menuKey: "momentos", path: "momentos" },
+          { menuKey: "estatisticas", path: "estatisticas" },
+          { menuKey: "logs", path: "logs" },
         ];
 
-        const firstAllowedMenu = allMenus.find((menu) => {
-          if (menu.adminOnly && role !== "admin") return false;
-          return hasPermission(menu.menuKey, "view");
-        });
+        // Etapa 1.28.02 — nenhum menu depende de papel literal; só de admin_permissions.
+        const firstAllowedMenu = allMenus.find((menu) =>
+          hasPermission(menu.menuKey, "view")
+        );
+
 
         if (firstAllowedMenu) {
           navigate(`/admin/${firstAllowedMenu.path}`, { replace: true });
