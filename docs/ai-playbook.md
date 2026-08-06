@@ -170,3 +170,15 @@ Sem esses seis itens, a etapa está incompleta — independentemente de a funcio
 Toda etapa deve encerrar com um item "Documentação" no relatório listando: arquivos criados, modificados,
 auditados e pendências. A documentação reflete exatamente a implementação real: nunca documentar
 funcionalidade inexistente, nunca deixar funcionalidade implementada sem documentação.
+
+
+---
+
+## Regra de papéis (1.28.02)
+
+- Nunca escrever verificações de tenant baseadas em papel literal (`role === "admin"`).
+  Usar `usePermissions().hasPermission(menu, tipo)` no frontend e
+  `has_table_permission_for_wedding()` no banco.
+- `isPlatformAdmin` (de `useAuth`) é o **único** atalho permitido, e apenas para plataforma.
+- Papéis Demo válidos: `admin_demo` e `user_demo` (sempre minúsculos).
+- Papel global em `user_roles` só pode ser concedido pelo Master Admin.

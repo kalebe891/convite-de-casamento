@@ -271,3 +271,41 @@ Pendências que a implementação futura deverá tratar:
 5. `assign_first_admin` pode conceder `user_roles='admin'` global ao 1º usuário — a troca de papel de tenant não revoga isso.
 6. Sem `pg_cron`/scheduler, nenhuma transição automática ocorrerá.
 7. Exclusão em 30 dias é promessa de UI sem implementação.
+
+
+---
+
+## Etapa 1.28.02 — Arquitetura oficial de papéis Demo (implementada)
+
+Esta seção **substitui** as conclusões da auditoria 1.28.01 nos pontos abaixo.
+
+### Papéis oficiais
+- `admin_demo` (Admin Demonstração) — criado em `role_profiles` e `admin_permissions` como
+  **réplica exata** do papel `admin` (13 menus).
+- `user_demo` (Usuário Demonstração) — somente leitura em 13/13 menus.
+- `User_demo` foi **eliminado** (role_profiles, admin_permissions, user_weddings, user_roles, código, docs).
+  Grafia canônica: sempre minúscula.
+
+### Criação de novas Demos
+`DemoSignupDialog` → `auth.signUp` → triggers (`handle_new_user`, `assign_first_admin`) →
+RPC `create_demo_tenant`, que agora grava `user_weddings.role = 'admin_demo'`.
+
+`assign_first_admin` **não concede mais** `user_roles='admin'` ao primeiro usuário: apenas o e-mail do
+administrador da plataforma. Nenhum usuário nascido de uma Demo obtém privilégio global.
+
+### Verificações literais eliminadas (papel de tenant)
+| Arquivo | Antes | Agora |
+|---|---|---|
+| `src/hooks/usePermissions.tsx` | `role === "admin"` → bypass total | bypass só para `isPlatformAdmin` |
+| `src/hooks/useAuthorization.tsx` | `isGlobalAdmin = role === "admin"` (papel de tenant) | `isPlatformAdmin` (user_roles) |
+| `src/hooks/usePagePermissions.tsx` | `isAdmin: role === "admin"` | `isAdmin: isPlatformAdmin` |
+| `src/components/admin/AppSidebar.tsx` | `adminOnly && role !== "admin"` | só `hasPermission(menu,'view')` |
+| `src/hooks/useRequireRole.tsx` | `menu.adminOnly && role !== "admin"` | só `hasPermission(menu,'view')` |
+| `src/layouts/AdminLayout.tsx` | label fixo admin/couple/senão "Cerimonialista" | label oficial de `role_profiles` (`useAllRoles().roleLabels`) |
+
+Preservado sem alteração: `has_role()`, `is_platform_admin()`, `user_roles`, guardas do Master Admin.
+
+### Ainda NÃO implementado (Etapa 1.28.03)
+Troca automática `admin_demo → user_demo`, expiração automática e exclusão automática.
+Pendências remanescentes: `user_weddings.role` sem FK para `role_profiles.role_key`;
+ausência de `pg_cron`/scheduler; papéis de teste legados no catálogo (`test`, `teste`, `tester`, `Tester`, `Concierge`).
