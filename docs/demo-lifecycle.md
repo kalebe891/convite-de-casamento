@@ -160,3 +160,114 @@ Para compartilhar entre usuários, uma etapa futura deverá criar:
 platform_settings.activation_phone    text
 platform_settings.activation_message  text
 ```
+
+---
+
+## Auditoria 1.28.01 — Arquitetura de permissões Demo (somente auditoria)
+
+Nenhum código, migration, RLS, cron, Edge Function ou permissão foi alterado nesta etapa.
+
+### 1. Fluxo real de criação de uma Demo
+
+```
+/casamento → DemoSignupDialog.tsx
+  ↓ supabase.auth.signUp(email, password)        ← nasce o USUÁRIO (auth.users)
+  ↓ trigger auth.on_auth_user_created → handle_new_user() → profiles
+  ↓ trigger public.on_profile_created_assign_admin → assign_first_admin()
+        ⚠ concede user_roles='admin' GLOBAL se for o 1º usuário da base
+          ou se o e-mail for o do fundador. Demos normais não recebem nada.
+  ↓ RPC public.create_demo_tenant(...)            ← nasce o TENANT
+        insere wedding_details (is_demo=true, demo_expires_at=now()+7d, tenant_status='active')
+        insere user_weddings(user_id, wedding_id, role='admin')   ← PAPEL DEFINIDO AQUI (hardcoded)
+  ↓ log DEMO_CREATED (admin_logs) → redirect /:eventType/:slug/admin
+```
+
+- **Papel do usuário Demo hoje:** literal `'admin'` dentro de `create_demo_tenant` (linha `INSERT INTO public.user_weddings ... 'admin'`).
+- `create_demo_tenant` **não** escreve em `role_profiles` nem em `admin_permissions`. Esses catálogos são estáticos e editados apenas via **Usuários → Permissões** (`RolePermissionsManager`).
+- Nenhuma Edge Function participa da criação. Nenhuma migration cria papéis Demo.
+
+### 2. Fluxo real de expiração (7 dias)
+
+| Camada | Estado real |
+|---|---|
+| Edge Function `expire-demo-tenants` | existe, `verify_jwt=false`, usa Service Role; arquiva `tenant_status='archived'`, `archived_at=now()` e loga `DEMO_EXPIRED` |
+| Agendamento | **inexistente** — `pg_cron` não está instalado (`cron.job` não existe no banco) |
+| Bloqueio | `useAuthorization().isDemoExpired` → `TenantAdminGuard` exibe tela "Esta demonstração expirou" |
+| UI | `DemoActivationBanner` (contador + ATIVAR) |
+
+### 3. Fluxo real de exclusão (30 dias)
+
+**Não existe.** O aviso "será removido em 30 dias" é apenas texto no `DemoActivationBanner`. Não há cron, job, RPC, Edge Function ou Worker que exclua Demos. `delete-tenant` existe, mas é uma ação **manual** do Master Admin.
+
+### 4. Matriz de permissões — `admin_demo`
+
+**`admin_demo` NÃO EXISTE.** Ausente em `role_profiles`, `admin_permissions`, `user_roles` e `user_weddings`. Nenhuma ocorrência no código-fonte.
+
+### 5. Matriz de permissões — `user_demo`
+
+A chave real gravada no banco é **`User_demo`** (U maiúsculo), `is_system=false`, label `User_demo`. Não existe `user_demo` em minúsculas. Zero usuários atribuídos (`user_roles` e `user_weddings` não a referenciam).
+
+| menu_key | view | add | edit | delete | publish |
+|---|---|---|---|---|---|
+| estatisticas | ✅ | ❌ | ❌ | ❌ | ❌ |
+| detalhes | ✅ | ❌ | ❌ | ❌ | ❌ |
+| convidados | ✅ | ❌ | ❌ | ❌ | ❌ |
+| convites | ✅ | ❌ | ❌ | ❌ | ❌ |
+| eventos | ✅ | ❌ | ❌ | ❌ | ❌ |
+| cronograma | ✅ | ❌ | ❌ | ❌ | ❌ |
+| buffet | ✅ | ❌ | ❌ | ❌ | ❌ |
+| playlist | ✅ | ❌ | ❌ | ❌ | ❌ |
+| presentes | ✅ | ❌ | ❌ | ❌ | ❌ |
+| momentos | ✅ | ❌ | ❌ | ❌ | ❌ |
+| checkin | ✅ | ❌ | ❌ | ❌ | ❌ |
+| usuarios | ✅ | ❌ | ❌ | ❌ | ❌ |
+| logs | ✅ | ❌ | ❌ | ❌ | ❌ |
+
+`User_demo` é, portanto, **somente leitura em 13/13 menus** (idêntico ao papel `Tester`).
+
+### 6. Diferença `admin_demo` × `user_demo`
+
+Comparação impossível: `admin_demo` não existe. O comportamento atual da Demo equivale ao papel `admin` (sistema, permissões amplas). A diferença efetiva hoje é `admin` × `User_demo`:
+
+| menu_key | `admin` (atual da Demo) | `User_demo` | diferença |
+|---|---|---|---|
+| detalhes | view + edit | view | perde `edit` |
+| convidados / convites / eventos / momentos | view+add+edit+delete | view | perde add/edit/delete |
+| cronograma / buffet / playlist / presentes | view+add+edit+delete+publish | view | perde add/edit/delete/publish |
+| usuarios | view+add+edit+delete | view | perde add/edit/delete |
+| estatisticas / logs / checkin | view | view | igual |
+
+### 7. Tenant de referência `3b680d06-…` (`beatriz-e-diogo-lab`)
+
+`is_demo=false`, `tenant_status='active'` e **sem nenhuma linha em `user_weddings`**. Não há permissões por tenant a extrair dele: as permissões residem exclusivamente em `admin_permissions`, que é global por `role_key` (não por tenant). Portanto a "fonte de verdade" utilizável são as linhas de `admin_permissions` acima.
+
+### 8. Rotina candidata para a troca automática de papel
+
+**`expire-demo-tenants`** é a única rotina apropriada e já existente. Ela já: (a) identifica exatamente o conjunto elegível (`is_demo=true AND tenant_status='active' AND demo_expires_at<=now()`), (b) roda com Service Role, (c) registra auditoria. A troca `UPDATE user_weddings SET role=<papel_demo_leitura> WHERE wedding_id IN (...)` cabe nela sem nova infraestrutura. **Não criar nova rotina.**
+Restrição: ela não é disparada automaticamente (sem `pg_cron`), logo a transição só ocorrerá quando houver scheduler.
+
+### 9. Código que assume papéis literais (pode ignorar papéis Demo)
+
+| Arquivo | Linha | Uso literal | Impacto |
+|---|---|---|---|
+| `src/hooks/useAuthorization.tsx` | 49 | `role === "admin"` → `isGlobalAdmin` | papel Demo nunca será global admin (correto) |
+| `src/hooks/usePermissions.tsx` | 79 | `role === "admin"` retorna `true` para tudo | **hoje a Demo (role `admin` no tenant) recebe bypass total de permissões** |
+| `src/hooks/usePagePermissions.tsx` | 65 | `isAdmin: role === "admin"` | idem |
+| `src/components/admin/AppSidebar.tsx` | 44 | `item.adminOnly && role !== "admin"` | itens adminOnly ocultos para papel Demo |
+| `src/hooks/useRequireRole.tsx` | 64 | `menu.adminOnly && role !== "admin"` | idem |
+| `src/layouts/AdminLayout.tsx` | 91 | label `admin`/`couple`/senão "Cerimonialista" | papel Demo apareceria rotulado como "Cerimonialista" |
+
+Nada foi corrigido — apenas documentado.
+
+### 10. Suporte da arquitetura 1.26 à transição de papel
+
+**Suportada, sem impossibilidade técnica.** `has_table_permission_for_wedding` resolve por `user_weddings.role → role_profiles → admin_permissions`; trocar o valor de `user_weddings.role` altera permissões imediatamente, sem tocar RLS.
+
+Pendências que a implementação futura deverá tratar:
+1. `user_weddings.role` **não tem FK** para `role_profiles.role_key` → grafia errada passa e resulta em zero permissões.
+2. Divergência de grafia: catálogo tem `User_demo`; a decisão arquitetural fala em `user_demo`. Definir a chave canônica antes de codificar.
+3. `admin_demo` precisará ser criado em `role_profiles` + `admin_permissions` (13 menus) antes de `create_demo_tenant` passar a usá-lo.
+4. `usePermissions` dá bypass total a `role === "admin"`; com `admin_demo` o painel passará a depender de fato de `admin_permissions`.
+5. `assign_first_admin` pode conceder `user_roles='admin'` global ao 1º usuário — a troca de papel de tenant não revoga isso.
+6. Sem `pg_cron`/scheduler, nenhuma transição automática ocorrerá.
+7. Exclusão em 30 dias é promessa de UI sem implementação.

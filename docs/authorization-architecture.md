@@ -245,3 +245,21 @@ Matriz real por papel em `admin_permissions` (13 menus × papéis de `role_profi
 8. **`create_new_event` possui duas sobrecargas**, uma das quais não cria o vínculo em `user_weddings`.
 
 Nenhuma dessas divergências foi corrigida nesta etapa — apenas documentada.
+
+---
+
+## 8. Papéis Demo (auditoria 1.28.01)
+
+Decisão arquitetural oficial registrada: usuários de bases Demo devem nascer com `admin_demo` e migrar
+automaticamente para o papel Demo somente leitura após 7 dias.
+
+Estado **real** hoje:
+
+- `admin_demo` **não existe** em `role_profiles`, `admin_permissions`, `user_roles` nem `user_weddings`.
+- Existe `User_demo` (grafia com U maiúsculo), somente leitura em 13/13 menus, sem usuários atribuídos.
+- `create_demo_tenant` grava `user_weddings.role = 'admin'` (literal) — a Demo hoje tem permissões de admin
+  de tenant e ainda recebe bypass total em `usePermissions` (`role === "admin"`).
+- A arquitetura 1.26 suporta a transição apenas com `UPDATE user_weddings.role`; não há impossibilidade técnica.
+
+Matrizes completas, código com papéis literais e pendências: ver `docs/demo-lifecycle.md`
+(seção "Auditoria 1.28.01").
