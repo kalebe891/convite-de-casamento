@@ -155,3 +155,18 @@ Uma etapa só está concluída quando:
 - [ ] as **decisões arquiteturais** tomadas estão documentadas.
 
 Sem esses seis itens, a etapa está incompleta — independentemente de a funcionalidade "parecer" pronta.
+
+---
+
+## Regra permanente (a partir de 1.28.01)
+
+`docs/` é a **fonte primária de conhecimento** do projeto. Antes de qualquer auditoria ou implementação:
+
+1. Ler toda a documentação pertinente em `docs/`.
+2. Validar se ela continua compatível com o código atual.
+3. Atualizar os documentos existentes em caso de divergência.
+4. Criar documento novo **apenas** se não houver local adequado — nunca duplicar.
+
+Toda etapa deve encerrar com um item "Documentação" no relatório listando: arquivos criados, modificados,
+auditados e pendências. A documentação reflete exatamente a implementação real: nunca documentar
+funcionalidade inexistente, nunca deixar funcionalidade implementada sem documentação.
